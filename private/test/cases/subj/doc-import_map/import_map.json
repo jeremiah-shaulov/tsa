@@ -1,0 +1,4 @@
+{	"imports":
+	{	"mapped-subj-1": "./private/subj1.ts"
+	}
+}

@@ -1,0 +1,16 @@
+import {testEmit} from '../test-emit.ts';
+import {tsa} from '../../tsa.ts';
+
+Deno.test
+(	'emit-deno',
+	async () =>
+	{	const subj = new URL(`subj/emit-deno/mod.ts`, import.meta.url).pathname;
+		await testEmit
+		(	[subj],
+			{	outFile: 'dist.js',
+				module: tsa.ModuleKind.AMD,
+				lib: ['lib.deno.ns.d.ts'],
+			}
+		);
+	}
+);
