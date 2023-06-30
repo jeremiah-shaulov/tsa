@@ -32,13 +32,12 @@ export function convertParameterNode(ts: typeof tsa, converter: Converter, decla
 	const optional = ts.isParameter(declaration) ? !!(declaration.questionToken || symbol && ts.getJSDocParameterTags(declaration).some(tag => tag.isBracketed)) : declaration.isBracketed;
 	const tsType = removeUndefined(convertType(ts, converter, symbol ? converter.checker.getTypeOfSymbolAtLocation(symbol, declaration) : ts.isParameter(declaration) ? declaration.type : declaration.typeExpression?.type), optional);
 	const defaultValue = convertDefaultValue(ts, init);
-	let result = convertParamName(ts, declaration.name, optional, tsType);
+	let result = convertParamName(ts, declaration.name, optional, rest ? undefined : tsType);
 	if (defaultValue)
 	{	result =
 		{	kind: 'assign',
 			left: result,
 			right: defaultValue,
-			tsType,
 		};
 	}
 	if (rest)

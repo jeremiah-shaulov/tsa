@@ -120,6 +120,18 @@ export class Class4<T, U> extends Class3<T> implements Inter1, Inter3<bigint>
 	}
 }
 
+export abstract class Class5
+{	f1!: Class2;
+
+	constructor(_par1: number=123, _cb1: (a1: number, b: string) => boolean)
+	{
+	}
+
+	method1(a=1, ...args: string[])
+	{
+	}
+}
+
 
 // Functions:
 export function func1(_a: number, _b: string): void

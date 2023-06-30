@@ -12,10 +12,10 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.4/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
 // deno run --allow-all /tmp/example1.ts
 
-import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.4/mod.ts';
+import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
 
 /**	Options for typescript compiler.
  **/
@@ -58,7 +58,7 @@ Currently `npm:` schema in module specifiers is not supported. To avoid reinvent
 First install the tool:
 
 ```bash
-deno install --allow-all https://deno.land/x/tsa@v0.0.4/tsa.ts
+deno install --allow-all https://deno.land/x/tsa@v0.0.5/tsa.ts
 ```
 
 You can use `tsa` as you use `tsc` for generating JavaScript or DTS (other usage patterns are not supported).
@@ -143,10 +143,10 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.4/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
 // deno run --allow-all /tmp/example2.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.4/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
 import {load} from 'https://deno.land/x/deno_graph@0.48.1/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
@@ -214,10 +214,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.4/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
 // deno run --allow-all /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.4/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -225,10 +225,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.4/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
 // deno run --allow-all /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.4/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
