@@ -11,7 +11,11 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 ### Example:
 
 ```ts
-import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.3/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// deno run --allow-all /tmp/example1.ts
+
+import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.3/mod.ts';
 
 /**	Options for typescript compiler.
  **/
@@ -49,7 +53,24 @@ await writeSelfDocToFile('/tmp/doc.json');
 
 Currently `npm:` schema in module specifiers is not supported. To avoid reinventing the wheel, i'll wait for `x/deno_graph` to start supporting this.
 
-## How to use
+## How to use from command line
+
+First install the tool:
+
+```bash
+deno install --allow-all https://deno.land/x/tsa@v0.0.3/tsa.ts
+```
+
+You can use `tsa` as you use `tsc` for generating JavaScript or DTS (other usage patterns are not supported).
+And it will do the same operations as `tsc` would, but on project that follows `Deno` standards.
+
+Plus `tsa` can generate source code AST. To do this specify `--outFile` to a file with `.json` extension.
+
+```bash
+tsa --outFile /tmp/ast.json 'https://deno.land/x/mysql@v2.11.0/mod.ts'
+```
+
+## How to use from Deno projects
 
 This library exports the following symbols:
 - `tsa` - namespace that contains everything from the underlying Typescript Compiler. It's the same namespace that `npm:typescript` exports, with 2 extensions:
@@ -121,7 +142,11 @@ If there are other errors encountered, a rejected promise should be returned.
 For example `LoadOptions` allow to substitute source code of a module during loading.
 
 ```ts
-import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.3/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// deno run --allow-all /tmp/example2.ts
+
+import {tsa} from 'https://deno.land/x/tsa@v0.0.3/mod.ts';
 import {load} from 'https://deno.land/x/deno_graph@0.48.1/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
@@ -188,14 +213,22 @@ Specify this callback to potentially include other symbols.
 This library contains typescript compiler inside, and it's version is predefined when the library is packaged.
 
 ```ts
-import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.3/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// deno run --allow-all /tmp/example3.ts
+
+import {tsa} from 'https://deno.land/x/tsa@v0.0.3/mod.ts';
 console.log(tsa.version);
 ```
 
 There's no guarantee that it can work with different `tsc` version, but i'll show you one hack that allows to substitute the `tsc`:
 
 ```ts
-import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.3/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// deno run --allow-all /tmp/example4.ts
+
+import {tsa} from 'https://deno.land/x/tsa@v0.0.3/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
