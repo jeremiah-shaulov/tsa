@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {TsTypeParamDef} from '../../types/mod.ts';
 import {convertType} from './convert_type.ts';
 import {Converter} from './converter.ts';

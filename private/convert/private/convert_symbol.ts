@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {DocNode, InterfaceDef} from '../../types/mod.ts';
 import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';

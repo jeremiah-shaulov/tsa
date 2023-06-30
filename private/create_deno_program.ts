@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-this-alias
 
-import {tsa} from './tsa.ts';
+import {tsa} from './tsa_ns.ts';
 import {path} from './deps.ts';
 import {Converter, EmitDocOptions} from './convert/mod.ts';
 import {getExtendedLibs} from './dts/mod.ts';

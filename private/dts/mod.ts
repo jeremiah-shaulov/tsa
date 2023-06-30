@@ -1,5 +1,5 @@
 import {cache, path} from '../deps.ts';
-import {tsa} from '../tsa.ts';
+import {tsa} from '../tsa_ns.ts';
 
 const DENO_LIBS =
 [	['deno.ns', 'lib.deno.ns.d.ts'],

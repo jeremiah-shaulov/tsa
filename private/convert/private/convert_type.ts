@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {TsTypeDef, ClassIndexSignatureDef, LiteralPropertyDef, LiteralCallSignatureDef, LiteralMethodDef, TsTypeParamDef, ParamDef} from '../../types/mod.ts';
 import {convertParameter, convertParameterNode} from './convert_parameter.ts';
 import {convertTypeParameter, convertTypeParamNode} from './convert_type_parameter.ts';

@@ -1,5 +1,5 @@
 import {assertEquals, denoDoc, DenoDocNode, DocOptions} from './deps.ts';
-import {tsa} from '../tsa.ts';
+import {tsa} from '../tsa_ns.ts';
 import {existsSync} from '../util.ts';
 import {LoadOptions} from "../load_options.ts";
 

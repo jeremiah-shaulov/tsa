@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {DecoratorDef} from '../../types/mod.ts';
 import {resolveSymbol} from './util.ts';
 import {convertLocation} from './convert_location.ts';

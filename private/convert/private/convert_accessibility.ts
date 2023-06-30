@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {Accessibility} from '../../types/mod.ts';
 
 export function convertAccessibility(ts: typeof tsa, modifiers?: readonly tsa.ModifierLike[]): {accessibility: Accessibility} | undefined

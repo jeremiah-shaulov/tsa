@@ -1,4 +1,4 @@
-import {tsa} from '../tsa.ts';
+import {tsa} from '../tsa_ns.ts';
 import {printDiagnostics} from '../util.ts';
 
 export async function testEmit(entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions)

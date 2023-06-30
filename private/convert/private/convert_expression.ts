@@ -1,4 +1,4 @@
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 import {getText} from './util.ts';
 
 export function convertExpression(ts: typeof tsa, expression: tsa.Expression)

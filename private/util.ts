@@ -1,4 +1,4 @@
-import {tsa} from './tsa.ts';
+import {tsa} from './tsa_ns.ts';
 
 const RE_IS_URL = /^(?:https?|file|npm):\/\//;
 

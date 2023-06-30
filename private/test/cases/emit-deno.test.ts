@@ -1,5 +1,5 @@
 import {testEmit} from '../test-emit.ts';
-import {tsa} from '../../tsa.ts';
+import {tsa} from '../../tsa_ns.ts';
 
 Deno.test
 (	'emit-deno',
