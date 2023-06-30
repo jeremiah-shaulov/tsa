@@ -11,7 +11,7 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 ### Example:
 
 ```ts
-import {tsa, LoadOptions, EmitDocOptions} from './mod.ts';
+import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
 
 /**	Options for typescript compiler.
  **/
@@ -64,7 +64,7 @@ They are assignable to the same types from [x/deno_doc@0.62.0](https://deno.land
 ```ts
 function DenoProgram.createDenoProgram(entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
 
-type DenoProgram = tsa.Program & {emitDoc: (options?: EmitDocOptions) => DocNode[]};
+type DenoProgram = tsa.Program & {emitDoc(options?: EmitDocOptions): DocNode[]};
 ```
 
 ## How the result is different from deno_doc?
@@ -121,7 +121,7 @@ If there are other errors encountered, a rejected promise should be returned.
 For example `LoadOptions` allow to substitute source code of a module during loading.
 
 ```ts
-import {tsa} from './mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
 import {load} from 'https://deno.land/x/deno_graph@0.48.1/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
@@ -149,6 +149,7 @@ export async function writeSelfDocToFile(filename: string|URL)
 	await Deno.writeTextFile(filename, JSON.stringify(docNodes, undefined, '\t'));
 }
 
+// Save to `/tmp/doc.json`
 await writeSelfDocToFile('/tmp/doc.json');
 ```
 
@@ -187,14 +188,14 @@ Specify this callback to potentially include other symbols.
 This library contains typescript compiler inside, and it's version is predefined when the library is packaged.
 
 ```ts
-import {tsa} from './mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
 console.log(tsa.version);
 ```
 
 There's no guarantee that it can work with different `tsc` version, but i'll show you one hack that allows to substitute the `tsc`:
 
 ```ts
-import {tsa} from './mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@0.0.2/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';

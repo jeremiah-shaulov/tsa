@@ -17,8 +17,10 @@ export async function getExtendedLibs(ts: typeof tsa, libLocation: string)
 	{	for (const [libName, filename] of DENO_LIBS)
 		{	const fileUrl = new URL('dist/'+filename, import.meta.url);
 			const localFilename = fileUrl.protocol=='file:' ? path.fromFileUrl(fileUrl) : (await cache(fileUrl)).path;
-			ts.libMap.set(libName, filename);
-			ts.libs.push(libName);
+			if (!ts.libMap.has(libName))
+			{	ts.libMap.set(libName, filename);
+				ts.libs.push(libName);
+			}
 			extendedLibs[path.join(libLocation, filename)] = localFilename;
 		}
 	}

@@ -12,7 +12,7 @@ type Any = any;
 (typescript as Any).createDenoProgram = createDenoProgram;
 
 declare module 'npm:typescript@5.1.3'
-{	type DenoProgram = Program & {emitDoc: (options?: EmitDocOptions) => DocNode[]};
+{	type DenoProgram = Program & {emitDoc(options?: EmitDocOptions): DocNode[]};
 
 	function createDenoProgram(entryPoints: readonly string[], compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;
 }
