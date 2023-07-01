@@ -9,8 +9,8 @@ export async function testEmit(entryPoints: readonly string[], compilerOptions?:
 		{	console.log(`File ${fileName}: ${text.length} chars`);
 		}
 	);
-	const diagnostics = tsa.getPreEmitDiagnostics(program).concat(result.diagnostics);
-	printDiagnostics(diagnostics, compilerOptions);
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	printDiagnostics(result.diagnostics);
 	if (result.emitSkipped)
 	{	throw new Error('emit failed');
 	}

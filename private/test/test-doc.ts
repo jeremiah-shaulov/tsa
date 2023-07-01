@@ -1,5 +1,6 @@
 import {assertEquals, denoDoc, DenoDocNode, DocOptions} from './deps.ts';
 import {tsa} from '../tsa_ns.ts';
+import {printDiagnostics} from '../util.ts';
 import {existsSync} from '../util.ts';
 import {LoadOptions} from "../load_options.ts";
 
@@ -456,6 +457,7 @@ export async function testDoc(subjUrl: URL, saveToFiles=false)
 	{	lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
 	};
 	const program = await tsa.createDenoProgram([subjUrl.href], compilerOptions, loadOptions);
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	console.time('tsa');
 	const dataFullDoc: DenoDocNode[] = program.emitDoc({includeReferenced: true});

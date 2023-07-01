@@ -41,6 +41,7 @@ async function main(): Promise<number>
 
 	try
 	{	const program = await tsa.createDenoProgram(commandLine.fileNames, commandLine.options);
+		printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 		if (emitDocOutFile)
 		{	const result = program.emitDoc();
@@ -48,8 +49,7 @@ async function main(): Promise<number>
 		}
 		else
 		{	const result = program.emit();
-			const diagnostics = tsa.getPreEmitDiagnostics(program).concat(result.diagnostics);
-			printDiagnostics(diagnostics, commandLine.options);
+			printDiagnostics(result.diagnostics);
 			if (result.emitSkipped)
 			{	throw new Error('emit failed');
 			}

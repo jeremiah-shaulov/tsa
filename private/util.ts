@@ -6,21 +6,20 @@ export function isUrl(str: string)
 {	return RE_IS_URL.test(str);
 }
 
-export function printDiagnostics(diagnostics: tsa.Diagnostic[], compilerOptions?: tsa.CompilerOptions)
-{	if (Deno.noColor)
-	{	for (const d of diagnostics)
-		{	const loc = d.file && d.start && tsa.getLineAndCharacterOfPosition(d.file, d.start);
-			const locText = loc && d.file ? `${d.file.fileName}(${loc.line + 1}:${loc.character + 1}): ` : '';
-			console.error(locText + tsa.flattenDiagnosticMessageText(d.messageText, '\n'));
-		}
-	}
-	else
-	{	const host =
+export function formatDiagnostics(diagnostics: readonly tsa.Diagnostic[])
+{	const formatDiagnostics = Deno.noColor ? tsa.formatDiagnostics : tsa.formatDiagnosticsWithColorAndContext;
+	return formatDiagnostics
+	(	diagnostics,
 		{	getCurrentDirectory: tsa.sys.getCurrentDirectory,
 			getNewLine: () => tsa.sys.newLine,
-			getCanonicalFileName: tsa.createCompilerHost(compilerOptions ?? {}).getCanonicalFileName,
-		};
-		tsa.sys.write(tsa.formatDiagnosticsWithColorAndContext(diagnostics, host) + host.getNewLine());
+			getCanonicalFileName: fileName => Deno.realPathSync(fileName),
+		}
+	);
+}
+
+export function printDiagnostics(diagnostics: readonly tsa.Diagnostic[])
+{	if (diagnostics.length)
+	{	console.error(formatDiagnostics(diagnostics));
 	}
 }
 

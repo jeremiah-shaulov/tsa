@@ -12,15 +12,17 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.6/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
 // deno run --allow-all /tmp/example1.ts
 
-import {tsa, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
+import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.6/mod.ts';
 
 /**	Options for typescript compiler.
  **/
 export const compilerOptions: tsa.CompilerOptions =
-{	lib: ['lib.esnext.d.ts', 'lib.deno.ns.d.ts'],
+{	declaration: true,
+	emitDeclarationOnly: true,
+	lib: ['lib.esnext.d.ts', 'lib.deno.ns.d.ts'],
 };
 
 /**	Configures how to resolve module specifiers, and how to load module contents.
@@ -39,10 +41,12 @@ export const emitDocOptions: EmitDocOptions =
 /**	Generate doc for the current module, and write it to the provided filename.
 	@param filename Where to save the doc in JSON format.
  **/
-export async function writeSelfDocToFile(filename: string|URL)
+export async function writeSelfDocToFile(filename: string)
 {	const program = await tsa.createDenoProgram([import.meta.url], compilerOptions, loadOptions);
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	const docNodes = program.emitDoc(emitDocOptions);
 	await Deno.writeTextFile(filename, JSON.stringify(docNodes, undefined, '\t'));
+	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', filename);
 }
 
 // Save to `/tmp/doc.json`
@@ -58,7 +62,7 @@ Currently `npm:` schema in module specifiers is not supported. To avoid reinvent
 First install the tool:
 
 ```bash
-deno install --allow-all https://deno.land/x/tsa@v0.0.5/tsa.ts
+deno install --allow-all https://deno.land/x/tsa@v0.0.6/tsa.ts
 ```
 
 You can use `tsa` as you use `tsc` for generating JavaScript or DTS (other usage patterns are not supported).
@@ -67,19 +71,21 @@ And it will do the same operations as `tsc` would, but on project that follows `
 Plus `tsa` can generate source code AST. To do this specify `--outFile` to a file with `.json` extension.
 
 ```bash
-tsa --outFile /tmp/ast.json 'https://deno.land/x/mysql@v2.11.0/mod.ts'
+tsa --declaration --emitDeclarationOnly --outFile /tmp/ast.json 'https://deno.land/x/mysql@v2.11.0/mod.ts'
 ```
 
 ## How to use from Deno projects
 
 This library exports the following symbols:
-- `tsa` - namespace that contains everything from the underlying Typescript Compiler. It's the same namespace that `npm:typescript` exports, with 2 extensions:
+- `tsa` - Namespace that contains everything from the underlying Typescript Compiler. It's the same namespace that `npm:typescript` exports, with 2 extensions:
 	1. type `DenoProgram`, that is extension of `Program`, that adds `emitDoc()` method
 	2. function `createDenoProgram()`, that is similar to `createProgram()`, but returns `DenoProgram` instead of `Program`
 - `LoadOptions` - Configures how to resolve module specifiers, and how to load module contents
 - `EmitDocOptions` - Options for `DenoProgram.emitDoc()`
-- type `DocNode`, array of which `DenoProgram.emitDoc()` returns. It's assignable to the `DocNode` from [x/deno_doc@0.62.0](https://deno.land/x/deno_doc@0.62.0), but contains more information
-- types for `DocNode` fields: `DocNodeKind`, `DocNodeFunction`, `DocNodeVariable`, `DocNodeClass`, and many more.
+- `formatDiagnostics()` - Calls one of `tsa.formatDiagnostics()` or `tsa.formatDiagnosticsWithColorAndContext()` depending on the value of `Deno.noColor`
+- `printDiagnostics()` - Prints the result of `formatDiagnostics()` to stderr
+- Type `DocNode`, array of which `DenoProgram.emitDoc()` returns. It's assignable to the `DocNode` from [x/deno_doc@0.62.0](https://deno.land/x/deno_doc@0.62.0), but contains more information
+- Types for `DocNode` fields: `DocNodeKind`, `DocNodeFunction`, `DocNodeVariable`, `DocNodeClass`, and many more
 They are assignable to the same types from [x/deno_doc@0.62.0](https://deno.land/x/deno_doc@0.62.0).
 
 ```ts
@@ -115,6 +121,7 @@ You can pass `tsa.CompilerOptions` to `tsa.createDenoProgram()`. It works in the
 - `lib` has 2 additional options that you can provide: `lib.deno.ns.d.ts` and `lib.deno.unstable.d.ts`. If you don't specify `lib` explicitly, the default is `lib.deno.ns.d.ts`.
 - default value for `allowJs` is `true`.
 - default value for `target` is `tsa.ScriptTarget.ESNext`.
+- default value for `module` is `tsa.ModuleKind.ESNext`.
 - regardless of `allowImportingTsExtensions` value, module specifiers must include `.ts` (or different) extension.
 
 ## Module resolution and loading options (LoadOptions)
@@ -143,19 +150,21 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.6/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
 // deno run --allow-all /tmp/example2.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
+import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.6/mod.ts';
 import {load} from 'https://deno.land/x/deno_graph@0.48.1/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
 	@param filename Where to save the doc in JSON format.
  **/
-export async function writeSelfDocToFile(filename: string|URL)
+export async function writeSelfDocToFile(filename: string)
 {	const program = await tsa.createDenoProgram
 	(	[import.meta.url],
-		undefined,
+		{	declaration: true,
+			emitDeclarationOnly: true,
+		},
 		{	async load(specifier)
 			{	const result = await load(specifier);
 				if (result?.kind == 'module')
@@ -170,8 +179,10 @@ export async function writeSelfDocToFile(filename: string|URL)
 			}
 		}
 	);
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	const docNodes = program.emitDoc();
 	await Deno.writeTextFile(filename, JSON.stringify(docNodes, undefined, '\t'));
+	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', filename);
 }
 
 // Save to `/tmp/doc.json`
@@ -214,10 +225,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.6/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
 // deno run --allow-all /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.6/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -225,10 +236,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.5/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.6/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
 // deno run --allow-all /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.5/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.6/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
