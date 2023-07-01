@@ -9,7 +9,7 @@ import {LoadOptions, Loader} from './load_options.ts';
 
 type SourceFile = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
-export async function createDenoProgram(this: typeof tsa, entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
+export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
 {	const ts = this;
 	compilerOptions = setDefaultOptions(this, compilerOptions);
 	const loader = await Loader.inst(loadOptions);
@@ -102,6 +102,9 @@ function setDefaultOptions(ts: typeof tsa, compilerOptions?: tsa.CompilerOptions
 	}
 	if (compilerOptions.target == undefined)
 	{	compilerOptions.target = ts.ScriptTarget.ESNext;
+	}
+	if (compilerOptions.module == undefined)
+	{	compilerOptions.module = ts.ModuleKind.ESNext;
 	}
 	delete compilerOptions.allowImportingTsExtensions; // TODO: implement filenames without extension
 	return compilerOptions;
