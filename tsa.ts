@@ -1,10 +1,9 @@
 #!/usr/bin/env -S deno run --allow-all
 
-import {tsa} from './mod.ts';
-import {printDiagnostics} from './private/util.ts';
+import {tsa, printDiagnostics} from './mod.ts';
 
 const HELP =
-`This tool works like \`tsc\` for generating JavaScript or DTS.
+`This tool works like \`tsc\` for generating JavaScript or DTS (other usage patterns are not supported).
 Also you can specify \`--outFile\` to a file with \`.json\` extension to generate project AST.
 This tool works on typescript projects that follow \`Deno\` standards.
 See \`tsc --help\` for more information.
