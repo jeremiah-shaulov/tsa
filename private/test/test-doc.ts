@@ -442,7 +442,7 @@ function makeCompatible2(dataDoc: Any, dataDenoDoc: Any)
 	}
 }
 
-export async function testDoc(subjUrl: URL, saveToFiles=false)
+export async function testDoc(subjUrl: URL, compilerOptions?: tsa.CompilerOptions, saveToFiles=false)
 {	const subjName = new URL('.', subjUrl).pathname.replace(/\/?$/, '').match(/[^\/]*$/)![0];
 
 	const loadOptions: LoadOptions = {};
@@ -453,8 +453,10 @@ export async function testDoc(subjUrl: URL, saveToFiles=false)
 		docOptions.importMap = importMapUrl.href;
 	}
 
-	const compilerOptions =
-	{	lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
+	compilerOptions =
+	{	declaration: true,
+		emitDeclarationOnly: true,
+		...compilerOptions,
 	};
 	const program = await tsa.createDenoProgram([subjUrl.href], compilerOptions, loadOptions);
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));

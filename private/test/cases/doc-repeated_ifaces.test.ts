@@ -6,6 +6,6 @@ Deno.test
 (	'doc-repeated_ifaces',
 	async () =>
 	{	const subj = new URL(`subj/doc-repeated_ifaces/mod.ts`, import.meta.url);
-		await testDoc(subj, SAVE_TO_FILES);
+		await testDoc(subj, {}, SAVE_TO_FILES);
 	}
 );

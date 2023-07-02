@@ -6,6 +6,6 @@ Deno.test
 (	'doc-import_map',
 	async () =>
 	{	const subj = new URL(`subj/doc-import_map/mod.ts`, import.meta.url);
-		await testDoc(subj, SAVE_TO_FILES);
+		await testDoc(subj, {}, SAVE_TO_FILES);
 	}
 );

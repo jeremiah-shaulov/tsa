@@ -6,6 +6,6 @@ Deno.test
 (	'doc-comments',
 	async () =>
 	{	const subj = new URL(`subj/doc-comments/mod.ts`, import.meta.url);
-		await testDoc(subj, SAVE_TO_FILES);
+		await testDoc(subj, {}, SAVE_TO_FILES);
 	}
 );

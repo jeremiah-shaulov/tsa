@@ -6,6 +6,6 @@ Deno.test
 (	'doc-decorators',
 	async () =>
 	{	const subj = new URL(`subj/doc-decorators/mod.ts`, import.meta.url);
-		await testDoc(subj, SAVE_TO_FILES);
+		await testDoc(subj, {experimentalDecorators: true}, SAVE_TO_FILES);
 	}
 );
