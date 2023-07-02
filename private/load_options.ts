@@ -1,4 +1,4 @@
-import {load, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} from './deps.ts';
+import {cache, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} from './deps.ts';
 import {isUrl} from './util.ts';
 
 type Resolve = (specifier: string, referrer: string) => string;
@@ -89,4 +89,17 @@ function hrefWithBase(specifier: string, referrerUrl: URL)
 		const prefix = 'http://http/';
 		return new URL(specifier, prefix+referrerUrl).href.slice(prefix.length);
 	}
+}
+
+export async function load(specifier: string, _isDynamic: boolean): Promise<LoadResponse|undefined>
+{	if (specifier.startsWith('node:') || specifier.startsWith('npm:'))
+	{	return {kind: 'external', specifier};
+	}
+	const result = specifier.startsWith('file://') ? undefined : await cache(specifier);
+	return {
+		kind: 'module',
+		specifier: result?.url.href ?? specifier,
+		headers: result?.meta.headers,
+		content: await Deno.readTextFile(result?.path ?? new URL(specifier)),
+	};
 }
