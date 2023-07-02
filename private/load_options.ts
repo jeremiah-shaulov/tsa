@@ -1,7 +1,8 @@
 import {cache, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} from './deps.ts';
+import {getNpmFilename} from './npm.ts';
 import {isUrl} from './util.ts';
 
-type Resolve = (specifier: string, referrer: string) => string;
+type Resolve = (specifier: string, referrer: string) => string | Promise<string>;
 type Load = (specifier: string, isDynamic: boolean) => Promise<LoadResponse|undefined>;
 
 export type LoadOptions =
@@ -43,13 +44,40 @@ export type LoadOptions =
 };
 
 export class Loader
-{	protected constructor(public load: Load, public resolve: Resolve)
-	{
-	}
+{	#useResolve: Resolve;
+	#useLoad: Load;
+	#resolved = new Map<string, Map<string, string>>;
 
 	static async inst(loadOptions?: LoadOptions)
-	{	const useLoad = loadOptions?.load ?? load;
-		return new Loader(useLoad, await getResolve(useLoad, loadOptions?.importMap, loadOptions?.resolve));
+	{	const useLoad = loadOptions?.load ?? defaultLoad;
+		const useResolve = await getResolve(useLoad, loadOptions?.importMap, loadOptions?.resolve);
+		return new Loader(useResolve, useLoad);
+	}
+
+	protected constructor(useResolve: Resolve, useLoad: Load)
+	{	this.#useResolve = useResolve;
+		this.#useLoad = useLoad;
+	}
+
+	async resolve(specifier: string, referrer: string)
+	{	const result = await this.#useResolve(specifier, referrer);
+		let byReferrer = this.#resolved.get(referrer);
+		if (!byReferrer)
+		{	byReferrer = new Map;
+			this.#resolved.set(referrer, byReferrer);
+		}
+		byReferrer.set(specifier, result);
+		return result;
+	}
+
+	load(specifier: string, isDynamic: boolean)
+	{	return this.#useLoad(specifier, isDynamic);
+	}
+
+	/**	Synchronously get something that has already been resolved in the past with `resolve()`.
+	 **/
+	resolved(specifier: string, referrer: string)
+	{	return this.#resolved.get(referrer)?.get(specifier) ?? '';
 	}
 }
 
@@ -57,7 +85,7 @@ async function getResolve(load: Load, importMapUrlOrStr?: string|URL, resolve?: 
 {	if (!importMapUrlOrStr)
 	{	return resolve ??
 		(	(specifier: string, referrer: string) =>
-			{	return hrefWithBase(specifier, new URL(referrer));
+			{	return defaultResolve(specifier, referrer);
 			}
 		);
 	}
@@ -75,31 +103,55 @@ async function getResolve(load: Load, importMapUrlOrStr?: string|URL, resolve?: 
 		{	return resolveModuleSpecifier(specifier, importMap, new URL(referrer));
 		}
 		catch
-		{	return hrefWithBase(specifier, new URL(referrer));
+		{	return defaultResolve(specifier, referrer);
 		}
 	};
 }
 
-function hrefWithBase(specifier: string, referrerUrl: URL)
-{	try
-	{	return new URL(specifier, referrerUrl).href;
+export async function defaultResolve(specifier: string, referrer: string)
+{	if (specifier.startsWith('npm:'))
+	{	const result = await getNpmFilename(specifier);
+		if (result)
+		{	return result.specifier;
+		}
+	}
+	try
+	{	return new URL(specifier, new URL(referrer)).href;
 	}
 	catch
 	{	// URL fails for 'npm:' schema
 		const prefix = 'http://http/';
-		return new URL(specifier, prefix+referrerUrl).href.slice(prefix.length);
+		return new URL(specifier, prefix+referrer).href.slice(prefix.length);
 	}
 }
 
-export async function load(specifier: string, _isDynamic: boolean): Promise<LoadResponse|undefined>
-{	if (specifier.startsWith('node:') || specifier.startsWith('npm:'))
+export async function defaultLoad(specifier: string, _isDynamic: boolean): Promise<LoadResponse|undefined>
+{	let filename;
+	let headers;
+	if (specifier.startsWith('npm:'))
+	{	const result = await getNpmFilename(specifier);
+		if (!result)
+		{	return {kind: 'external', specifier};
+		}
+		filename = result.filename;
+		specifier = result.specifier;
+	}
+	else if (specifier.startsWith('node:'))
 	{	return {kind: 'external', specifier};
 	}
-	const result = specifier.startsWith('file://') ? undefined : await cache(specifier);
+	else if (!specifier.startsWith('file://'))
+	{	const result = await cache(specifier);
+		specifier = result.url.href;
+		headers = result.meta.headers;
+		filename = result.path;
+	}
+	else
+	{	filename = new URL(specifier);
+	}
 	return {
 		kind: 'module',
-		specifier: result?.url.href ?? specifier,
-		headers: result?.meta.headers,
-		content: await Deno.readTextFile(result?.path ?? new URL(specifier)),
+		specifier,
+		headers,
+		content: await Deno.readTextFile(filename),
 	};
 }

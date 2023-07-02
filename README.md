@@ -12,16 +12,17 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.7/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
-// deno run --allow-all /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example1.ts
 
-import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.7/mod.ts';
+import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
 
 /**	Options for typescript compiler.
  **/
 export const compilerOptions: tsa.CompilerOptions =
 {	declaration: true,
 	emitDeclarationOnly: true,
+	allowSyntheticDefaultImports: true,
 	lib: ['lib.esnext.d.ts', 'lib.deno.ns.d.ts'],
 };
 
@@ -62,7 +63,7 @@ Currently `npm:` schema in module specifiers is not supported. To avoid reinvent
 First install the tool:
 
 ```bash
-deno install --allow-all https://deno.land/x/tsa@v0.0.7/tsa.ts
+deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.8/tsa.ts
 ```
 
 You can use `tsa` as you use `tsc` for generating JavaScript or DTS (other usage patterns are not supported).
@@ -81,6 +82,8 @@ This library exports the following symbols:
 	1. type `DenoProgram`, that is extension of `Program`, that adds `emitDoc()` method
 	2. function `createDenoProgram()`, that is similar to `createProgram()`, but returns `DenoProgram` instead of `Program`
 - `LoadOptions` - Configures how to resolve module specifiers, and how to load module contents
+- `defaultResolve()` - Function that is used by default if `LoadOptions.resolve()` is not set
+- `defaultLoad()` - Function that is used by default if `LoadOptions.load()` is not set. It loads from files or external URLs, and caches external resources.
 - `EmitDocOptions` - Options for `DenoProgram.emitDoc()`
 - `formatDiagnostics()` - Calls one of `tsa.formatDiagnostics()` or `tsa.formatDiagnosticsWithColorAndContext()` depending on the value of `Deno.noColor`
 - `printDiagnostics()` - Prints the result of `formatDiagnostics()` to stderr
@@ -150,11 +153,10 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.7/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
-// deno run --allow-all /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example2.ts
 
-import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.7/mod.ts';
-import {load} from 'https://deno.land/x/deno_graph@0.48.1/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
 	@param filename Where to save the doc in JSON format.
@@ -164,9 +166,10 @@ export async function writeSelfDocToFile(filename: string)
 	(	[import.meta.url],
 		{	declaration: true,
 			emitDeclarationOnly: true,
+			allowSyntheticDefaultImports: true,
 		},
-		{	async load(specifier)
-			{	const result = await load(specifier);
+		{	async load(specifier, isDynamic)
+			{	const result = await defaultLoad(specifier, isDynamic);
 				if (result?.kind == 'module')
 				{	result.content =
 					`	/**	Example module.
@@ -225,10 +228,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.7/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
-// deno run --allow-all /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.7/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -236,10 +239,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.7/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
-// deno run --allow-all /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.7/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';

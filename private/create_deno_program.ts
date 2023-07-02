@@ -22,13 +22,13 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	{	host.resolveModuleNameLiterals = function(moduleLiterals, containingFile)
 		{	const resolvedModules = new Array<tsa.ResolvedModuleWithFailedLookupLocations>;
 			for (const {text} of moduleLiterals)
-			{	const resolvedFileName = loader.resolve(text, containingFile);
+			{	const resolvedFileName = loader.resolved(text, containingFile);
 				const file = files.get(resolvedFileName);
 				resolvedModules.push
-				(	{	resolvedModule:
+				(	{	resolvedModule: file &&
 						{	resolvedFileName,
 							isExternalLibraryImport: false,
-							extension: !file ? '' :
+							extension:
 							(	file.scriptKind == ts.ScriptKind.TS ? ts.Extension.Ts :
 								file.scriptKind == ts.ScriptKind.TSX ? ts.Extension.Tsx :
 								file.scriptKind == ts.ScriptKind.JSON ? ts.Extension.Json :
@@ -46,10 +46,10 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	{	host.resolveModuleNames = function(moduleLiterals, containingFile)
 		{	const resolvedModules = new Array<tsa.ResolvedModule | undefined>();
 			for (const text of moduleLiterals)
-			{	const resolvedFileName = loader.resolve(text, containingFile);
+			{	const resolvedFileName = loader.resolved(text, containingFile);
 				const file = files.get(resolvedFileName);
 				resolvedModules.push
-				(	!file ? undefined :
+				(	file &&
 					{	resolvedFileName,
 						isExternalLibraryImport: false,
 					}
@@ -144,7 +144,7 @@ async function forFile(ts: typeof tsa, modHref: string, files: Map<string, Sourc
 			{	if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement))
 				{	const {moduleSpecifier} = statement;
 					if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier))
-					{	const importHref = loader.resolve(moduleSpecifier.text, modHref);
+					{	const importHref = await loader.resolve(moduleSpecifier.text, modHref);
 						if (!files.has(importHref))
 						{	promises.push(forFile(ts, importHref, files, loader));
 						}
@@ -153,7 +153,7 @@ async function forFile(ts: typeof tsa, modHref: string, files: Map<string, Sourc
 			}
 			// Find `/// <reference path="..." />`
 			for (const {fileName} of sourceFile.referencedFiles)
-			{	const importHref = loader.resolve(fileName, modHref);
+			{	const importHref = await loader.resolve(fileName, modHref);
 				if (!files.has(importHref))
 				{	promises.push(forFile(ts, importHref, files, loader));
 				}

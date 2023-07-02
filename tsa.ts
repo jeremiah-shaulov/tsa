@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-all
+#!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
 import {tsa, printDiagnostics} from './mod.ts';
 

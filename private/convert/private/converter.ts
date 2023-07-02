@@ -215,7 +215,7 @@ export class Converter
 			if (this.ts.isImportDeclaration(statement) || this.ts.isExportDeclaration(statement))
 			{	if (statement.moduleSpecifier && this.ts.isStringLiteral(statement.moduleSpecifier))
 				{	if (addToEntryPoints)
-					{	const importHref = this.loader.resolve(statement.moduleSpecifier.text, sourceFile.fileName);
+					{	const importHref = this.loader.resolved(statement.moduleSpecifier.text, sourceFile.fileName);
 						if (!addToEntryPoints.includes(importHref))
 						{	addToEntryPoints.push(importHref);
 						}
