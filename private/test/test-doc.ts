@@ -15,29 +15,43 @@ const RE_IS_URL = /^(?:https?|file):\/\//;
  **/
 function makeCompatible(dataDoc: Any, dataDenoDoc: Any, subjHref: string, parentKey='')
 {	if (Array.isArray(dataDoc) && Array.isArray(dataDenoDoc))
-	{	// 1. Fix repeated interface declarations (when an interface with the same name is declared several times)
+	{	// 1. Fix repeated interface and function declarations (when an interface or an overloaded function with the same name is declared several times)
 		const ifaces = new Array<Any>();
 L:		for (let i=0; i<dataDenoDoc.length; i++)
 		{	const v = dataDenoDoc[i];
-			if (v.interfaceDef)
-			{	for (const v2 of ifaces)
-				{	if (v2.name==v.name && v2.location?.filename==v.location?.filename)
-					{	v2.interfaceDef.methods = v2.interfaceDef.methods.concat(v.interfaceDef.methods);
-						v2.interfaceDef.callSignatures = v2.interfaceDef.callSignatures.concat(v.interfaceDef.callSignatures);
-						v2.interfaceDef.indexSignatures = v2.interfaceDef.indexSignatures.concat(v.interfaceDef.indexSignatures);
-						v2.interfaceDef.typeParams = v2.interfaceDef.typeParams.concat(v.interfaceDef.typeParams);
-						for (const ce of v.interfaceDef.extends)
-						{	if (!v2.interfaceDef.extends.some((e: Any) => e.repr == ce.repr))
-							{	v2.interfaceDef.extends.push(ce);
+			if (v.interfaceDef || v.functionDef)
+			{	for (let j=0; j<ifaces.length; j++)
+				{	const v2 = ifaces[j];
+					if (v2.name==v.name && v2.kind==v.kind && v2.location?.filename==v.location?.filename)
+					{	if (v.interfaceDef)
+						{	v2.interfaceDef.methods = v2.interfaceDef.methods.concat(v.interfaceDef.methods);
+							v2.interfaceDef.callSignatures = v2.interfaceDef.callSignatures.concat(v.interfaceDef.callSignatures);
+							v2.interfaceDef.indexSignatures = v2.interfaceDef.indexSignatures.concat(v.interfaceDef.indexSignatures);
+							v2.interfaceDef.typeParams = v2.interfaceDef.typeParams.concat(v.interfaceDef.typeParams);
+							for (const ce of v.interfaceDef.extends)
+							{	if (!v2.interfaceDef.extends.some((e: Any) => e.repr == ce.repr))
+								{	v2.interfaceDef.extends.push(ce);
+								}
 							}
-						}
-						for (const ce of v.interfaceDef.properties)
-						{	if (!v2.interfaceDef.properties.some((e: Any) => e.name == ce.name))
-							{	v2.interfaceDef.properties.push(ce);
+							for (const ce of v.interfaceDef.properties)
+							{	if (!v2.interfaceDef.properties.some((e: Any) => e.name == ce.name))
+								{	v2.interfaceDef.properties.push(ce);
+								}
 							}
+							dataDenoDoc.splice(i--, 1);
+							continue L;
 						}
-						dataDenoDoc.splice(i--, 1);
-						continue L;
+						else // if `v.functionDef`
+						{	if (v.functionDef.hasBody)
+							{	const k = dataDenoDoc.indexOf(v2);
+								if (k != -1)
+								{	dataDenoDoc[k] = v;
+									ifaces[j] = v;
+								}
+							}
+							dataDenoDoc.splice(i--, 1);
+							continue L;
+						}
 					}
 				}
 				ifaces.push(v);

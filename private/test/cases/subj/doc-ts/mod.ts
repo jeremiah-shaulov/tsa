@@ -173,6 +173,12 @@ export function func12(_a: number, {b: _b=[true, false], c: [_d=true, _e=false]}
 export function func13(_a: number, {_b=[true, false], c: [_d=true, _e=false]}: Record<string, boolean[]>): void
 {
 }
+// overloaded function
+export function func14(a: number): number;
+export function func14(a: string): string;
+export function func14(a: number|string): number|string
+{	return a;
+}
 
 
 // Enums:

@@ -108,19 +108,22 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 					}
 				}
 				else if (ts.isFunctionDeclaration(declaration))
-				{	const functionDef = convertFunction(ts, converter, declaration);
-					if (functionDef)
-					{	return {
-							declaration,
-							node:
-							{	kind: 'function',
-								name,
-								location: convertLocation(ts, converter, declaration),
-								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
-								functionDef,
-							}
-						};
+				{	const useDeclaration = declarations.find(d => ts.isFunctionDeclaration(d) && d.body!=undefined) ?? declaration;
+					if (ts.isFunctionDeclaration(useDeclaration))
+					{	const functionDef = convertFunction(ts, converter, useDeclaration);
+						if (functionDef)
+						{	return {
+								declaration: useDeclaration,
+								node:
+								{	kind: 'function',
+									name,
+									location: convertLocation(ts, converter, useDeclaration),
+									...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(useDeclaration)),
+									declarationKind: getDeclarationKind(ts, useDeclaration, isExportAssignment),
+									functionDef,
+								}
+							};
+						}
 					}
 				}
 				else if (ts.isVariableDeclaration(declaration))
