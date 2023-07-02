@@ -215,7 +215,7 @@ The referrers include: `DecoratorDef.nodeIndex`, `TsTypeRefDef.nodeIndex` and `T
 Set this to `true` to ignore the ignore.
 - `noImportNodes` - By default, for every symbol that appears in `import from` statement there will be corresponding `DocNode` with `kind == 'import'`.
 Set this to `true` to exclude such nodes from the result.
-- `includeSymbol` - Callback function that will be called to ask you whether you want to include every occured symbol in the source files to the result.
+- `includeSymbol()` - Callback function that will be called to ask you whether you want to include every occured symbol in the source files to the result.
 By default only exported symbols are processed, and if you set `EmitDocOptions.includeReferenced`, also not exported but referenced ones.
 Specify this callback to potentially include other symbols.
 

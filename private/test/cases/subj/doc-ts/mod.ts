@@ -127,7 +127,7 @@ export abstract class Class5
 	{
 	}
 
-	method1(a=1, ...args: string[])
+	method1(_a=1, ..._args: string[])
 	{
 	}
 }

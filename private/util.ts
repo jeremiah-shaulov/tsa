@@ -1,6 +1,6 @@
 import {tsa} from './tsa_ns.ts';
 
-const RE_IS_URL = /^(?:https?|file|npm):\/\//;
+const RE_IS_URL = /^(?:https?|file|npm|node):\/\//;
 
 export function isUrl(str: string)
 {	return RE_IS_URL.test(str);
@@ -12,7 +12,7 @@ export function formatDiagnostics(diagnostics: readonly tsa.Diagnostic[])
 	(	diagnostics,
 		{	getCurrentDirectory: tsa.sys.getCurrentDirectory,
 			getNewLine: () => tsa.sys.newLine,
-			getCanonicalFileName: fileName => Deno.realPathSync(fileName),
+			getCanonicalFileName: s => s, // no need, because i use absolute URLs
 		}
 	);
 }
