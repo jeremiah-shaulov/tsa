@@ -66,8 +66,11 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 		}
 		// maybe a lib file (like `lib.esnext.d.ts`)
 		try
-		{	if (isUrl(filename))
+		{	if (filename.startsWith('file://'))
 			{	filename = path.fromFileUrl(filename);
+			}
+			else if (isUrl(filename))
+			{	return;
 			}
 			if (extendedLibs[filename] && !existsSync(filename))
 			{	filename = extendedLibs[filename];
