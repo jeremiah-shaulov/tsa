@@ -136,7 +136,7 @@ You can pass `LoadOptions` to `tsa.createDenoProgram()` that allow to configure 
 ```ts
 type LoadOptions =
 {	importMap?: string|URL;
-	resolve?(specifier: string, referrer: string): string;
+	resolve?(specifier: string, referrer: string): string | Promise<string>;
 	load?(specifier: string, isDynamic: boolean): Promise<LoadResponse|undefined>;
 };
 ```
