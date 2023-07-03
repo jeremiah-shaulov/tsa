@@ -212,9 +212,9 @@ export class Converter
 		{	if (!this.#noImportNodes && this.ts.isImportDeclaration(statement))
 			{	this.#convertImport(statement);
 			}
-			if (this.ts.isImportDeclaration(statement) || this.ts.isExportDeclaration(statement))
-			{	if (statement.moduleSpecifier && this.ts.isStringLiteral(statement.moduleSpecifier))
-				{	if (addToEntryPoints)
+			if (addToEntryPoints)
+			{	if (this.ts.isImportDeclaration(statement) || this.ts.isExportDeclaration(statement))
+				{	if (statement.moduleSpecifier && this.ts.isStringLiteral(statement.moduleSpecifier))
 					{	const importHref = this.loader.resolved(statement.moduleSpecifier.text, sourceFile.fileName);
 						if (!addToEntryPoints.includes(importHref))
 						{	addToEntryPoints.push(importHref);

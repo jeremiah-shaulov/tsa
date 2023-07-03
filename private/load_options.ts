@@ -49,8 +49,14 @@ export class Loader
 	#resolved = new Map<string, Map<string, string>>;
 
 	static async inst(loadOptions?: LoadOptions)
-	{	const useLoad = loadOptions?.load ?? defaultLoad;
-		const useResolve = await getResolve(useLoad, loadOptions?.importMap, loadOptions?.resolve);
+	{	const importMap = loadOptions?.importMap;
+		const resolve = loadOptions?.resolve;
+		if (importMap && resolve)
+		{	console.error(`Both importMap and resolve() are set`);
+		}
+		const load = loadOptions?.load;
+		const useLoad = load ?? defaultLoad;
+		const useResolve = !importMap ? (resolve ?? defaultResolve) : await getResolveWithImportMap(importMap, useLoad);
 		return new Loader(useResolve, useLoad);
 	}
 
@@ -81,24 +87,14 @@ export class Loader
 	}
 }
 
-async function getResolve(load: Load, importMapUrlOrStr?: string|URL, resolve?: LoadOptions['resolve'])
-{	if (!importMapUrlOrStr)
-	{	return resolve ??
-		(	(specifier: string, referrer: string) =>
-			{	return defaultResolve(specifier, referrer);
-			}
-		);
-	}
-	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : path.toFileUrl(await Deno.realPath(importMapUrlOrStr));
+async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load)
+{	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : path.toFileUrl(await Deno.realPath(importMapUrlOrStr));
 	const importMapResult = await load(importMapUrl.href, false);
 	if (importMapResult?.kind != 'module')
 	{	throw new Deno.errors.NotFound(`Import map not found: ${importMapUrl.href}`);
 	}
 	const importMap = resolveImportMap(JSON.parse(importMapResult.content), importMapUrl);
-	if (resolve)
-	{	console.error(`Both importMap and resolve() are set`);
-	}
-	return (specifier: string, referrer: string) =>
+	return function(specifier: string, referrer: string)
 	{	try
 		{	return resolveModuleSpecifier(specifier, importMap, new URL(referrer));
 		}
