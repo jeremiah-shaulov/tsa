@@ -6,6 +6,7 @@ import {Converter, EmitDocOptions} from './convert/mod.ts';
 import {getExtendedLibs} from './dts/mod.ts';
 import {existsSync, isUrl} from './util.ts';
 import {LoadOptions, Loader} from './load_options.ts';
+import {getNpmFilename} from './npm.ts';
 
 type SourceFile = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
@@ -120,8 +121,14 @@ async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|UR
 	await Promise.all
 	(	entryPoints.map
 		(	async (entryPoint, i) =>
-			{	const entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : path.toFileUrl(await Deno.realPath(entryPoint)).href;
+			{	// To absolute URL: `entryPoint` -> `entryPointHref`
+				let entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : path.toFileUrl(await Deno.realPath(entryPoint)).href;
+				// If this is `npm:` URL, resolve it to internal path to the main module, like `npm:typescript@5.1.5` -> `npm:typescript@5.1.5/lib/typescript.d.ts`
+				// This is needed, because tsc wants to see file extension
+				entryPointHref = (await getNpmFilename(entryPointHref))?.specifier || entryPointHref;
+				// Add to `entryPointsHrefs` array
 				entryPointsHrefs[i] = entryPointHref;
+				// Read the file contents, and scan it for `import from` and `export from`
 				await forFile(ts, entryPointHref, files, loader);
 			}
 		)
