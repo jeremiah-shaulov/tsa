@@ -54,7 +54,7 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 		else
 		{	if (exports)
 			{	for (const e of exports)
-				{	if (!curExports.some(ce => ce.location.filename == e.location.filename))
+				{	if (!curExports.some(ce => ce.name == e.name && ce.location.filename == e.location.filename))
 					{	curExports.push(e);
 					}
 				}

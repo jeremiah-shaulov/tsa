@@ -25,3 +25,4 @@ export default defaultHello;
 import data from './private/data.json' assert {type: 'json'};
 const JSON_DATA = data;
 export {JSON_DATA};
+export {JSON_DATA as JSON_DATA_2};

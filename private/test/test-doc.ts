@@ -38,8 +38,6 @@ L:		for (let i=0; i<dataDenoDoc.length; i++)
 								{	v2.interfaceDef.properties.push(ce);
 								}
 							}
-							dataDenoDoc.splice(i--, 1);
-							continue L;
 						}
 						else // if `v.functionDef`
 						{	if (v.functionDef.hasBody)
@@ -49,15 +47,29 @@ L:		for (let i=0; i<dataDenoDoc.length; i++)
 									ifaces[j] = v;
 								}
 							}
-							dataDenoDoc.splice(i--, 1);
-							continue L;
 						}
+						dataDenoDoc.splice(i--, 1);
+						continue L;
 					}
 				}
 				ifaces.push(v);
 			}
 		}
-		// 2. Sort by line number, so the order will be the same in dataDoc and dataDenoDoc
+		// 2. Remove nodes in dataDenoDoc that are not reported as separate nodes in dataDoc, but as reexports of another nodes
+		for (let i=0; i<dataDoc.length; i++)
+		{	const v = dataDoc[i];
+			if (v.exports)
+			{	for (const e of v.exports)
+				{	const j = dataDenoDoc.findIndex(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind=='export');
+					if (j != -1)
+					{	if (!dataDoc.some(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind=='export'))
+						{	dataDenoDoc.splice(j, 1);
+						}
+					}
+				}
+			}
+		}
+		// 3. Sort by line number, so the order will be the same in dataDoc and dataDenoDoc
 		if (dataDenoDoc[0]?.location)
 		{	for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	if (!RE_IS_URL.test(dataDenoDoc[i].location.filename))
@@ -67,7 +79,7 @@ L:		for (let i=0; i<dataDenoDoc.length; i++)
 			dataDoc.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
 			dataDenoDoc.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
 		}
-		// 3. Fix @callback: if dataDenoDoc has sequence of @callback, @param, @returns, and dataDoc has @callback with tsType that contains the parameters and the return type, remove the @param and @returns from dataDenoDoc
+		// 4. Fix @callback: if dataDenoDoc has sequence of @callback, @param, @returns, and dataDoc has @callback with tsType that contains the parameters and the return type, remove the @param and @returns from dataDenoDoc
 		if (parentKey == 'tags')
 		{	// jsDoc.doc.tags
 M:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
@@ -88,7 +100,7 @@ M:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 4. As above, but for @typedef, @property
+		// 5. As above, but for @typedef, @property
 		if (parentKey == 'tags')
 		{	// jsDoc.doc.tags
 N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
@@ -106,7 +118,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 5. Fix @param: if dataDenoDoc has sequence of @param name.sub1, @param name.sub2, etc., and dataDoc has single @param with tsType, remove from dataDenoDoc
+		// 6. Fix @param: if dataDenoDoc has sequence of @param name.sub1, @param name.sub2, etc., and dataDoc has single @param with tsType, remove from dataDenoDoc
 		if (parentKey == 'tags')
 		{	for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	if (dataDoc[i].kind=='param' && dataDenoDoc[i].kind=='param' && dataDoc[i].name==dataDenoDoc[i].name)
@@ -122,7 +134,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 6. Fix @param and @enum: if dataDenoDoc has unsupported tag that starts with '@param' (this happens when the param type contains braces), or '@enum' (this happens when the enum tag doesn't specify type), then copy the tag from dataDoc
+		// 7. Fix @param and @enum: if dataDenoDoc has unsupported tag that starts with '@param' (this happens when the param type contains braces), or '@enum' (this happens when the enum tag doesn't specify type), then copy the tag from dataDoc
 		if (parentKey == 'tags')
 		{	for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	if (dataDenoDoc[i].kind=='unsupported')
@@ -135,7 +147,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 7. Fix @template: when dataDoc has typeParams, add it also to dataDenoDoc, and fix unsupported templates
+		// 8. Fix @template: when dataDoc has typeParams, add it also to dataDenoDoc, and fix unsupported templates
 		if (parentKey == 'tags')
 		{	for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	// when dataDenoDoc has typeParams, add it also to dataDenoDoc
@@ -150,11 +162,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 8. Do recursive
+		// 9. Do recursive
 		for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		{	makeCompatible(dataDoc[i], dataDenoDoc[i], subjHref, '');
 		}
-		// 9. If dataDenoDoc has list of types, and dataDoc has ['...'] (nesting level is too deep), cut dataDenoDoc
+		// 10. If dataDenoDoc has list of types, and dataDoc has ['...'] (nesting level is too deep), cut dataDenoDoc
 		if (dataDoc.length==1 && dataDoc[0].IS_DOC_UNSUPPORTED===true && dataDenoDoc.length>1)
 		{	dataDenoDoc.length = 1;
 		}
