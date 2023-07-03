@@ -25,12 +25,25 @@ export function printDiagnostics(diagnostics: readonly tsa.Diagnostic[])
 
 /**	File exists? If yes, return it's `stat`.
  **/
+export async function exists(filespec: string|URL)
+{	try
+	{	return await Deno.stat(filespec);
+	}
+	catch (e)
+	{	if (!(e instanceof Deno.errors.NotFound))
+		{	throw e;
+		}
+	}
+}
+
+/**	File exists? If yes, return it's `stat`.
+ **/
 export function existsSync(filespec: string|URL)
 {	try
 	{	return Deno.statSync(filespec);
 	}
 	catch (e)
-	{	if (e.code !== 'ENOENT')
+	{	if (!(e instanceof Deno.errors.NotFound))
 		{	throw e;
 		}
 	}
@@ -43,7 +56,7 @@ export function existsSync(filespec: string|URL)
 	{	await Deno.remove(filespec);
 	}
 	catch (e)
-	{	if (e.code != 'ENOENT')
+	{	if (!(e instanceof Deno.errors.NotFound))
 		{	throw e;
 		}
 	}

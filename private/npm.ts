@@ -1,4 +1,5 @@
 import {cacheDirectory, path} from './deps.ts';
+import {exists} from './util.ts';
 
 let npmRoots: string[] | undefined;
 const known = new Map<string, {filename: string, specifier: string}|null>;
@@ -62,7 +63,16 @@ async function findNpmFilename(specifier: string)
 					if (!modulePath)
 					{	const packageJsonPath = path.join(npmRoot, moduleName, version, 'package.json');
 						const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
-						modulePath = packageJson.typings || packageJson.main || 'index.js';
+						modulePath = packageJson.types || packageJson.typings;
+						if (!modulePath)
+						{	modulePath = packageJson.main || 'index.js';
+							if (modulePath.slice(-3).toLowerCase() == '.js')
+							{	const modulePathDts = modulePath.slice(0, -2) + 'd.ts';
+								if (await exists(modulePathDts))
+								{	modulePath = modulePathDts;
+								}
+							}
+						}
 					}
 					const dirname = path.join(npmRoot, moduleName, version);
 					const filename = path.join(dirname, modulePath);
