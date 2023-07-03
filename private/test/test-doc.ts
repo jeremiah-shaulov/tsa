@@ -414,7 +414,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		if (parentKey=='' && Array.isArray(dataDoc.exports) && !dataDenoDoc.exports)
 		{	dataDenoDoc.exports = dataDoc.exports;
 		}
-		// 30. Fix computed properties: if dataDenoDoc has `['name']: type`, and dataDoc has `name: type`, then copy the property name from dataDoc
+		// 30. Fix computed properties: if dataDenoDoc has `['name']: type` (with constant name), and dataDoc has `name: type`, then copy the property name from dataDoc
 		if (dataDenoDoc.properties && dataDoc.properties)
 		{	for (let i=0; i<dataDenoDoc.properties.length && dataDoc.properties.length; i++)
 			{	if (dataDenoDoc.properties[i].name != dataDoc.properties[i].name && dataDenoDoc.properties[i].name[0]=='[' && (dataDenoDoc.properties[i].name==`['${dataDoc.properties[i].name}']` || dataDenoDoc.properties[i].name==`["${dataDoc.properties[i].name}"]`))

@@ -8,3 +8,4 @@ export type * from './private/types/mod.ts';
 // TODO: support `node:`
 // TODO: support Windows environment
 // TODO: docs from each function signature
+// TODO: remove inherited constructors and index signatures? (`// 22.` in `makeCompatible()`)

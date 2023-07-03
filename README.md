@@ -96,7 +96,9 @@ They are assignable to the same types from [x/deno_doc@0.62.0](https://deno.land
 ```ts
 function DenoProgram.createDenoProgram(entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
 
-type DenoProgram = tsa.Program & {emitDoc(options?: EmitDocOptions): DocNode[]};
+interface DenoProgram extends tsa.Program
+{	emitDoc(options?: EmitDocOptions): DocNode[];
+}
 ```
 
 ## How the result is different from deno_doc?
@@ -108,7 +110,7 @@ This library adds additional information to `DocNode`:
 
 - `Location` has additional `entryPointNumber` field.
 You can pass relative paths to `createDenoProgram()` as entry points, but `Location.filename` always contains corresponding absolute URL. If this filename is one of the entry points, the `entryPointNumber` field will contain the index in `entryPoints` array.
-- `DocNode` has additional `exports` field. If a symbol is reexported from several places, those places will be recorded here (including current location). Also if this node is returned as `DeclarationKind != 'export'`, but the symbol is exported from some other entry point or traversed file, `exports` will contain 1 record for the export.
+- `DocNode` has additional `exports` field. If a symbol is reexported from several places, those places will be recorded here (including current location).
 - `ClassPropertyDef` has additional `init` field that contains property initializer (if any).
 - `EnumDef` has additional `isConst` field for `const enum`s.
 - Doc-comments are returned not only as `doc` string, but also `docTokens`, that have separate parts for comment text and `@link` tags.
@@ -119,6 +121,7 @@ To include referenced symbols in the result, use `EmitDocOptions.includeReferenc
 - References to another named types are returned as `TsTypeRefDef` objects that contain not only `typeName`, but also additional `nodeIndex` field, that contains index in the results for this type.
 If the type is an enum member, also `nodeSubIndex` will be set to member number. See `EmitDocOptions.includeReferenced`.
 - `ClassDef` has additional `superNodeIndex` field, that contains node index in the results for the super class. See `EmitDocOptions.includeReferenced`.
+- `TsTypeDef.repr` field for string literals (`kind == 'string'`) contains quotes, for string template literals (`kind == 'template'`) contains backticks, and for bigint literals (`kind == 'bigInt'`) has trailing `n`.
 
 ## Configuration options for the Typescript Compiler (tsa.CompilerOptions)
 

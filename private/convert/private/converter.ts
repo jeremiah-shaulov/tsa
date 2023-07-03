@@ -139,7 +139,21 @@ export class Converter
 			{	this.#convertSourceFilePrivateSymbols(sourceFile, exportedSymbols);
 			}
 		}
-		// 3. Copy nodes that are exported from namespaces to corresponding elements in `#namespaces`.
+		// 3. If a symbol is added as private, but it's actually exported from different places (has `exports`), change it to exported (this is particularly needed for compatibility with `x/deno_doc`)
+		for (const node of this.outNodes)
+		{	if (node.declarationKind!='export' && node.exports)
+			{	const e = node.exports.find(e => e.location.filename == node.location.filename) ?? node.exports[0];
+				if (e)
+				{	node.declarationKind = 'export';
+					node.name = e.name;
+					node.location = e.location;
+					if (node.exports.length == 1)
+					{	delete node.exports;
+					}
+				}
+			}
+		}
+		// 4. Copy nodes that are exported from namespaces to corresponding elements in `#namespaces`.
 		for (const [filename, {elements, forJsDoc}] of this.#namespaces)
 		{	if (entryPointsHrefs.includes(filename))
 			{	for (const node of this.outNodes)
@@ -162,7 +176,7 @@ export class Converter
 				}
 			}
 		}
-		// 4. Convert namespaces (something like `export * as nsName from '...'`)
+		// 5. Convert namespaces (something like `export * as nsName from '...'`)
 		for (const [filename] of this.#namespaces)
 		{	if (!entryPointsHrefs.includes(filename))
 			{	entryPointsHrefs.push(filename);
@@ -173,7 +187,7 @@ export class Converter
 				}
 			}
 		}
-		// 5. Done
+		// 6. Done
 		const {outNodes} = this;
 		this.outNodes = [];
 		this.#declarations.clear();
