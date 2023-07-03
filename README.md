@@ -7,15 +7,16 @@ It's similar to [npm:typedoc](https://www.npmjs.com/package/typedoc), but works 
 - uses `.ts` filename extension in module specifiers
 - allows to import remote modules
 - allows to use `lib.deno.ns.d.ts` library to  support `Deno` built-in objects
+- (current support for `npm:` schema in module specifiers is not stable)
 
 ### Example:
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.9/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example1.ts
 
-import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
+import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.9/mod.ts';
 
 /**	Options for typescript compiler.
  **/
@@ -43,10 +44,15 @@ export const emitDocOptions: EmitDocOptions =
 	@param filename Where to save the doc in JSON format.
  **/
 export async function writeSelfDocToFile(filename: string)
-{	const program = await tsa.createDenoProgram([import.meta.url], compilerOptions, loadOptions);
+{	// Create typescript program from the source code of this file
+	const program = await tsa.createDenoProgram([import.meta.url], compilerOptions, loadOptions);
+	// Print errors and warnings (if any)
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	// Generate the docs
 	const docNodes = program.emitDoc(emitDocOptions);
+	// Save the docs to file
 	await Deno.writeTextFile(filename, JSON.stringify(docNodes, undefined, '\t'));
+	// Print the number of `docNodes` written
 	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', filename);
 }
 
@@ -54,16 +60,12 @@ export async function writeSelfDocToFile(filename: string)
 await writeSelfDocToFile('/tmp/doc.json');
 ```
 
-## What's not supported
-
-Currently `npm:` schema in module specifiers is not supported. To avoid reinventing the wheel, i'll wait for `x/deno_graph` to start supporting this.
-
 ## How to use from command line
 
 First install the tool:
 
 ```bash
-deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.8/tsa.ts
+deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.9/tsa.ts
 ```
 
 You can use `tsa` as you use `tsc` for generating JavaScript or DTS (other usage patterns are not supported).
@@ -153,23 +155,26 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.9/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example2.ts
 
-import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.9/mod.ts';
 
 /**	Generate doc for the current module, and write it to the provided filename.
 	@param filename Where to save the doc in JSON format.
  **/
 export async function writeSelfDocToFile(filename: string)
-{	const program = await tsa.createDenoProgram
+{	// Create typescript program from the source code of this file
+	const program = await tsa.createDenoProgram
 	(	[import.meta.url],
 		{	declaration: true,
 			emitDeclarationOnly: true,
 			allowSyntheticDefaultImports: true,
 		},
 		{	async load(specifier, isDynamic)
-			{	const result = await defaultLoad(specifier, isDynamic);
+			{	// Load the module contents
+				const result = await defaultLoad(specifier, isDynamic);
+				// If the module was found, substitute it's contents
 				if (result?.kind == 'module')
 				{	result.content =
 					`	/**	Example module.
@@ -178,13 +183,18 @@ export async function writeSelfDocToFile(filename: string)
 						${result.content}
 					`;
 				}
+				// Return the result
 				return result;
 			}
 		}
 	);
+	// Print errors and warnings (if any)
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	// Generate the docs
 	const docNodes = program.emitDoc();
+	// Save the docs to file
 	await Deno.writeTextFile(filename, JSON.stringify(docNodes, undefined, '\t'));
+	// Print the number of `docNodes` written
 	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', filename);
 }
 
@@ -228,10 +238,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.9/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.9/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -239,10 +249,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.8/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.9/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.8/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.9/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
