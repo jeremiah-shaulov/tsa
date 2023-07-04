@@ -1,5 +1,4 @@
 import {testDoc} from '../test-doc.ts';
-import {tsa} from '../../tsa_ns.ts';
 
 const SAVE_TO_FILES = Deno.args.includes('--save-to-files');
 
