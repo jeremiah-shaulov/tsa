@@ -12,7 +12,7 @@ export type LoadOptions =
 		When a `resolve()` function is also specified, a warning will be issued
 		and the import map will be used instead of the `resolve()` function.
 	 **/
-	importMap?: string|URL;
+	importMap?: string | URL;
 
 	/** An optional callback that allows the default resolution logic of the
 		module graph to be "overridden". This is intended to allow items like an

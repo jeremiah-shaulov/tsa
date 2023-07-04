@@ -110,11 +110,20 @@ function setDefaultOptions(ts: typeof tsa, compilerOptions?: tsa.CompilerOptions
 	if (compilerOptions.allowJs == undefined)
 	{	compilerOptions.allowJs = true;
 	}
+	if (compilerOptions.resolveJsonModule == undefined)
+	{	compilerOptions.resolveJsonModule = true;
+	}
+	if (compilerOptions.allowSyntheticDefaultImports == undefined)
+	{	compilerOptions.allowSyntheticDefaultImports = true;
+	}
 	if (compilerOptions.target == undefined)
 	{	compilerOptions.target = ts.ScriptTarget.ESNext;
 	}
 	if (compilerOptions.module == undefined)
 	{	compilerOptions.module = ts.ModuleKind.ESNext;
+	}
+	if (compilerOptions.moduleResolution == undefined)
+	{	compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeNext;
 	}
 	delete compilerOptions.allowImportingTsExtensions; // TODO: implement filenames without extension
 	return compilerOptions;
