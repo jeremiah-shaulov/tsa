@@ -1,6 +1,6 @@
 import {assertEquals, denoDoc, DenoDocNode, DocOptions} from './deps.ts';
 import {tsa} from '../tsa_ns.ts';
-import {printDiagnostics} from '../util.ts';
+import {ensureTempFile, printDiagnostics} from '../util.ts';
 import {existsSync} from '../util.ts';
 import {LoadOptions} from "../load_options.ts";
 
@@ -297,9 +297,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		else if (dataDenoDoc.jsDoc?.doc)
 		{	// dataDenoDoc: replace \n\t -> \n
 			dataDenoDoc.jsDoc.doc = dataDenoDoc.jsDoc.doc.replace(/\n\t*/g, '\n').replace(/\n$/, '');
-			// dataDoc: replace {@link text } -> {@link text}
 			if (dataDoc.jsDoc?.doc)
-			{	dataDoc.jsDoc.doc = dataDoc.jsDoc.doc.replace(/(\{@\w+[^\}]+?) \}/g, '$1}');
+			{	// dataDoc: replace \r\n -> \n
+				dataDoc.jsDoc.doc = dataDoc.jsDoc.doc.replace(/\r\n*/g, '\n');
+				// dataDoc: replace {@link text } -> {@link text}
+				dataDoc.jsDoc.doc = dataDoc.jsDoc.doc.replace(/(\{@\w+[^\}]+?) \}/g, '$1}');
 			}
 		}
 		if (dataDenoDoc.doc?.endsWith('\n') && dataDoc.doc?.endsWith('\n')===false)
@@ -495,20 +497,20 @@ export async function testDoc(subjUrl: URL, compilerOptions?: tsa.CompilerOption
 
 	console.time('deno');
 	const dataDenoDoc: DenoDocNode[] = await denoDoc(subjUrl.href, docOptions);
-	//const dataDenoDoc = JSON.parse(await Deno.readTextFile(`/tmp/deno-${subjName}-classic.json`));
+	//const dataDenoDoc = JSON.parse(await Deno.readTextFile(await ensureTempFile(`deno-${subjName}-classic.json`)));
 	console.timeEnd('deno');
 
 	if (saveToFiles)
-	{	await Deno.writeTextFile(`/tmp/deno-${subjName}-classic.json`, JSON.stringify(dataDenoDoc, undefined, '\t'));
-		await Deno.writeTextFile(`/tmp/deno-${subjName}-td.json`, JSON.stringify(dataFullDoc, undefined, '\t'));
+	{	await Deno.writeTextFile(await ensureTempFile(`deno-${subjName}-classic.json`), JSON.stringify(dataDenoDoc, undefined, '\t'));
+		await Deno.writeTextFile(await ensureTempFile(`deno-${subjName}-td.json`), JSON.stringify(dataFullDoc, undefined, '\t'));
 	}
 
 	makeCompatible(dataDoc, dataDenoDoc, subjUrl.href);
 	makeCompatible2(dataDoc, dataDenoDoc);
 
 	if (saveToFiles)
-	{	await Deno.writeTextFile(`/tmp/deno-${subjName}-classic-compat.json`, JSON.stringify(dataDenoDoc, undefined, '\t'));
-		await Deno.writeTextFile(`/tmp/deno-${subjName}-td-compat.json`, JSON.stringify(dataDoc, undefined, '\t'));
+	{	await Deno.writeTextFile(await ensureTempFile(`deno-${subjName}-classic-compat.json`), JSON.stringify(dataDenoDoc, undefined, '\t'));
+		await Deno.writeTextFile(await ensureTempFile(`deno-${subjName}-td-compat.json`), JSON.stringify(dataDoc, undefined, '\t'));
 	}
 
 	assertEquals(dataDoc, dataDenoDoc);

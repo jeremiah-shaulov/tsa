@@ -68,14 +68,19 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 		// maybe a lib file (like `lib.esnext.d.ts`)
 		try
 		{	const origSpecifier = filename;
+			let fileUrl;
 			if (filename.startsWith('file://'))
 			{	filename = path.fromFileUrl(filename);
+				fileUrl = new URL(filename);
 			}
 			else if (isUrl(filename))
 			{	return;
 			}
-			if (extendedLibs[filename] && !existsSync(filename))
-			{	filename = extendedLibs[filename];
+			else
+			{	fileUrl = path.toFileUrl(filename);
+			}
+			if (extendedLibs[fileUrl.href] && !existsSync(fileUrl))
+			{	filename = extendedLibs[fileUrl.href];
 			}
 			const content = Deno.readTextFileSync(filename);
 			return createSourceFile(ts, content, origSpecifier, filename).sourceFile;

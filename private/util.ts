@@ -1,3 +1,4 @@
+import {path} from './deps.ts';
 import {tsa} from './tsa_ns.ts';
 
 const RE_IS_URL = /^https?:\/\/|file:\/\/|npm:|node:/;
@@ -62,17 +63,17 @@ export function existsSync(filespec: string|URL)
 	}
 }*/
 
-/**	Create temporary directory with given name, or ensure that it already exists.
-	@param dirName Name without path of the directory that will be created in system `/tmp`.
+/**	Create file in temporary directory with given name, or ensure that such file already exists.
+	@param filename Name without path of the file that will be created or reused.
  **/
-/*export async function ensureTempDir(dirName: string)
-{	const tmpTmpDir = await Deno.makeTempDir();
-	const tmpDir = path.join(path.dirname(tmpTmpDir), dirName);
-	if (await exists(tmpDir))
-	{	await Deno.remove(tmpTmpDir);
+export async function ensureTempFile(filename: string)
+{	const tmpTmpFilename = await Deno.makeTempFile();
+	const tmpFilename = path.join(path.dirname(tmpTmpFilename), filename);
+	if (await exists(tmpFilename))
+	{	await Deno.remove(tmpTmpFilename);
 	}
 	else
-	{	await Deno.rename(tmpTmpDir, tmpDir);
+	{	await Deno.rename(tmpTmpFilename, tmpFilename);
 	}
-	return tmpDir;
-}*/
+	return tmpFilename;
+}

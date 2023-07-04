@@ -1,7 +1,7 @@
 import {tsa} from '../tsa_ns.ts';
 import {printDiagnostics} from '../util.ts';
 
-export async function testEmit(entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions)
+export async function testEmit(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions)
 {	const program = await tsa.createDenoProgram(entryPoints, compilerOptions);
 	const result = program.emit
 	(	undefined,

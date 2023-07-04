@@ -3,7 +3,7 @@ import {testEmit} from '../test-emit.ts';
 Deno.test
 (	'emit-dom',
 	async () =>
-	{	const subj = new URL(`subj/emit-dom/mod.ts`, import.meta.url).pathname;
+	{	const subj = new URL(`subj/emit-dom/mod.ts`, import.meta.url);
 		await testEmit
 		(	[subj],
 			{	outDir: 'dist',

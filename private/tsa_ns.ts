@@ -16,7 +16,7 @@ declare module 'npm:typescript@5.1.6'
 	{	emitDoc(options?: EmitDocOptions): DocNode[];
 	}
 
-	function createDenoProgram(entryPoints: readonly string[], compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;
+	function createDenoProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;
 }
 
 // 2. Reexport the `typescript`

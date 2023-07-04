@@ -4,7 +4,7 @@ import {tsa} from '../../tsa_ns.ts';
 Deno.test
 (	'emit-deno',
 	async () =>
-	{	const subj = new URL(`subj/emit-deno/mod.ts`, import.meta.url).pathname;
+	{	const subj = new URL(`subj/emit-deno/mod.ts`, import.meta.url);
 		await testEmit
 		(	[subj],
 			{	outFile: 'dist.js',

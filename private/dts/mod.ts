@@ -21,7 +21,7 @@ export async function getExtendedLibs(ts: typeof tsa, libLocation: string)
 			{	ts.libMap.set(libName, filename);
 				ts.libs.push(libName);
 			}
-			extendedLibs[path.join(libLocation, filename)] = localFilename;
+			extendedLibs[path.toFileUrl(path.join(libLocation, filename)).href] = localFilename;
 		}
 	}
 	return extendedLibs;

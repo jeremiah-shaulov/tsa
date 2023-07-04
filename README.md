@@ -94,7 +94,7 @@ This library exports the following symbols:
 They are assignable to the same types from [x/deno_doc@0.62.0](https://deno.land/x/deno_doc@0.62.0).
 
 ```ts
-function DenoProgram.createDenoProgram(entryPoints: readonly string[], compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
+function DenoProgram.createDenoProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
 
 interface DenoProgram extends tsa.Program
 {	emitDoc(options?: EmitDocOptions): DocNode[];
