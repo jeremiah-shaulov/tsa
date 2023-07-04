@@ -1,7 +1,7 @@
 import {path} from './deps.ts';
 import {tsa} from './tsa_ns.ts';
 
-const RE_IS_URL = /^https?:\/\/|file:\/\/|npm:|node:/;
+const RE_IS_URL = /^https?:\/\/|^file:\/\/|^npm:|^node:/;
 
 export function isUrl(str: string)
 {	return RE_IS_URL.test(str);

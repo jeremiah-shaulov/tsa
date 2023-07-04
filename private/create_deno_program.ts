@@ -18,10 +18,17 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	const host = ts.createCompilerHost(compilerOptions);
 	const libLocation = host.getDefaultLibLocation?.() ?? '';
 	const extendedLibs = await getExtendedLibs(this, libLocation);
+	const cwdHref = path.toFileUrl(Deno.cwd()).href;
 
 	if (parseFloat(this.versionMajorMinor) >= 5.0) // in case of substituted `this`
 	{	host.resolveModuleNameLiterals = function(moduleLiterals, containingFile)
-		{	const resolvedModules = new Array<tsa.ResolvedModuleWithFailedLookupLocations>;
+		{	if (!isUrl(containingFile))
+			{	containingFile = path.toFileUrl(containingFile).href;
+			}
+			if (containingFile.startsWith(cwdHref) && containingFile.slice(cwdHref.length, cwdHref.length+5)=='/npm:')
+			{	containingFile = containingFile.slice(cwdHref.length + 1);
+			}
+			const resolvedModules = new Array<tsa.ResolvedModuleWithFailedLookupLocations>;
 			for (const {text} of moduleLiterals)
 			{	const resolvedFileName = loader.resolved(text, containingFile);
 				const file = files.get(resolvedFileName);

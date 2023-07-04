@@ -2,7 +2,7 @@ import {cacheDirectory, path} from './deps.ts';
 import {exists} from './util.ts';
 
 let npmRoots: string[] | undefined;
-const known = new Map<string, {filename: string, specifier: string}|null>;
+const known = new Map<string, {fileUrl: URL, specifier: string}|null>;
 
 async function getNpmRoots()
 {	if (!npmRoots)
@@ -28,6 +28,9 @@ export async function getNpmFilename(specifier: string)
 		if (result === undefined)
 		{	result = await findNpmFilename(specifier);
 			known.set(specifier, result ?? null);
+			if (result)
+			{	known.set(result.specifier, result ?? null);
+			}
 		}
 		return result ?? undefined;
 	}
@@ -74,13 +77,13 @@ async function findNpmFilename(specifier: string)
 							}
 						}
 					}
-					const dirname = path.join(npmRoot, moduleName, version);
-					const filename = path.join(dirname, modulePath);
-					if (filename.startsWith(dirname))
+					const dirUrl = path.toFileUrl(path.join(npmRoot, moduleName, version));
+					const fileUrl = new URL(modulePath, dirUrl.href+'/');
+					if (fileUrl.href.startsWith(dirUrl.href))
 					{	// Stat to throw exception if not found, so will try another `npmRoot`
-						await Deno.stat(filename);
+						await Deno.stat(fileUrl);
 						// Success
-						return {filename, specifier: `npm:${moduleName}@${version}${filename.slice(dirname.length)}`};
+						return {fileUrl, specifier: `npm:${moduleName}@${version}${fileUrl.href.slice(dirUrl.href.length)}`};
 					}
 				}
 				catch (e)

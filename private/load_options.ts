@@ -134,7 +134,7 @@ export async function defaultLoad(specifier: string, _isDynamic: boolean): Promi
 		if (!result)
 		{	return {kind: 'external', specifier};
 		}
-		filename = result.filename;
+		filename = result.fileUrl;
 		specifier = result.specifier;
 	}
 	else if (specifier.startsWith('node:'))
