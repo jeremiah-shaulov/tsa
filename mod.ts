@@ -4,6 +4,7 @@ export {defaultResolve, defaultLoad, type LoadOptions} from './private/load_opti
 export {type EmitDocOptions} from './private/convert/mod.ts';
 export type * from './private/types/mod.ts';
 
+// TODO: command line arguments for emit to disable flags enabled by default
 // TODO: `emit()` from `npm:`
 // TODO: support `node:`
 // TODO: docs from each function signature
