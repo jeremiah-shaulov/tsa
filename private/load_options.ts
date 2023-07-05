@@ -86,7 +86,7 @@ export class Loader
 	/**	Synchronously get something that has already been resolved in the past with `resolve()`.
 	 **/
 	resolved(specifier: string, referrer: string)
-	{	return this.#resolved.get(referrer)?.get(specifier) ?? '';
+	{	return this.#resolved.get(referrer)?.get(specifier) ?? defaultResolveSync(specifier, referrer);
 	}
 }
 
@@ -116,13 +116,18 @@ export async function defaultResolve(specifier: string, referrer: string)
 		{	return result.specifier;
 		}
 	}
-	try
+	return defaultResolveSync(specifier, referrer);
+}
+
+function defaultResolveSync(specifier: string, referrer: string)
+{	try
 	{	return new URL(specifier, new URL(referrer)).href;
 	}
 	catch
 	{	// URL fails for 'npm:' schema
 		const prefix = 'http://http/';
-		return new URL(specifier, prefix+referrer).href.slice(prefix.length);
+		const {href} = new URL(specifier, prefix+referrer);
+		return href.startsWith(prefix) ? href.slice(prefix.length) : href;
 	}
 }
 

@@ -1,3 +1,8 @@
+/**	Extension to `tsc` that adds custom files loader, and AST generator.
+
+	@module
+ **/
+
 export {tsa} from './private/tsa_ns.ts';
 export {formatDiagnostics, printDiagnostics} from './private/util.ts';
 export {defaultResolve, defaultLoad, type LoadOptions} from './private/load_options.ts';
