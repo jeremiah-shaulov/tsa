@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {DocNode, InterfaceDef} from '../../types/mod.ts';
+import {DocNode, InterfaceDef} from '../../doc_node/mod.ts';
 import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertClass} from './convert_class.ts';

@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {TsTypeDef, ClassIndexSignatureDef, LiteralPropertyDef, LiteralCallSignatureDef, LiteralMethodDef, TsTypeParamDef, ParamDef} from '../../types/mod.ts';
+import {TsTypeDef, ClassIndexSignatureDef, LiteralPropertyDef, LiteralCallSignatureDef, LiteralMethodDef, TsTypeParamDef, ParamDef} from '../../doc_node/mod.ts';
 import {convertParameter, convertParameterNode} from './convert_parameter.ts';
 import {convertTypeParameter, convertTypeParamNode} from './convert_type_parameter.ts';
 import {resolveSymbol, getText, removeUndefined, getPropertySpecialName} from './util.ts';

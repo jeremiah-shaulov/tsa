@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {JsDoc, JsDocTag, JsDocToken} from '../../types/mod.ts';
+import {JsDoc, JsDocTag, JsDocToken} from '../../doc_node/mod.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertTypeParamNode} from './convert_type_parameter.ts';
 import {Converter} from './converter.ts';

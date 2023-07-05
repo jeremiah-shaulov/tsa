@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {ClassDef, ClassConstructorDef, ClassPropertyDef, ClassMethodDef} from '../../types/mod.ts';
+import {ClassDef, ClassConstructorDef, ClassPropertyDef, ClassMethodDef} from '../../doc_node/mod.ts';
 import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertDecorators} from './convert_decorators.ts';

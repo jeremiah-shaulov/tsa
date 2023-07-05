@@ -1,6 +1,6 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
-import {ClassDef, DecoratorDef, DocNode, Export, TsTypeRefDef, DocNodeNamespace, Location, JsDoc} from '../../types/mod.ts';
+import {ClassDef, DecoratorDef, DocNode, Export, TsTypeRefDef, DocNodeNamespace, Location, JsDoc} from '../../doc_node/mod.ts';
 import {convertImport} from './convert_import.ts';
 import {convertModuleDoc} from './convert_module_doc.ts';
 import {convertSymbol} from './convert_symbol.ts';

@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {FunctionDef} from '../../types/mod.ts';
+import {FunctionDef} from '../../doc_node/mod.ts';
 import {convertTypeParameter} from './convert_type_parameter.ts';
 import {convertParameter} from './convert_parameter.ts';
 import {convertSignatureReturnType} from './convert_index_signature.ts';

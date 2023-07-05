@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {TsTypeDef, ParamDef, ClassConstructorParamDef} from '../../types/mod.ts';
+import {TsTypeDef, ParamDef, ClassConstructorParamDef} from '../../doc_node/mod.ts';
 import {convertDecorators} from './convert_decorators.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertDefaultValue} from './convert_expression.ts';

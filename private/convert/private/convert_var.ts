@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {VariableDef} from '../../types/mod.ts';
+import {VariableDef} from '../../doc_node/mod.ts';
 import {convertType} from './convert_type.ts';
 import {Converter} from './converter.ts';
 

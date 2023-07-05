@@ -1,7 +1,7 @@
 import typescript from 'npm:typescript@5.1.6';
 import {createDenoProgram} from './create_deno_program.ts';
 import {LoadOptions} from './load_options.ts';
-import {DocNode} from './types/mod.ts';
+import {DocNode} from './doc_node/mod.ts';
 import {EmitDocOptions} from './convert/mod.ts';
 
 // deno-lint-ignore no-explicit-any

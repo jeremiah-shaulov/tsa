@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {InterfaceDef, InterfaceCallSignatureDef, InterfacePropertyDef, InterfaceMethodDef} from '../../types/mod.ts';
+import {InterfaceDef, InterfaceCallSignatureDef, InterfacePropertyDef, InterfaceMethodDef} from '../../doc_node/mod.ts';
 import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertTypeParameter} from './convert_type_parameter.ts';

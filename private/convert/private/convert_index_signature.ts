@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {TsTypeTypePredicateDef, ClassIndexSignatureDef} from '../../types/mod.ts';
+import {TsTypeTypePredicateDef, ClassIndexSignatureDef} from '../../doc_node/mod.ts';
 import {convertType} from './convert_type.ts';
 import {getText} from './util.ts';
 import {Converter} from './converter.ts';

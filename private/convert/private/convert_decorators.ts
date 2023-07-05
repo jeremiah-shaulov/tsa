@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {DecoratorDef} from '../../types/mod.ts';
+import {DecoratorDef} from '../../doc_node/mod.ts';
 import {resolveSymbol} from './util.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertExpression} from './convert_expression.ts';

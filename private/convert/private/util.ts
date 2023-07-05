@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {TsTypeDef, Export} from '../../types/mod.ts';
+import {TsTypeDef, Export} from '../../doc_node/mod.ts';
 import {convertLocation} from './convert_location.ts';
 import {Converter} from './converter.ts';
 
