@@ -1,5 +1,6 @@
 /.vscode
 /deleteme.ts
 /dist.d.ts
+/dist.ts
 /dist.js
 /dist.json

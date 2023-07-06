@@ -14,12 +14,12 @@ export function convertImport(ts: typeof tsa, converter: Converter, declaration:
 				{	if (name)
 					{	outNodes.push
 						(	{	kind: 'import',
-								name: name.getText(),
+								name: name.text,
 								location: convertLocation(ts, converter, declaration),
 								declarationKind: 'private',
 								importDef:
 								{	src: importHref,
-									imported: typeof(propertyName)=='string' ? propertyName : propertyName ? propertyName.getText() : name.getText(),
+									imported: typeof(propertyName)=='string' ? propertyName : propertyName ? propertyName.text : name.text,
 								}
 							}
 						);

@@ -36,15 +36,17 @@ async function main(): Promise<number>
 		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
 	}
 
-	const emitDocOutFile = commandLine.options.outFile?.slice(-5).toLowerCase()==='.json' ? commandLine.options.outFile : '';
-
 	try
 	{	const program = await tsa.createDenoProgram(commandLine.fileNames, commandLine.options);
 		printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
-		if (emitDocOutFile)
+		if (commandLine.options.outFile?.slice(-5).toLowerCase() === '.json')
 		{	const result = program.emitDoc();
-			await Deno.writeTextFile(emitDocOutFile, JSON.stringify(result));
+			await Deno.writeTextFile(commandLine.options.outFile, JSON.stringify(result));
+		}
+		else if (commandLine.options.outFile?.slice(-3).toLowerCase() === '.ts')
+		{	const result = program.emitTs();
+			await Deno.writeTextFile(commandLine.options.outFile, result);
 		}
 		else
 		{	const result = program.emit();
