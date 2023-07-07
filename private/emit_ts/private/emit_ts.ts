@@ -76,7 +76,7 @@ class Bundler
 
 	reorderNodesAccordingToDependency()
 	{	const {nodesWithInfo} = this;
-		const knownSymbols = new Set<tsa.Symbol>;
+		let knownSymbols = new Set<tsa.Symbol>;
 		const stack = new Array<{fromSourceFile: tsa.SourceFile, symbol: tsa.Symbol}>;
 L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		{	const nodeWithInfo = nodesWithInfo[i];
@@ -111,6 +111,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 									{	nodesWithInfo.splice(k, 1);
 									}
 									nodesWithInfo.splice(i, 0, ...nodes.reverse());
+									knownSymbols = newKnownSymbols;
 									i += nodes.length - 1;
 									stack.length = 0;
 									continue L;
@@ -135,7 +136,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		const found = nodesWithInfo.findIndex(n => n.introduces.includes(symbol));
 		knownSymbols.add(symbol);
 		if (found != -1)
-		{	if (found<=fromNode || outNodeIndices.includes(found))
+		{	if (found<fromNode || outNodeIndices.includes(found))
 			{	return false;
 			}
 			outNodeIndices.push(found);

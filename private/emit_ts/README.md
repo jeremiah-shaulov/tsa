@@ -8,7 +8,8 @@ import {Class2 as Class2Alias} from './mod2.ts';
 export class Class1 extends Class2Alias
 {	name1 = 'class1';
 }
-export const mark1 = 10;
+const mark1Base = 9;
+export const mark1 = mark1Base + 1;
 export type OneOrTwo = 1 | 2;
 
 const c = new Class1;
@@ -64,7 +65,8 @@ export {Class1, mark1, type OneOrTwo};
 // _____________________________________________________________________________
 
 await Promise.resolve();
-const mark1 = 10; // shift mark1 to the beginning before awaiting
+const mark1Base = 9; // shift to the beginning before awaiting
+const mark1 = mark1Base + 1; // shift to the beginning before awaiting
 modExportMark1(mark1);
 const Class2Alias = await modPromiseClass2;
 class Class1 extends Class2Alias
