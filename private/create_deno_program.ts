@@ -106,7 +106,7 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	};
 
 	(program as tsa.DenoProgram).emitTs = function()
-	{	return emitTs(ts, this, loader, host.getNewLine());
+	{	return emitTs(ts, this, loader);
 	};
 
 	return program as tsa.DenoProgram;

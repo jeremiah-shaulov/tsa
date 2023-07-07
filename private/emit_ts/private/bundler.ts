@@ -27,7 +27,8 @@ type NodeWithInfo =
 };
 
 export class Bundler
-{	nodesWithInfo = new Array<NodeWithInfo>;
+{	#nodesWithInfo = new Array<NodeWithInfo>;
+	#exportStmts = new Array<NodeWithInfo>;
 	#occupiedNames = new Map<string, tsa.Symbol>;
 	#symbolRenames = new Map<tsa.Symbol, string>;
 
@@ -64,6 +65,11 @@ export class Bundler
 					{	if (!modulesHrefs.includes(importFromHref))
 						{	modulesHrefs.push(importFromHref);
 						}
+						if (isExport && isEntryPoint)
+						{	for (const symbol of introduces)
+							{	wantExport.push(symbol);
+							}
+						}
 						curStmtRefs.clear();
 						return [];
 					}
@@ -82,7 +88,7 @@ export class Bundler
 						if (wantUnexport || renames.size)
 						{	node = unexportOrRenameStmt(ts, context, node, renames);
 						}
-						this.nodesWithInfo.push({sourceFile, node, refs: curStmtRefs, introduces});
+						this.#nodesWithInfo.push({sourceFile, node, refs: curStmtRefs, introduces});
 						curStmtRefs = new Set;
 					}
 				}
@@ -95,14 +101,22 @@ export class Bundler
 						false,
 						context.factory.createNamedExports
 						(	wantExport.map
-							(	e => context.factory.createExportSpecifier(false, this.#symbolRenames.get(e), e.name)
+							(	e => context.factory.createExportSpecifier(symbolIsType(ts, e), this.#symbolRenames.get(e), e.name)
 							)
 						)
 					);
-					this.nodesWithInfo.push({sourceFile, node: exportStmt, refs: curStmtRefs, introduces: []});
+					this.#exportStmts.push({sourceFile, node: exportStmt, refs: curStmtRefs, introduces: []});
 				}
 			}
 		);
+	}
+
+	getResult()
+	{	this.#reorderNodesAccordingToDependency();
+		for (const node of this.#exportStmts)
+		{	this.#nodesWithInfo.push(node);
+		}
+		return this.#nodesWithInfo;
 	}
 
 	#addDeclaredSymbols(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, context: tsa.TransformationContext, node: tsa.Node, moduleDecls: Map<tsa.Symbol, tsa.Symbol>)
@@ -142,6 +156,22 @@ export class Bundler
 				}
 			}
 		}
+		else if (ts.isExportDeclaration(node))
+		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier))
+			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
+				const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
+				if (moduleSymbol)
+				{	isExport = true;
+					const exports = checker.getExportsOfModule(moduleSymbol);
+					for (const symbol of exports)
+					{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+						if (resolvedSymbol)
+						{	introduces.push(resolvedSymbol);
+						}
+					}
+				}
+			}
+		}
 		return {importFromHref, isExport, introduces, renames};
 	}
 
@@ -167,8 +197,8 @@ export class Bundler
 		}
 	}
 
-	reorderNodesAccordingToDependency()
-	{	const {nodesWithInfo} = this;
+	#reorderNodesAccordingToDependency()
+	{	const nodesWithInfo = this.#nodesWithInfo;
 		let knownSymbols = new Set<tsa.Symbol>;
 		const stack = new Array<{fromSourceFile: tsa.SourceFile, symbol: tsa.Symbol}>;
 L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
@@ -225,7 +255,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 	}
 
 	#getStmtsThatIntroduce(symbol: tsa.Symbol, knownSymbols: Set<tsa.Symbol>, fromNode: number, outNodeIndices: number[])
-	{	const {nodesWithInfo} = this;
+	{	const nodesWithInfo = this.#nodesWithInfo;
 		const found = nodesWithInfo.findIndex(n => n.introduces.includes(symbol));
 		knownSymbols.add(symbol);
 		if (found != -1)
@@ -248,14 +278,14 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		return true;
 	}
 
-	/*debug()
+	debug()
 	{	let str = '';
 		const printer = tsa.createPrinter();
-		for (const {sourceFile, node} of this.nodesWithInfo)
+		for (const {sourceFile, node} of this.#nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
 		return str;
-	}*/
+	}
 }
 
 function transformSourceFile
@@ -421,4 +451,8 @@ function renameBindingName(ts: typeof tsa, context: tsa.TransformationContext, n
 	else
 	{	return (name && renames.get(name)) ?? name;
 	}
+}
+
+function symbolIsType(ts: typeof tsa, resolvedSymbol: tsa.Symbol)
+{	return !!(resolvedSymbol.flags & (ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias));
 }

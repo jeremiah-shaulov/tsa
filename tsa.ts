@@ -45,8 +45,15 @@ async function main(): Promise<number>
 			await Deno.writeTextFile(commandLine.options.outFile, JSON.stringify(result));
 		}
 		else if (commandLine.options.outFile?.slice(-3).toLowerCase() === '.ts')
-		{	const result = program.emitTs();
-			await Deno.writeTextFile(commandLine.options.outFile, result);
+		{	const host = tsa.createCompilerHost(commandLine.options);
+			const newLine = host.getNewLine();
+			const result = program.emitTs();
+			let str = '';
+			const printer = tsa.createPrinter();
+			for (const node of result)
+			{	str += printer.printNode(tsa.EmitHint.Unspecified, node, node.getSourceFile()) + newLine;
+			}
+			await Deno.writeTextFile(commandLine.options.outFile, str);
 		}
 		else
 		{	const result = program.emit();
