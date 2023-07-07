@@ -1,6 +1,8 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
 
+// TODO: ExportDeclaration
+
 type NodeWithInfo =
 {	sourceFile: tsa.SourceFile,
 	node: tsa.Node;
@@ -35,6 +37,8 @@ export function emitTs(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader,
 
 class Bundler
 {	nodesWithInfo = new Array<NodeWithInfo>;
+	#occupiedNames = new Map<string, tsa.Symbol>;
+	#symbolRenames = new Map<tsa.Symbol, string>;
 
 	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[])
 	{	const moduleDecls = new Map<tsa.Symbol, tsa.Symbol>;
@@ -46,14 +50,24 @@ class Bundler
 			{	if (level > 0)
 				{	if (ts.isIdentifier(node))
 					{	const symbol = checker.getSymbolAtLocation(node);
-						const ref = symbol && !(symbol.flags & ts.SymbolFlags.Function) && moduleDecls.get(symbol); // functions can be declared later
-						if (ref)
-						{	curStmtRefs.add(ref);
+						if (symbol)
+						{	// Add ref?
+							const ref = moduleDecls.get(symbol);
+							if (ref)
+							{	if (!(symbol.flags & ts.SymbolFlags.Function)) // functions can be declared later
+								{	curStmtRefs.add(ref);
+								}
+							}
+							// Rename?
+							const newName = this.#symbolRenames.get(ref ?? symbol) ?? (ref && ref.name!=symbol.name ? ref.name : undefined);
+							if (newName != undefined)
+							{	node = context.factory.createIdentifier(newName);
+							}
 						}
 					}
 				}
 				else
-				{	const {importFromHref, isExport, introduces} = addDeclaredSymbols(ts, checker, loader, sourceFile, node, moduleDecls);
+				{	const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols(ts, checker, loader, sourceFile, context, node, moduleDecls);
 					if (importFromHref)
 					{	if (!modulesHrefs.includes(importFromHref))
 						{	modulesHrefs.push(importFromHref);
@@ -62,8 +76,8 @@ class Bundler
 						return [];
 					}
 					else
-					{	if (isExport)
-						{	node = unexportStmt(ts, node, context);
+					{	if (isExport || renames.size)
+						{	node = unexportOrRenameStmt(ts, context, node, renames);
 						}
 						this.nodesWithInfo.push({sourceFile, node, refs: curStmtRefs, introduces});
 						curStmtRefs = new Set;
@@ -72,6 +86,68 @@ class Bundler
 				return node;
 			}
 		);
+	}
+
+	#addDeclaredSymbols(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, context: tsa.TransformationContext, node: tsa.Node, moduleDecls: Map<tsa.Symbol, tsa.Symbol>)
+	{	let importFromHref = '';
+		let isExport = false;
+		const introduces = new Array<tsa.Symbol>;
+		const renames = new Map<tsa.Identifier, tsa.Identifier>;
+		if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
+		{	isExport = !!node.modifiers?.some(m => m.kind & ts.SyntaxKind.ExportKeyword);
+			const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+			for (const name of names)
+			{	const symbol = checker.getSymbolAtLocation(name);
+				if (symbol)
+				{	moduleDecls.set(symbol, symbol);
+					introduces.push(symbol);
+					const newName = this.#occupyName(symbol);
+					if (newName != undefined)
+					{	renames.set(name, context.factory.createIdentifier(newName));
+					}
+				}
+			}
+		}
+		else if (ts.isImportDeclaration(node))
+		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && node.importClause)
+			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
+				const {importClause: {name, namedBindings}} = node;
+				const elements = namedBindings && ts.isNamedImports(namedBindings) ? namedBindings.elements ?? [] : [{name}];
+				for (const {name} of elements)
+				{	if (name)
+					{	const symbol = checker.getSymbolAtLocation(name);
+						const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+						if (symbol && resolvedSymbol)
+						{	moduleDecls.set(symbol, resolvedSymbol);
+							this.#occupyName(resolvedSymbol);
+						}
+					}
+				}
+			}
+		}
+		return {importFromHref, isExport, introduces, renames};
+	}
+
+	#occupyName(symbol: tsa.Symbol)
+	{	const curSymbol = this.#occupiedNames.get(symbol.name);
+		if (!curSymbol)
+		{	this.#occupiedNames.set(symbol.name, symbol);
+		}
+		else if (curSymbol != symbol)
+		{	const name = this.#getUniqueName(symbol.name);
+			this.#occupiedNames.set(name, symbol);
+			this.#symbolRenames.set(symbol, name);
+			return name;
+		}
+	}
+
+	#getUniqueName(base: string)
+	{	for (let i=1; true; i++)
+		{	const name = base + i.toString(16);
+			if (!this.#occupiedNames.has(name))
+			{	return name;
+			}
+		}
 	}
 
 	reorderNodesAccordingToDependency()
@@ -156,8 +232,8 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 	}
 
 	debug()
-	{	const printer = tsa.createPrinter();
-		let str = '';
+	{	let str = '';
+		const printer = tsa.createPrinter();
 		for (const {sourceFile, node} of this.nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
@@ -185,42 +261,6 @@ function transformSourceFile(ts: typeof tsa, sourceFile: tsa.SourceFile, visitor
 	}
 }
 
-function addDeclaredSymbols(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, node: tsa.Node, moduleDecls: Map<tsa.Symbol, tsa.Symbol>)
-{	let importFromHref = '';
-	let isExport = false;
-	const introduces = new Array<tsa.Symbol>;
-	if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-	{	isExport = !!node.modifiers?.some(m => m.kind & ts.SyntaxKind.ExportKeyword);
-		const names = !ts.isVariableStatement(node) ? [node.name] : node.declarationList.declarations.map(v => v.name);
-		for (const name of names)
-		{	if (name && ts.isIdentifier(name)) // TODO: others
-			{	const symbol = checker.getSymbolAtLocation(name);
-				if (symbol)
-				{	moduleDecls.set(symbol, symbol);
-					introduces.push(symbol);
-				}
-			}
-		}
-	}
-	else if (ts.isImportDeclaration(node))
-	{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && node.importClause)
-		{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
-			const {importClause: {name, namedBindings}} = node;
-			const elements = namedBindings && ts.isNamedImports(namedBindings) ? namedBindings.elements ?? [] : [{name}];
-			for (const {name} of elements)
-			{	if (name)
-				{	const symbol = checker.getSymbolAtLocation(name);
-					const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-					if (symbol && resolvedSymbol)
-					{	moduleDecls.set(symbol, resolvedSymbol);
-					}
-				}
-			}
-		}
-	}
-	return {importFromHref, isExport, introduces};
-}
-
 function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?: tsa.Symbol)
 {	if (symbol && (symbol.flags & ts.SymbolFlags.Alias))
 	{	symbol = checker.getAliasedSymbol(symbol);
@@ -228,13 +268,27 @@ function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?: tsa.Sy
 	return symbol;
 }
 
-function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.TransformationContext)
+function getNames(ts: typeof tsa, name: tsa.BindingName, outNames=new Array<tsa.Identifier>)
+{	if (!ts.isIdentifier(name))
+	{	for (const e of name.elements)
+		{	if (!ts.isOmittedExpression(e))
+			{	getNames(ts, e.name, outNames);
+			}
+		}
+	}
+	else
+	{	outNames.push(name);
+	}
+	return outNames;
+}
+
+function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext, node: tsa.Node, renames: Map<tsa.Identifier, tsa.Identifier>)
 {	if (ts.isFunctionDeclaration(node))
 	{	node = context.factory.updateFunctionDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
 			node.asteriskToken,
-			node.name,
+			(node.name && renames.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.parameters,
 			node.type,
@@ -245,7 +299,7 @@ function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.Transformatio
 	{	node = context.factory.updateClassDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			node.name,
+			(node.name && renames.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.heritageClauses,
 			node.members
@@ -255,7 +309,7 @@ function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.Transformatio
 	{	node = context.factory.updateInterfaceDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			node.name,
+			(node.name && renames.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.heritageClauses,
 			node.members
@@ -265,7 +319,7 @@ function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.Transformatio
 	{	node = context.factory.updateEnumDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			node.name,
+			(node.name && renames.get(node.name)) ?? node.name,
 			node.members
 		);
 	}
@@ -273,7 +327,7 @@ function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.Transformatio
 	{	node = context.factory.updateTypeAliasDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			node.name,
+			(node.name && renames.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.type
 		);
@@ -282,7 +336,18 @@ function unexportStmt(ts: typeof tsa, node: tsa.Node, context: tsa.Transformatio
 	{	node = context.factory.updateVariableStatement
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			node.declarationList
+			renames.size==0 ? node.declarationList : context.factory.updateVariableDeclarationList
+			(	node.declarationList,
+				node.declarationList.declarations.map
+				(	d => context.factory.updateVariableDeclaration
+					(	d,
+						renameBindingName(ts, context, d.name, renames),
+						d.exclamationToken,
+						d.type,
+						d.initializer
+					)
+				)
+			)
 		);
 	}
 	return node;
@@ -295,5 +360,41 @@ function unexportModifiers(ts: typeof tsa, modifiers?: tsa.NodeArray<tsa.Modifie
 	}
 	else
 	{	return modifiers.slice(0, i).concat(modifiers.slice(i+1))
+	}
+}
+
+function renameBindingName(ts: typeof tsa, context: tsa.TransformationContext, name: tsa.BindingName, renames: Map<tsa.Identifier, tsa.Identifier>): tsa.BindingName
+{	if (ts.isObjectBindingPattern(name))
+	{	return context.factory.updateObjectBindingPattern
+		(	name,
+			name.elements.map
+			(	d => context.factory.updateBindingElement
+				(	d,
+					d.dotDotDotToken,
+					d.propertyName,
+					renameBindingName(ts, context, d.name, renames),
+					d.initializer
+				)
+			)
+		);
+	}
+	else if (ts.isArrayBindingPattern(name))
+	{	return context.factory.updateArrayBindingPattern
+		(	name,
+			name.elements.map
+			(	d =>
+				(	!ts.isBindingElement(d) ? d : context.factory.updateBindingElement
+					(	d,
+						d.dotDotDotToken,
+						d.propertyName,
+						renameBindingName(ts, context, d.name, renames),
+						d.initializer
+					)
+				)
+			)
+		);
+	}
+	else
+	{	return (name && renames.get(name)) ?? name;
 	}
 }
