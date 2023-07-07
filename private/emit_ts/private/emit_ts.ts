@@ -4,9 +4,25 @@ import {Loader} from '../../load_options.ts';
 // TODO: ExportDeclaration
 
 type NodeWithInfo =
-{	sourceFile: tsa.SourceFile,
+{	/**	From what file this node originates. Faster version of `node.getSourceFile()`.
+	 **/
+	sourceFile: tsa.SourceFile,
+
+	/**	The node.
+	 **/
 	node: tsa.Node;
+
+	/**	What symbols does this node reference (use).
+	 **/
 	refs: Set<tsa.Symbol>;
+
+	/**	What symbols does this node introduce (declare).
+		For example:
+		```ts
+		let a = b + c;
+		```
+		References `b` and `c`, and introduces `a`.
+	 **/
 	introduces: tsa.Symbol[];
 };
 
@@ -17,11 +33,11 @@ export function emitTs(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader,
 	const modulesHrefs = entryPointsHrefs.slice();
 	// Create bundler and add modules to it
 	const bundler = new Bundler;
-	for (let i=0; i<modulesHrefs.length; i++)
+	for (let i=0; i<modulesHrefs.length; i++) // imported modules will be added to `modulesHrefs` while iterating
 	{	const moduleHref = modulesHrefs[i];
 		const sourceFile = program.getSourceFile(moduleHref);
 		if (sourceFile)
-		{	bundler.addModule(ts, checker, loader, sourceFile, modulesHrefs);
+		{	bundler.addModule(ts, checker, loader, sourceFile, modulesHrefs, i<entryPointsHrefs.length);
 		}
 	}
 	// Reordered nodes according to dependency
@@ -40,8 +56,9 @@ class Bundler
 	#occupiedNames = new Map<string, tsa.Symbol>;
 	#symbolRenames = new Map<tsa.Symbol, string>;
 
-	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[])
+	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[], isEntryPoint: boolean)
 	{	const moduleDecls = new Map<tsa.Symbol, tsa.Symbol>;
+		const wantExport = new Array<tsa.Symbol>;
 		let curStmtRefs = new Set<tsa.Symbol>;
 		transformSourceFile
 		(	ts,
@@ -76,7 +93,18 @@ class Bundler
 						return [];
 					}
 					else
-					{	if (isExport || renames.size)
+					{	let wantUnexport = isExport;
+						if (isExport && isEntryPoint)
+						{	if (renames.size == 0)
+							{	wantUnexport = false;
+							}
+							else
+							{	for (const symbol of introduces)
+								{	wantExport.push(symbol);
+								}
+							}
+						}
+						if (wantUnexport || renames.size)
 						{	node = unexportOrRenameStmt(ts, context, node, renames);
 						}
 						this.nodesWithInfo.push({sourceFile, node, refs: curStmtRefs, introduces});
@@ -84,6 +112,20 @@ class Bundler
 					}
 				}
 				return node;
+			},
+			context =>
+			{	if (wantExport.length)
+				{	const exportStmt = context.factory.createExportDeclaration
+					(	undefined,
+						false,
+						context.factory.createNamedExports
+						(	wantExport.map
+							(	e => context.factory.createExportSpecifier(false, this.#symbolRenames.get(e), e.name)
+							)
+						)
+					);
+					this.nodesWithInfo.push({sourceFile, node: exportStmt, refs: curStmtRefs, introduces: []});
+				}
 			}
 		);
 	}
@@ -180,7 +222,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 							let newKnownSymbols = new Set(knownSymbols.values());
 							const nodeIndices = new Array<number>;
 							for (let j=stack.length-1; j>=0; j--)
-							{	if (this.getStmtsThatIntroduce(stack[j].symbol, newKnownSymbols, i, nodeIndices))
+							{	if (this.#getStmtsThatIntroduce(stack[j].symbol, newKnownSymbols, i, nodeIndices))
 								{	const nodes = nodeIndices.map(k => nodesWithInfo[k]);
 									nodeIndices.sort((a, b) => b - a); // descendant order
 									for (const k of nodeIndices)
@@ -207,7 +249,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		}
 	}
 
-	getStmtsThatIntroduce(symbol: tsa.Symbol, knownSymbols: Set<tsa.Symbol>, fromNode: number, outNodeIndices: number[])
+	#getStmtsThatIntroduce(symbol: tsa.Symbol, knownSymbols: Set<tsa.Symbol>, fromNode: number, outNodeIndices: number[])
 	{	const {nodesWithInfo} = this;
 		const found = nodesWithInfo.findIndex(n => n.introduces.includes(symbol));
 		knownSymbols.add(symbol);
@@ -222,7 +264,7 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 			}
 			for (const ref of refs)
 			{	if (!knownSymbols.has(ref) && !introduces.includes(ref))
-				{	if (!this.getStmtsThatIntroduce(ref, knownSymbols, fromNode, outNodeIndices))
+				{	if (!this.#getStmtsThatIntroduce(ref, knownSymbols, fromNode, outNodeIndices))
 					{	return false;
 					}
 				}
@@ -231,17 +273,22 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		return true;
 	}
 
-	debug()
+	/*debug()
 	{	let str = '';
 		const printer = tsa.createPrinter();
 		for (const {sourceFile, node} of this.nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
 		return str;
-	}
+	}*/
 }
 
-function transformSourceFile(ts: typeof tsa, sourceFile: tsa.SourceFile, visitor: (node: tsa.Node, level: number, context: tsa.TransformationContext) => tsa.VisitResult<tsa.Node>)
+function transformSourceFile
+(	ts: typeof tsa,
+	sourceFile: tsa.SourceFile,
+	visitor: (node: tsa.Node, level: number, context: tsa.TransformationContext) => tsa.VisitResult<tsa.Node>,
+	onEnd: (context: tsa.TransformationContext) => void
+)
 {	const result = ts.transform(sourceFile, [transformerFactory]);
 	return result.transformed[0];
 
@@ -249,7 +296,9 @@ function transformSourceFile(ts: typeof tsa, sourceFile: tsa.SourceFile, visitor
 	{	let level = -1;
 
 		return function(rootNode: tsa.Node)
-		{	return ts.visitNode(rootNode, visit);
+		{	const result = ts.visitNode(rootNode, visit);
+			onEnd(context);
+			return result;
 		};
 
 		function visit(node: tsa.Node)
