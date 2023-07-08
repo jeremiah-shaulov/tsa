@@ -4,4 +4,5 @@ const ONE = 'one';
 const A = null;
 
 import * as num2 from './private/subj2.ts';
-console.log(ONE, num2.ONE);
+import {num} from './private/subj1.ts';
+console.log(ONE, A, num2.ONE, num.ONE);

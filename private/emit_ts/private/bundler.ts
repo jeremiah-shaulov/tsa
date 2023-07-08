@@ -1,7 +1,7 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
 import {transformSourceFile, visitSourceFile} from './visit_source_file.ts';
-import {getNames, resolveSymbol, symbolIsType, unexportOrRenameStmt} from './util.ts';
+import {getNames, resolveSymbol, symbolIsNameFromNs, symbolIsType, unexportOrRenameStmt} from './util.ts';
 
 // TODO: ExportDeclaration
 
@@ -66,7 +66,7 @@ export class Bundler
 						if (symbol)
 						{	// Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`)?
 							const isNameFromNsRightSide = isNameFromNs; // `isNameFromNs` was set in left side
-							isNameFromNs ||= symbol.flags==ts.SymbolFlags.Alias && ts.isPropertyAccessExpression(node.parent) && symbol.getDeclarations()?.[0]?.kind==ts.SyntaxKind.NamespaceImport;
+							isNameFromNs ||= symbolIsNameFromNs(ts, symbol, node);
 							if (!isNameFromNs || isNameFromNsRightSide)
 							{	// Does current statement use a module-level symbol?
 								const ref = moduleScope.get(symbol);
@@ -231,9 +231,12 @@ export class Bundler
 		{	this.#occupiedNames.set(symbol.name, symbol);
 		}
 		else if (curSymbol != symbol)
-		{	const name = this.#getUniqueName(symbol.name);
-			this.#occupiedNames.set(name, symbol);
-			this.#symbolRenames.set(symbol, name);
+		{	let name = this.#symbolRenames.get(symbol);
+			if (name == undefined)
+			{	name = this.#getUniqueName(symbol.name);
+				this.#occupiedNames.set(name, symbol);
+				this.#symbolRenames.set(symbol, name);
+			}
 			return name;
 		}
 	}
@@ -250,8 +253,7 @@ export class Bundler
 	#applyNodesSubstitution(ts: typeof tsa, checker: tsa.TypeChecker)
 	{	const nodesWithInfo = new Array<NodeWithInfo>;
 		const exportStmts = new Array<NodeWithInfo>;
-		const modules = this.#modules;
-		for (const [sourceFile, {substNodes, entryPointNumber, wantExport, wantExportNs, nodesInfo}] of modules)
+		for (const [sourceFile, {substNodes, entryPointNumber, wantExport, wantExportNs, nodesInfo}] of this.#modules)
 		{	let nStmt = 0;
 			transformSourceFile
 			(	ts,
@@ -332,6 +334,39 @@ export class Bundler
 					)
 			)
 		);
+
+		/*if (types.length)
+		{	const nsStmt = context.factory.createModuleDeclaration
+			(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+				alias,
+				context.factory.createModuleBlock
+				(	symbols.map
+					(	s => symbolIsType(ts, s) ?
+							context.factory.createTypeAliasDeclaration
+							(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+								context.factory.createIdentifier(s.name),
+								undefined,
+								context.factory.createTypeReferenceNode(s.name)
+							)
+						:
+							context.factory.createVariableStatement
+							(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+								context.factory.createVariableDeclarationList
+								(	[	context.factory.createVariableDeclaration
+										(	s.name,
+											undefined,
+											undefined,
+											d.initializer
+										)
+									],
+									ts.NodeFlags.Const
+								)
+							)
+					)
+				)
+			);
+			exportStmts.push({sourceFile, node: nsStmt, refs: new Set, introduces: []});
+		}*/
 	}
 
 	debug(nodesWithInfo: NodeWithInfo[])

@@ -4,6 +4,16 @@ export function symbolIsType(ts: typeof tsa, resolvedSymbol: tsa.Symbol)
 {	return !!(resolvedSymbol.flags & (ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias));
 }
 
+export function symbolIsNameFromNs(ts: typeof tsa, symbol: tsa.Symbol, node: tsa.Node)
+{	if (symbol.flags==ts.SymbolFlags.Alias && ts.isPropertyAccessExpression(node.parent))
+	{	const declaration = symbol.getDeclarations()?.[0];
+		if (declaration)
+		{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
+		}
+	}
+	return false;
+}
+
 export function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?: tsa.Symbol)
 {	if (symbol && (symbol.flags & ts.SymbolFlags.Alias))
 	{	symbol = checker.getAliasedSymbol(symbol);
