@@ -8,8 +8,8 @@ export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compile
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	let str = '';
 	const printer = tsa.createPrinter();
-	for (const node of result)
-	{	str += printer.printNode(tsa.EmitHint.Unspecified, node, node.getSourceFile()) + '\n';
+	for (const {sourceFile, node} of result)
+	{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 	}
 	// Transpile the ts to js to see that it's valid
 	const mainTs = tsa.createSourceFile('main.ts', str, tsa.ScriptTarget.Latest);

@@ -3,6 +3,7 @@ import {createDenoProgram} from './create_deno_program.ts';
 import {LoadOptions} from './load_options.ts';
 import {DocNode} from './doc_node/mod.ts';
 import {EmitDocOptions} from './convert/mod.ts';
+import {NodeWithInfo} from './emit_ts/private/bundler.ts';
 
 // deno-lint-ignore no-explicit-any
 type Any = any;
@@ -14,7 +15,7 @@ type Any = any;
 declare module 'npm:typescript@5.1.6'
 {	interface DenoProgram extends Program
 	{	emitDoc(options?: EmitDocOptions): DocNode[];
-		emitTs(): Node[];
+		emitTs(): NodeWithInfo[];
 	}
 
 	function createDenoProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;

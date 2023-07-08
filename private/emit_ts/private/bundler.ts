@@ -3,8 +3,8 @@ import {Loader} from '../../load_options.ts';
 
 // TODO: ExportDeclaration
 
-type NodeWithInfo =
-{	/**	From what file this node originates. Faster version of `node.getSourceFile()`.
+export type NodeWithInfo =
+{	/**	From what file this node originates. Even if `node.getSourceFile()` returns undefined.
 	 **/
 	sourceFile: tsa.SourceFile,
 
@@ -12,7 +12,7 @@ type NodeWithInfo =
 	 **/
 	node: tsa.Node;
 
-	/**	What symbols does this node reference (use).
+	/**	What global symbols does this node reference (use).
 	 **/
 	refs: Set<tsa.Symbol>;
 
@@ -140,17 +140,19 @@ export class Bundler
 			}
 		}
 		else if (ts.isImportDeclaration(node))
-		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && node.importClause)
+		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier))
 			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
-				const {importClause: {name, namedBindings}} = node;
-				const elements = namedBindings && ts.isNamedImports(namedBindings) ? namedBindings.elements ?? [] : [{name}];
-				for (const {name} of elements)
-				{	if (name)
-					{	const symbol = checker.getSymbolAtLocation(name);
-						const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-						if (symbol && resolvedSymbol)
-						{	moduleDecls.set(symbol, resolvedSymbol);
-							this.#occupyName(resolvedSymbol);
+				if (node.importClause)
+				{	const {importClause: {name, namedBindings}} = node;
+					const elements = namedBindings && ts.isNamedImports(namedBindings) ? namedBindings.elements ?? [] : [{name}];
+					for (const {name} of elements)
+					{	if (name)
+						{	const symbol = checker.getSymbolAtLocation(name);
+							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+							if (symbol && resolvedSymbol)
+							{	moduleDecls.set(symbol, resolvedSymbol);
+								this.#occupyName(resolvedSymbol);
+							}
 						}
 					}
 				}
@@ -278,14 +280,14 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		return true;
 	}
 
-	debug()
+	/*debug()
 	{	let str = '';
 		const printer = tsa.createPrinter();
 		for (const {sourceFile, node} of this.#nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
 		return str;
-	}
+	}*/
 }
 
 function transformSourceFile

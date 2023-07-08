@@ -50,8 +50,15 @@ async function main(): Promise<number>
 			const result = program.emitTs();
 			let str = '';
 			const printer = tsa.createPrinter();
-			for (const node of result)
-			{	str += printer.printNode(tsa.EmitHint.Unspecified, node, node.getSourceFile()) + newLine;
+			const files = new Set<tsa.SourceFile>;
+			for (const {sourceFile, node} of result)
+			{	if (sourceFile && !files.has(sourceFile))
+				{	files.add(sourceFile);
+					console.error(sourceFile.fileName);
+					str += `// ` + sourceFile.fileName + newLine;
+				}
+				const line = printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + newLine;
+				str += line;
 			}
 			await Deno.writeTextFile(commandLine.options.outFile, str);
 		}
