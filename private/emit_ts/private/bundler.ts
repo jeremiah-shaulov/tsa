@@ -97,8 +97,8 @@ export class Bundler
 						entryPointNumber!=-1 ? wantExportNs : undefined
 					);
 					let wantUnexport = isExport;
-					if (importFromHref)
-					{	if (!modulesHrefs.includes(importFromHref))
+					if (importFromHref || ts.isExportDeclaration(node))
+					{	if (importFromHref && !modulesHrefs.includes(importFromHref))
 						{	modulesHrefs.push(importFromHref);
 						}
 						nodesInfo.push(undefined);
@@ -181,8 +181,9 @@ export class Bundler
 						if (moduleSymbol)
 						{	const symbols = checker.getExportsOfModule(moduleSymbol);
 							for (const symbol of symbols)
-							{	moduleScope.set(symbol, symbol);
-								this.#occupyName(symbol);
+							{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+								moduleScope.set(symbol, resolvedSymbol);
+								this.#occupyName(resolvedSymbol);
 							}
 						}
 					}
@@ -191,10 +192,11 @@ export class Bundler
 		}
 		else if (ts.isExportDeclaration(node))
 		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) // TODO: without `moduleSpecifier`
-			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
+			{	// `export from 'name'`
+				importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
 				if (wantExport && wantExportNs)
 				{	if (node.exportClause && ts.isNamedExports(node.exportClause))
-					{	// `export {name1, name2} ...`
+					{	// `export {name1, name2} from 'name'`
 						for (const {name, propertyName} of node.exportClause.elements)
 						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
@@ -204,7 +206,7 @@ export class Bundler
 						}
 					}
 					else
-					{	// `export * ...`
+					{	// `export * from 'name'`
 						const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
 						if (moduleSymbol)
 						{	const symbols = checker.getExportsOfModule(moduleSymbol);
@@ -320,18 +322,24 @@ export class Bundler
 	#createNamespace(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, symbols: tsa.Symbol[]): tsa.ObjectLiteralExpression
 	{	return context.factory.createObjectLiteralExpression
 		(	symbols.map
-			(	s => s.flags & ts.SymbolFlags.Alias ?
-					context.factory.createPropertyAssignment
-					(	s.name,
-						this.#createNamespace(ts, checker, context, checker.getExportsOfModule(resolveSymbol(ts, checker, s) ?? s).filter(s => !symbolIsType(ts, s)))
-					)
-				: !this.#symbolRenames.has(s) ?
-					context.factory.createShorthandPropertyAssignment(s.name)
-				:
-					context.factory.createPropertyAssignment
-					(	s.name,
-						context.factory.createIdentifier(this.#symbolRenames.get(s) ?? s.name)
-					)
+			(	symbol =>
+				{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+					if (resolvedSymbol.flags & ts.SymbolFlags.Module)
+					{	return context.factory.createPropertyAssignment
+						(	symbol.name,
+							this.#createNamespace(ts, checker, context, checker.getExportsOfModule(resolvedSymbol).filter(s => !symbolIsType(ts, s)))
+						);
+					}
+					else if (!this.#symbolRenames.has(symbol))
+					{	return context.factory.createShorthandPropertyAssignment(symbol.name);
+					}
+					else
+					{	return context.factory.createPropertyAssignment
+						(	symbol.name,
+							context.factory.createIdentifier(this.#symbolRenames.get(symbol) ?? symbol.name)
+						);
+					}
+				}
 			)
 		);
 

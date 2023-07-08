@@ -1,5 +1,7 @@
-export const ONE = 1;
-export const TWO = 2;
-export const THREE = 3;
+const ONE = 1;
+const TWO = 2;
+const THREE = 3;
+
+export {ONE, TWO, THREE};
 
 export type Numbers = 1 | 2 | 3;

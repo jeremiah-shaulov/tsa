@@ -50,10 +50,10 @@ async function main(): Promise<number>
 			const result = program.emitTs();
 			let str = '';
 			const printer = tsa.createPrinter();
-			const files = new Set<tsa.SourceFile>;
+			let lastSourceFile: tsa.SourceFile|undefined;
 			for (const {sourceFile, node} of result)
-			{	if (sourceFile && !files.has(sourceFile))
-				{	files.add(sourceFile);
+			{	if (sourceFile != lastSourceFile)
+				{	lastSourceFile = sourceFile;
 					console.error(sourceFile.fileName);
 					str += `// ` + sourceFile.fileName + newLine;
 				}

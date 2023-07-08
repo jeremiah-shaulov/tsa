@@ -14,9 +14,9 @@ export function symbolIsNameFromNs(ts: typeof tsa, symbol: tsa.Symbol, node: tsa
 	return false;
 }
 
-export function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?: tsa.Symbol)
+export function resolveSymbol<T extends tsa.Symbol|undefined>(ts: typeof tsa, checker: tsa.TypeChecker, symbol: T)
 {	if (symbol && (symbol.flags & ts.SymbolFlags.Alias))
-	{	symbol = checker.getAliasedSymbol(symbol);
+	{	return checker.getAliasedSymbol(symbol);
 	}
 	return symbol;
 }
