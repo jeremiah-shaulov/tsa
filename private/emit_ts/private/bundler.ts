@@ -16,7 +16,7 @@ export type NodeWithInfo =
 	 **/
 	refs: Set<tsa.Symbol>;
 
-	/**	What symbols does this node introduce (declare).
+	/**	What global symbols does this node introduce (declare).
 		For example:
 		```ts
 		let a = b + c;
@@ -32,60 +32,74 @@ export class Bundler
 	#occupiedNames = new Map<string, tsa.Symbol>;
 	#symbolRenames = new Map<tsa.Symbol, string>;
 
-	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[], isEntryPoint: boolean)
-	{	const moduleDecls = new Map<tsa.Symbol, tsa.Symbol>;
-		const wantExport = new Array<tsa.Symbol>;
+	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[], entryPointNumber: number)
+	{	const moduleScope = new Map<tsa.Symbol, tsa.Symbol>;
+		const wantExport = new Map<tsa.Symbol, tsa.Identifier|undefined>;
 		let curStmtRefs = new Set<tsa.Symbol>;
+		let isNameFromNs = false;
+		let substNameFromNs: tsa.Identifier|undefined;
 		transformSourceFile
 		(	ts,
 			sourceFile,
 			(node, level, context) =>
 			{	if (level > 0)
-				{	if (ts.isIdentifier(node))
+				{	if (ts.isPropertyAccessExpression(node))
+					{	if (substNameFromNs)
+						{	node = substNameFromNs;
+							substNameFromNs = undefined;
+						}
+						isNameFromNs = false;
+					}
+					else if (ts.isIdentifier(node))
 					{	const symbol = checker.getSymbolAtLocation(node);
 						if (symbol)
-						{	// Add ref?
-							const ref = moduleDecls.get(symbol);
-							if (ref)
-							{	if (!(symbol.flags & ts.SymbolFlags.Function)) // functions can be declared later
+						{	// Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`)?
+							const isNameFromNsRightSide = isNameFromNs; // `isNameFromNs` was set in left side
+							isNameFromNs ||= symbol.flags==ts.SymbolFlags.Alias && ts.isPropertyAccessExpression(node.parent) && symbol.getDeclarations()?.[0]?.kind==ts.SyntaxKind.NamespaceImport;
+							if (!isNameFromNs || isNameFromNsRightSide)
+							{	// Does current statement use a module-level symbol?
+								const ref = moduleScope.get(symbol);
+								if (ref)
 								{	curStmtRefs.add(ref);
 								}
-							}
-							// Rename?
-							const newName = this.#symbolRenames.get(ref ?? symbol) ?? (ref && ref.name!=symbol.name ? ref.name : undefined);
-							if (newName != undefined)
-							{	node = context.factory.createIdentifier(newName);
+								// Rename?
+								const newName = this.#symbolRenames.get(ref ?? symbol) ?? (ref && ref.name!=symbol.name ? ref.name : undefined);
+								const newNameNode = newName==undefined ? undefined : context.factory.createIdentifier(newName);
+								if (isNameFromNsRightSide)
+								{	substNameFromNs = newNameNode ?? node;
+								}
+								else if (newNameNode)
+								{	node = newNameNode;
+								}
 							}
 						}
 					}
 				}
 				else
-				{	const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols(ts, checker, loader, sourceFile, context, node, moduleDecls);
+				{	if (entryPointNumber!=0 && ts.isExportAssignment(node)) // is `export default` or `export =`?
+					{	node = context.factory.createExpressionStatement(node.expression); // remove `export default` if isn't first entry point
+					}
+					const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols(ts, checker, loader, sourceFile, context, node, moduleScope, entryPointNumber!=-1 ? wantExport : undefined);
 					if (importFromHref)
 					{	if (!modulesHrefs.includes(importFromHref))
 						{	modulesHrefs.push(importFromHref);
-						}
-						if (isExport && isEntryPoint)
-						{	for (const symbol of introduces)
-							{	wantExport.push(symbol);
-							}
 						}
 						curStmtRefs.clear();
 						return [];
 					}
 					else
 					{	let wantUnexport = isExport;
-						if (isExport && isEntryPoint)
-						{	if (renames.size == 0)
+						if (isExport && entryPointNumber!=-1)
+						{	if (!renames)
 							{	wantUnexport = false;
 							}
 							else
 							{	for (const symbol of introduces)
-								{	wantExport.push(symbol);
+								{	wantExport.set(symbol, undefined);
 								}
 							}
 						}
-						if (wantUnexport || renames.size)
+						if (wantUnexport || renames)
 						{	node = unexportOrRenameStmt(ts, context, node, renames);
 						}
 						this.#nodesWithInfo.push({sourceFile, node, refs: curStmtRefs, introduces});
@@ -95,13 +109,13 @@ export class Bundler
 				return node;
 			},
 			context =>
-			{	if (wantExport.length)
+			{	if (wantExport.size)
 				{	const exportStmt = context.factory.createExportDeclaration
 					(	undefined,
 						false,
 						context.factory.createNamedExports
-						(	wantExport.map
-							(	e => context.factory.createExportSpecifier(symbolIsType(ts, e), this.#symbolRenames.get(e), e.name)
+						(	[...wantExport.entries()].map
+							(	([e, rename]) => context.factory.createExportSpecifier(symbolIsType(ts, e), this.#symbolRenames.get(e) ?? (rename && e.name), rename ?? e.name)
 							)
 						)
 					);
@@ -111,30 +125,42 @@ export class Bundler
 		);
 	}
 
-	getResult()
-	{	this.#reorderNodesAccordingToDependency();
+	getResult(ts: typeof tsa)
+	{	this.#reorderNodesAccordingToDependency(ts);
 		for (const node of this.#exportStmts)
 		{	this.#nodesWithInfo.push(node);
 		}
 		return this.#nodesWithInfo;
 	}
 
-	#addDeclaredSymbols(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, context: tsa.TransformationContext, node: tsa.Node, moduleDecls: Map<tsa.Symbol, tsa.Symbol>)
+	#addDeclaredSymbols
+	(	ts: typeof tsa,
+		checker: tsa.TypeChecker,
+		loader: Loader,
+		sourceFile: tsa.SourceFile,
+		context: tsa.TransformationContext,
+		node: tsa.Node,
+		moduleScope: Map<tsa.Symbol, tsa.Symbol>,
+		wantExport?: Map<tsa.Symbol, tsa.Identifier|undefined>
+	)
 	{	let importFromHref = '';
 		let isExport = false;
 		const introduces = new Array<tsa.Symbol>;
-		const renames = new Map<tsa.Identifier, tsa.Identifier>;
+		let renames: Map<tsa.Identifier, tsa.Identifier> | undefined;
 		if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
 		{	isExport = !!node.modifiers?.some(m => m.kind & ts.SyntaxKind.ExportKeyword);
 			const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
 			for (const name of names)
 			{	const symbol = checker.getSymbolAtLocation(name);
 				if (symbol)
-				{	moduleDecls.set(symbol, symbol);
+				{	moduleScope.set(symbol, symbol);
 					introduces.push(symbol);
 					const newName = this.#occupyName(symbol);
 					if (newName != undefined)
-					{	renames.set(name, context.factory.createIdentifier(newName));
+					{	if (!renames)
+						{	renames = new Map;
+						}
+						renames.set(name, context.factory.createIdentifier(newName));
 					}
 				}
 			}
@@ -142,16 +168,25 @@ export class Bundler
 		else if (ts.isImportDeclaration(node))
 		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier))
 			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
-				if (node.importClause)
-				{	const {importClause: {name, namedBindings}} = node;
-					const elements = namedBindings && ts.isNamedImports(namedBindings) ? namedBindings.elements ?? [] : [{name}];
-					for (const {name} of elements)
-					{	if (name)
+				const namedBindings = node.importClause?.namedBindings;
+				if (namedBindings)
+				{	if (ts.isNamedImports(namedBindings))
+					{	for (const {name} of namedBindings.elements ?? [])
 						{	const symbol = checker.getSymbolAtLocation(name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
 							if (symbol && resolvedSymbol)
-							{	moduleDecls.set(symbol, resolvedSymbol);
+							{	moduleScope.set(symbol, resolvedSymbol);
 								this.#occupyName(resolvedSymbol);
+							}
+						}
+					}
+					else
+					{	const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
+						if (moduleSymbol)
+						{	const symbols = checker.getExportsOfModule(moduleSymbol);
+							for (const symbol of symbols)
+							{	moduleScope.set(symbol, symbol);
+								this.#occupyName(symbol);
 							}
 						}
 					}
@@ -159,16 +194,29 @@ export class Bundler
 			}
 		}
 		else if (ts.isExportDeclaration(node))
-		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier))
+		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) // TODO: without `moduleSpecifier`
 			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
-				const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
-				if (moduleSymbol)
-				{	isExport = true;
-					const exports = checker.getExportsOfModule(moduleSymbol);
-					for (const symbol of exports)
-					{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-						if (resolvedSymbol)
-						{	introduces.push(resolvedSymbol);
+				isExport = true;
+				if (wantExport)
+				{	if (node.exportClause && ts.isNamedExports(node.exportClause))
+					{	// `export {name1, name2} ...`
+						for (const {name, propertyName} of node.exportClause.elements)
+						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
+							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+							if (resolvedSymbol)
+							{	wantExport.set(resolvedSymbol, propertyName ? name : undefined);
+							}
+						}
+					}
+					else
+					{	// `export * ...`
+						const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
+						if (moduleSymbol)
+						{	const symbols = checker.getExportsOfModule(moduleSymbol);
+							const exportAs = node.exportClause && ts.isNamespaceExport(node.exportClause) ? node.exportClause.name : undefined; // TODO: ...
+							for (const symbol of symbols)
+							{	wantExport.set(symbol, undefined);
+							}
 						}
 					}
 				}
@@ -191,7 +239,7 @@ export class Bundler
 	}
 
 	#getUniqueName(base: string)
-	{	for (let i=1; true; i++)
+	{	for (let i=2; true; i++)
 		{	const name = base + i.toString(16);
 			if (!this.#occupiedNames.has(name))
 			{	return name;
@@ -199,7 +247,7 @@ export class Bundler
 		}
 	}
 
-	#reorderNodesAccordingToDependency()
+	#reorderNodesAccordingToDependency(ts: typeof tsa)
 	{	const nodesWithInfo = this.#nodesWithInfo;
 		let knownSymbols = new Set<tsa.Symbol>;
 		const stack = new Array<{fromSourceFile: tsa.SourceFile, symbol: tsa.Symbol}>;
@@ -207,44 +255,46 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		{	const nodeWithInfo = nodesWithInfo[i];
 			const {sourceFile, refs, introduces} = nodeWithInfo;
 			for (const symbol of refs)
-			{	if (!knownSymbols.has(symbol) && !introduces.includes(symbol)) // If this stmt depends on symbol not introduced yet
-				{	// Find what module introduces this symbol
-					const toSourceFile = nodesWithInfo.find(n => n.introduces.includes(symbol))?.sourceFile;
-					if (toSourceFile)
-					{	if (!stack.some(s => s.fromSourceFile == toSourceFile))
-						{	// Find where this module begins
-							for (let j=i+1; j<iEnd; j++)
-							{	if (nodesWithInfo[j].sourceFile == toSourceFile)
-								{	// Want to bring `nodesWithInfo[i .. j]` to the end of array
-									const part = nodesWithInfo.splice(i, j-i);
-									nodesWithInfo.splice(nodesWithInfo.length, 0, ...part);
-									stack.push({fromSourceFile: sourceFile, symbol});
-									i--;
-									continue L;
-								}
-							}
-						}
-						else
-						{	// Circular dependency
-							let newKnownSymbols = new Set(knownSymbols.values());
-							const nodeIndices = new Array<number>;
-							for (let j=stack.length-1; j>=0; j--)
-							{	if (this.#getStmtsThatIntroduce(stack[j].symbol, newKnownSymbols, i, nodeIndices))
-								{	const nodes = nodeIndices.map(k => nodesWithInfo[k]);
-									nodeIndices.sort((a, b) => b - a); // descendant order
-									for (const k of nodeIndices)
-									{	nodesWithInfo.splice(k, 1);
+			{	if (!(symbol.flags & ts.SymbolFlags.Function)) // functions can be declared later
+				{	if (!knownSymbols.has(symbol) && !introduces.includes(symbol)) // If this stmt depends on symbol not introduced yet
+					{	// Find what module introduces this symbol
+						const toSourceFile = nodesWithInfo.find(n => n.introduces.includes(symbol))?.sourceFile;
+						if (toSourceFile)
+						{	if (!stack.some(s => s.fromSourceFile == toSourceFile))
+							{	// Find where this module begins
+								for (let j=i+1; j<iEnd; j++)
+								{	if (nodesWithInfo[j].sourceFile == toSourceFile)
+									{	// Want to bring `nodesWithInfo[i .. j]` to the end of array
+										const part = nodesWithInfo.splice(i, j-i);
+										nodesWithInfo.splice(nodesWithInfo.length, 0, ...part);
+										stack.push({fromSourceFile: sourceFile, symbol});
+										i--;
+										continue L;
 									}
-									nodesWithInfo.splice(i, 0, ...nodes.reverse());
-									knownSymbols = newKnownSymbols;
-									i += nodes.length - 1;
-									stack.length = 0;
-									continue L;
 								}
-								newKnownSymbols = new Set(knownSymbols.values());
-								nodeIndices.length = 0;
 							}
-							console.error(`Modules circular dependency: ${stack.map(s => s.fromSourceFile.fileName).join(' -> ')} -> ${toSourceFile.fileName}`);
+							else
+							{	// Circular dependency
+								let newKnownSymbols = new Set(knownSymbols.values());
+								const nodeIndices = new Array<number>;
+								for (let j=stack.length-1; j>=0; j--)
+								{	if (this.#getStmtsThatIntroduce(stack[j].symbol, newKnownSymbols, i, nodeIndices))
+									{	const nodes = nodeIndices.map(k => nodesWithInfo[k]);
+										nodeIndices.sort((a, b) => b - a); // descendant order
+										for (const k of nodeIndices)
+										{	nodesWithInfo.splice(k, 1);
+										}
+										nodesWithInfo.splice(i, 0, ...nodes.reverse());
+										knownSymbols = newKnownSymbols;
+										i += nodes.length - 1;
+										stack.length = 0;
+										continue L;
+									}
+									newKnownSymbols = new Set(knownSymbols.values());
+									nodeIndices.length = 0;
+								}
+								console.error(`Modules circular dependency: ${stack.map(s => s.fromSourceFile.fileName).join(' -> ')} -> ${toSourceFile.fileName}`);
+							}
 						}
 					}
 				}
@@ -280,14 +330,14 @@ L:		for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 		return true;
 	}
 
-	/*debug()
+	debug()
 	{	let str = '';
 		const printer = tsa.createPrinter();
 		for (const {sourceFile, node} of this.#nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
 		return str;
-	}*/
+	}
 }
 
 function transformSourceFile
@@ -338,13 +388,13 @@ function getNames(ts: typeof tsa, name: tsa.BindingName, outNames=new Array<tsa.
 	return outNames;
 }
 
-function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext, node: tsa.Node, renames: Map<tsa.Identifier, tsa.Identifier>)
+function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext, node: tsa.Node, renames?: Map<tsa.Identifier, tsa.Identifier>)
 {	if (ts.isFunctionDeclaration(node))
 	{	node = context.factory.updateFunctionDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
 			node.asteriskToken,
-			(node.name && renames.get(node.name)) ?? node.name,
+			(node.name && renames?.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.parameters,
 			node.type,
@@ -355,7 +405,7 @@ function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext
 	{	node = context.factory.updateClassDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			(node.name && renames.get(node.name)) ?? node.name,
+			(node.name && renames?.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.heritageClauses,
 			node.members
@@ -365,7 +415,7 @@ function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext
 	{	node = context.factory.updateInterfaceDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			(node.name && renames.get(node.name)) ?? node.name,
+			(node.name && renames?.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.heritageClauses,
 			node.members
@@ -375,7 +425,7 @@ function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext
 	{	node = context.factory.updateEnumDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			(node.name && renames.get(node.name)) ?? node.name,
+			(node.name && renames?.get(node.name)) ?? node.name,
 			node.members
 		);
 	}
@@ -383,7 +433,7 @@ function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext
 	{	node = context.factory.updateTypeAliasDeclaration
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			(node.name && renames.get(node.name)) ?? node.name,
+			(node.name && renames?.get(node.name)) ?? node.name,
 			node.typeParameters,
 			node.type
 		);
@@ -392,7 +442,7 @@ function unexportOrRenameStmt(ts: typeof tsa, context: tsa.TransformationContext
 	{	node = context.factory.updateVariableStatement
 		(	node,
 			unexportModifiers(ts, node.modifiers),
-			renames.size==0 ? node.declarationList : context.factory.updateVariableDeclarationList
+			!renames ? node.declarationList : context.factory.updateVariableDeclarationList
 			(	node.declarationList,
 				node.declarationList.declarations.map
 				(	d => context.factory.updateVariableDeclaration

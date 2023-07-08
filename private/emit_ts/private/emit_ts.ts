@@ -12,9 +12,9 @@ export function emitTs(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader)
 	{	const moduleHref = modulesHrefs[i];
 		const sourceFile = program.getSourceFile(moduleHref);
 		if (sourceFile)
-		{	bundler.addModule(ts, checker, loader, sourceFile, modulesHrefs, i<entryPointsHrefs.length);
+		{	bundler.addModule(ts, checker, loader, sourceFile, modulesHrefs, i<entryPointsHrefs.length ? i : -1);
 		}
 	}
 	// Get the result
-	return bundler.getResult();
+	return bundler.getResult(ts);
 }

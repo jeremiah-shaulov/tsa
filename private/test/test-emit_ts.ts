@@ -1,7 +1,7 @@
 import {tsa} from '../tsa_ns.ts';
-import {printDiagnostics, formatDiagnostics} from '../util.ts';
+import {printDiagnostics, formatDiagnostics, ensureTempFile} from '../util.ts';
 
-export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions)
+export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, saveToFileTag='')
 {	// Emit ts
 	const program = await tsa.createDenoProgram(entryPoints, compilerOptions);
 	const result = program.emitTs();
@@ -28,10 +28,13 @@ export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compile
 		{	console.log(`File ${fileName}: ${text.length} chars`);
 		}
 	);
+	if (saveToFileTag)
+	{	const filename = await ensureTempFile(`deno-${saveToFileTag}.ts`);
+		await Deno.writeTextFile(filename, str);
+	}
 	const diagnostics = tsa.getPreEmitDiagnostics(program2).concat(result2.diagnostics);
 	if (diagnostics.length)
 	{	printDiagnostics(diagnostics);
 		throw new Error(formatDiagnostics(diagnostics));
 	}
-	console.log(str);
 }
