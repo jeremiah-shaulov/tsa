@@ -16,5 +16,5 @@ export function emitTs(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader)
 		}
 	}
 	// Get the result
-	return bundler.getResult(ts);
+	return bundler.getResult(ts, checker);
 }

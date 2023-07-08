@@ -32,6 +32,7 @@ type Module =
 {	substNodes: Map<tsa.Node, tsa.Node|string>;
 	entryPointNumber: number;
 	wantExport: Map<tsa.Symbol, tsa.Identifier|undefined>;
+	wantExportNs: Map<tsa.Identifier, tsa.Symbol[]>;
 	nodesInfo: Array<NodeInfo | undefined>;
 };
 
@@ -50,11 +51,12 @@ export class Bundler
 	addModule(ts: typeof tsa, checker: tsa.TypeChecker, loader: Loader, sourceFile: tsa.SourceFile, modulesHrefs: string[], entryPointNumber: number)
 	{	const moduleScope = new Map<tsa.Symbol, tsa.Symbol>;
 		const wantExport = new Map<tsa.Symbol, tsa.Identifier|undefined>;
+		const wantExportNs = new Map<tsa.Identifier, tsa.Symbol[]>;
 		let curStmtRefs = new Set<tsa.Symbol>;
 		let isNameFromNs = false;
 		const substNodes = new Map<tsa.Node, tsa.Node|string>;
 		const nodesInfo = new Array<NodeInfo | undefined>;
-		this.#modules.set(sourceFile, {substNodes, entryPointNumber, wantExport, nodesInfo});
+		this.#modules.set(sourceFile, {substNodes, entryPointNumber, wantExport, wantExportNs, nodesInfo});
 		visitSourceFile
 		(	sourceFile,
 			(node, level) =>
@@ -84,7 +86,16 @@ export class Bundler
 					}
 				}
 				else
-				{	const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols(ts, checker, loader, sourceFile, node, moduleScope, entryPointNumber!=-1 ? wantExport : undefined);
+				{	const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols
+					(	ts,
+						checker,
+						loader,
+						sourceFile,
+						node,
+						moduleScope,
+						entryPointNumber!=-1 ? wantExport : undefined,
+						entryPointNumber!=-1 ? wantExportNs : undefined
+					);
 					let wantUnexport = isExport;
 					if (importFromHref)
 					{	if (!modulesHrefs.includes(importFromHref))
@@ -112,8 +123,8 @@ export class Bundler
 		);
 	}
 
-	getResult(ts: typeof tsa)
-	{	const {nodesWithInfo, exportStmts} = this.#applyNodesSubstitution(ts);
+	getResult(ts: typeof tsa, checker: tsa.TypeChecker)
+	{	const {nodesWithInfo, exportStmts} = this.#applyNodesSubstitution(ts, checker);
 		reorderNodesAccordingToDependency(ts, nodesWithInfo);
 		return nodesWithInfo.concat(exportStmts);
 	}
@@ -125,7 +136,8 @@ export class Bundler
 		sourceFile: tsa.SourceFile,
 		node: tsa.Node,
 		moduleScope: Map<tsa.Symbol, tsa.Symbol>,
-		wantExport?: Map<tsa.Symbol, tsa.Identifier|undefined>
+		wantExport?: Map<tsa.Symbol, tsa.Identifier|undefined>,
+		wantExportNs?: Map<tsa.Identifier, tsa.Symbol[]>
 	)
 	{	let importFromHref = '';
 		let isExport = false;
@@ -180,7 +192,7 @@ export class Bundler
 		else if (ts.isExportDeclaration(node))
 		{	if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) // TODO: without `moduleSpecifier`
 			{	importFromHref = loader.resolved(node.moduleSpecifier.text, sourceFile.fileName);
-				if (wantExport)
+				if (wantExport && wantExportNs)
 				{	if (node.exportClause && ts.isNamedExports(node.exportClause))
 					{	// `export {name1, name2} ...`
 						for (const {name, propertyName} of node.exportClause.elements)
@@ -197,8 +209,13 @@ export class Bundler
 						if (moduleSymbol)
 						{	const symbols = checker.getExportsOfModule(moduleSymbol);
 							const exportAs = node.exportClause && ts.isNamespaceExport(node.exportClause) ? node.exportClause.name : undefined; // TODO: ...
-							for (const symbol of symbols)
-							{	wantExport.set(symbol, undefined);
+							if (!exportAs)
+							{	for (const symbol of symbols)
+								{	wantExport.set(symbol, undefined);
+								}
+							}
+							else
+							{	wantExportNs.set(exportAs, symbols);
 							}
 						}
 					}
@@ -230,11 +247,11 @@ export class Bundler
 		}
 	}
 
-	#applyNodesSubstitution(ts: typeof tsa)
+	#applyNodesSubstitution(ts: typeof tsa, checker: tsa.TypeChecker)
 	{	const nodesWithInfo = new Array<NodeWithInfo>;
 		const exportStmts = new Array<NodeWithInfo>;
 		const modules = this.#modules;
-		for (const [sourceFile, {substNodes, entryPointNumber, wantExport, nodesInfo}] of modules)
+		for (const [sourceFile, {substNodes, entryPointNumber, wantExport, wantExportNs, nodesInfo}] of modules)
 		{	let nStmt = 0;
 			transformSourceFile
 			(	ts,
@@ -273,10 +290,48 @@ export class Bundler
 						);
 						exportStmts.push({sourceFile, node: exportStmt, refs: new Set, introduces: []});
 					}
+					for (const [alias, symbols] of wantExportNs)
+					{	const values = symbols.filter(s => !symbolIsType(ts, s));
+						if (values.length)
+						{	const exportStmt = context.factory.createVariableStatement
+							(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+								context.factory.createVariableDeclarationList
+								(	[	context.factory.createVariableDeclaration
+										(	alias,
+											undefined,
+											undefined,
+											this.#createNamespace(ts, checker, context, values)
+										)
+									],
+									ts.NodeFlags.Const
+								)
+							);
+							exportStmts.push({sourceFile, node: exportStmt, refs: new Set, introduces: []});
+						}
+					}
 				}
 			);
 		}
 		return {nodesWithInfo, exportStmts};
+	}
+
+	#createNamespace(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, symbols: tsa.Symbol[]): tsa.ObjectLiteralExpression
+	{	return context.factory.createObjectLiteralExpression
+		(	symbols.map
+			(	s => s.flags & ts.SymbolFlags.Alias ?
+					context.factory.createPropertyAssignment
+					(	s.name,
+						this.#createNamespace(ts, checker, context, checker.getExportsOfModule(resolveSymbol(ts, checker, s) ?? s).filter(s => !symbolIsType(ts, s)))
+					)
+				: !this.#symbolRenames.has(s) ?
+					context.factory.createShorthandPropertyAssignment(s.name)
+				:
+					context.factory.createPropertyAssignment
+					(	s.name,
+						context.factory.createIdentifier(this.#symbolRenames.get(s) ?? s.name)
+					)
+			)
+		);
 	}
 
 	debug(nodesWithInfo: NodeWithInfo[])
