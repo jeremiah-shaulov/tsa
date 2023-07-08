@@ -54,8 +54,10 @@ async function main(): Promise<number>
 			for (const {sourceFile, node} of result)
 			{	if (sourceFile != lastSourceFile)
 				{	lastSourceFile = sourceFile;
-					console.error(sourceFile.fileName);
-					str += `// ` + sourceFile.fileName + newLine;
+					const loc = node.pos>=0 ? sourceFile.getLineAndCharacterOfPosition(node.pos) : undefined;
+					const info = sourceFile.fileName + (!loc ? '' : `, line ${loc.line + 1}`);
+					str += `// ` + info + newLine;
+					console.error(info);
 				}
 				const line = printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + newLine;
 				str += line;
