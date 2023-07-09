@@ -1,7 +1,7 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
 import {transformSourceFile, visitSourceFile} from './visit_source_file.ts';
-import {getNames, resolveSymbol, symbolIsNameFromNs, symbolIsType, unexportOrRenameStmt} from './util.ts';
+import {getNames, resolveSymbol, nodeIsNameFromNs, symbolIsNs, symbolIsType, unexportOrRenameStmt} from './util.ts';
 
 // TODO: ExportDeclaration
 
@@ -53,7 +53,6 @@ export class Bundler
 		const wantExport = new Map<tsa.Symbol, tsa.Identifier|undefined>;
 		const wantExportNs = new Map<tsa.Identifier, tsa.Symbol[]>;
 		let curStmtRefs = new Set<tsa.Symbol>;
-		let isNameFromNs = false;
 		const substNodes = new Map<tsa.Node, tsa.Node|string>;
 		const nodesInfo = new Array<NodeInfo | undefined>;
 		this.#modules.set(sourceFile, {substNodes, entryPointNumber, wantExport, wantExportNs, nodesInfo});
@@ -63,30 +62,25 @@ export class Bundler
 			{	if (level > 0)
 				{	if (ts.isIdentifier(node))
 					{	const symbol = checker.getSymbolAtLocation(node);
-						if (symbol)
-						{	// Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`)?
-							const isNameFromNsRightSide = isNameFromNs; // `isNameFromNs` was set in left side
-							isNameFromNs ||= symbolIsNameFromNs(ts, symbol, node);
-							if (!isNameFromNs || isNameFromNsRightSide)
-							{	// Does current statement use a module-level symbol?
-								const ref = moduleScope.get(symbol);
-								if (ref)
-								{	curStmtRefs.add(ref);
-								}
-								// Rename?
-								const newName = this.#symbolRenames.get(ref ?? symbol) ?? (ref && ref.name!=symbol.name ? ref.name : undefined);
-								if (isNameFromNsRightSide)
-								{	substNodes.set(node.parent, newName ?? node);
-								}
-								else if (newName != undefined)
-								{	substNodes.set(node, newName);
-								}
+						if (symbol && !symbolIsNs(ts, symbol))
+						{	// Does current statement use a module-level symbol?
+							const ref = moduleScope.get(symbol);
+							if (ref)
+							{	curStmtRefs.add(ref);
+							}
+							// Rename?
+							const newName = this.#symbolRenames.get(ref ?? symbol) ?? (ref && ref.name!=symbol.name ? ref.name : undefined);
+							if (nodeIsNameFromNs(ts, checker, node))
+							{	substNodes.set(node.parent, newName ?? node);
+							}
+							else if (newName != undefined)
+							{	substNodes.set(node, newName);
 							}
 						}
 					}
 				}
 				else
-				{	const {importFromHref, isExport, introduces, renames} = this.#addDeclaredSymbols
+				{	const {importFromHref, isExport, introduces, renames} = this.#addSymbolsToModuleScope
 					(	ts,
 						checker,
 						loader,
@@ -129,7 +123,7 @@ export class Bundler
 		return nodesWithInfo.concat(exportStmts);
 	}
 
-	#addDeclaredSymbols
+	#addSymbolsToModuleScope
 	(	ts: typeof tsa,
 		checker: tsa.TypeChecker,
 		loader: Loader,
@@ -170,7 +164,7 @@ export class Bundler
 					{	for (const {name} of namedBindings.elements ?? [])
 						{	const symbol = checker.getSymbolAtLocation(name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-							if (symbol && resolvedSymbol)
+							if (symbol && resolvedSymbol && !(resolvedSymbol.flags & ts.SymbolFlags.Module))
 							{	moduleScope.set(symbol, resolvedSymbol);
 								this.#occupyName(resolvedSymbol);
 							}
