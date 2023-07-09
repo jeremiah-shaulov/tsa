@@ -6,12 +6,25 @@ export function symbolIsType(ts: typeof tsa, resolvedSymbol: tsa.Symbol)
 
 /**	Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`), and is this node the **left** side of the property access?
  **/
-export function symbolIsNs(ts: typeof tsa, node: tsa.Node, symbol: tsa.Symbol)
+export function nodeIsNs(ts: typeof tsa, checker: tsa.TypeChecker, node: tsa.Node, symbol: tsa.Symbol)
+{	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.expression || ts.isQualifiedName(node.parent) && node==node.parent.left)
+	{	return symbolIsNs(ts, checker, symbol);
+	}
+	return false;
+}
+
+function symbolIsNs(ts: typeof tsa, checker: tsa.TypeChecker, symbol: tsa.Symbol)
 {	if (symbol.flags & ts.SymbolFlags.Alias)
-	{	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.expression || ts.isQualifiedName(node.parent) && node==node.parent.left)
-		{	const declaration = symbol.getDeclarations()?.[0];
-			if (declaration)
-			{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
+	{	const declaration = symbol.getDeclarations()?.[0];
+		if (declaration)
+		{	if (declaration.kind == ts.SyntaxKind.NamespaceImport)
+			{	return true;
+			}
+			if (declaration.kind == ts.SyntaxKind.ImportSpecifier)
+			{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+				if (resolvedSymbol && resolvedSymbol.flags & ts.SymbolFlags.Module)
+				{	return true;
+				}
 			}
 		}
 	}
@@ -23,21 +36,11 @@ export function symbolIsNs(ts: typeof tsa, node: tsa.Node, symbol: tsa.Symbol)
 export function nodeIsNameFromNs(ts: typeof tsa, checker: tsa.TypeChecker, node: tsa.Node)
 {	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.name)
 	{	const symbol = checker.getSymbolAtLocation(node.parent.expression);
-		if (symbol && symbol.flags & ts.SymbolFlags.Alias)
-		{	const declaration = symbol.getDeclarations()?.[0];
-			if (declaration)
-			{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
-			}
-		}
+		return !symbol ? false : symbolIsNs(ts, checker, symbol);
 	}
 	else if (ts.isQualifiedName(node.parent) && node==node.parent.right)
 	{	const symbol = checker.getSymbolAtLocation(node.parent.left);
-		if (symbol && symbol.flags & ts.SymbolFlags.Alias)
-		{	const declaration = symbol.getDeclarations()?.[0];
-			if (declaration)
-			{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
-			}
-		}
+		return !symbol ? false : symbolIsNs(ts, checker, symbol);
 	}
 	return false;
 }

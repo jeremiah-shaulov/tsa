@@ -4,9 +4,9 @@ import {tsa} from '../../tsa_ns.ts';
 const SAVE_TO_FILES = Deno.args.includes('--save-to-files');
 
 Deno.test
-(	'emit_bundle-circular',
+(	'emit_bundle-basic',
 	async () =>
-	{	const subj = new URL(`subj/emit_bundle-circular/mod.ts`, import.meta.url);
+	{	const subj = new URL(`subj/emit_bundle-basic/mod.ts`, import.meta.url);
 		await testEmitBundle
 		(	[subj],
 			{	outFile: 'dist.js',
@@ -14,7 +14,7 @@ Deno.test
 				resolveJsonModule: false,
 				lib: ['lib.esnext.d.ts', 'lib.dom.d.ts'],
 			},
-			SAVE_TO_FILES ? 'emit_bundle-circular' : ''
+			SAVE_TO_FILES ? 'emit_bundle-basic' : ''
 		);
 	}
 );

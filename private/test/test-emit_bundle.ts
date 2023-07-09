@@ -1,7 +1,7 @@
 import {tsa} from '../tsa_ns.ts';
 import {printDiagnostics, formatDiagnostics, ensureTempFile} from '../util.ts';
 
-export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, saveToFileTag='')
+export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, saveToFileTag='')
 {	// Emit ts
 	const program = await tsa.createDenoProgram(entryPoints, compilerOptions);
 	const result = program.emitBundle();

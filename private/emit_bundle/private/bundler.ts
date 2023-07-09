@@ -1,7 +1,7 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
 import {transformSourceFile, visitSourceFile} from './visit_source_file.ts';
-import {getNames, resolveSymbol, nodeIsNameFromNs, symbolIsNs, symbolIsType, unexportOrRenameStmt} from './util.ts';
+import {getNames, resolveSymbol, nodeIsNameFromNs, nodeIsNs, symbolIsType, unexportOrRenameStmt} from './util.ts';
 
 // TODO: ExportDeclaration
 
@@ -62,7 +62,7 @@ export class Bundler
 			{	if (level > 0)
 				{	if (ts.isIdentifier(node))
 					{	const symbol = checker.getSymbolAtLocation(node);
-						if (symbol && !symbolIsNs(ts, node, symbol))
+						if (symbol && !nodeIsNs(ts, checker, node, symbol))
 						{	// Does current statement use a module-level symbol?
 							const ref = moduleScope.get(symbol);
 							if (ref)
@@ -338,14 +338,14 @@ export class Bundler
 		);
 	}
 
-	debug(nodesWithInfo: NodeWithInfo[])
+	/*debug(nodesWithInfo: NodeWithInfo[])
 	{	let str = '';
 		const printer = tsa.createPrinter();
 		for (const {sourceFile, node} of nodesWithInfo)
 		{	str += printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + '\n';
 		}
 		return str;
-	}
+	}*/
 }
 
 function getStmtsThatIntroduce(nodesWithInfo: NodeWithInfo[], symbol: tsa.Symbol, knownSymbols: Set<tsa.Symbol>, fromNode: number, outNodeIndices: number[])
