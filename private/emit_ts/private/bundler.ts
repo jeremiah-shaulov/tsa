@@ -336,39 +336,6 @@ export class Bundler
 				}
 			)
 		);
-
-		/*if (types.length)
-		{	const nsStmt = context.factory.createModuleDeclaration
-			(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-				alias,
-				context.factory.createModuleBlock
-				(	symbols.map
-					(	s => symbolIsType(ts, s) ?
-							context.factory.createTypeAliasDeclaration
-							(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-								context.factory.createIdentifier(s.name),
-								undefined,
-								context.factory.createTypeReferenceNode(s.name)
-							)
-						:
-							context.factory.createVariableStatement
-							(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-								context.factory.createVariableDeclarationList
-								(	[	context.factory.createVariableDeclaration
-										(	s.name,
-											undefined,
-											undefined,
-											d.initializer
-										)
-									],
-									ts.NodeFlags.Const
-								)
-							)
-					)
-				)
-			);
-			exportStmts.push({sourceFile, node: nsStmt, refs: new Set, introduces: []});
-		}*/
 	}
 
 	debug(nodesWithInfo: NodeWithInfo[])

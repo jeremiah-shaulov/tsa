@@ -93,7 +93,8 @@ export class Loader
 /**	Get function that will resolve things according to import map.
  **/
 async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load)
-{	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : path.toFileUrl(await Deno.realPath(importMapUrlOrStr));
+{	const cwd = path.toFileUrl(await Deno.realPath(Deno.cwd())).href + '/';
+	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : new URL(await defaultResolve(importMapUrlOrStr, cwd));
 	const importMapResult = await load(importMapUrl.href, false);
 	if (importMapResult?.kind != 'module')
 	{	throw new Deno.errors.NotFound(`Import map not found: ${importMapUrl.href}`);

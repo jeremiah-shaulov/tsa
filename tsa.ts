@@ -1,85 +1,133 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
 import {tsa, printDiagnostics} from './mod.ts';
+import {Command, writeAll} from './private/deps.ts';
+import {defaultLoad, defaultResolve} from './private/load_options.ts';
 
-const HELP =
-`This tool works like \`tsc\` for generating JavaScript or DTS (other usage patterns are not supported).
-Also you can specify \`--outFile\` to a file with \`.json\` extension to generate project AST.
-This tool works on typescript projects that follow \`Deno\` standards.
-See \`tsc --help\` for more information.
-`;
+const program = new Command('tsa');
 
-async function main(): Promise<number>
-{	const commandLine = tsa.parseCommandLine(Deno.args);
+program
+	.version('0.0.1')
+	.description
+	(	'Typescript compiler adapter for Deno.\n' +
+		'It can perform 2 operations: `tsa doc ...`, and `tsa bundle ...`.\n' +
+		'Use `tsa help [command]` to see description.\n' +
+		'This tool can work on files or URLs. Example: `tsa doc https://deno.land/x/crc32hash@v1.0.0/mod.ts`.\n' +
+		'There\'s also unstable support for "npm:" protocol. Example: \`tsa doc npm:chalk\`.'
+	);
 
-	if (commandLine.options.locale)
-	{	tsa.validateLocaleAndSetLanguage(commandLine.options.locale, tsa.sys, commandLine.errors);
-	}
+program
+	.command('doc <file1.ts> [fileN.ts...]')
+	.description
+	(	'Generate JSON AST suitable for further documentation generation.'
+	)
+	.option('--outFile <out.json>', 'Where to save the result (default: stdout).')
+	.option('--pretty', 'Produce human-readable JSON.')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const outFile = String(options.outFile || '/dev/stdout');
+			const pretty = !!options.pretty;
+			const entryPoints = [file1, ...files];
 
-	if (commandLine.options.version)
-	{	console.error(tsa.version);
-		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-	}
+			// Create program
+			const program = await tsa.createDenoProgram(entryPoints);
+			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
-	if (commandLine.options.help || commandLine.options.all)
-	{	console.error(HELP.trim());
-		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-	}
+			// Generate doc
+			const result = program.emitDoc();
 
-	if (commandLine.options.build || commandLine.options.init || commandLine.options.watch && commandLine.options.listFilesOnly || commandLine.options.project || commandLine.options.showConfig || !commandLine.fileNames.length)
-	{	console.error('This command line invokation pattern is not supported');
-		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-	}
-
-	if (commandLine.errors.length > 0)
-	{	printDiagnostics(commandLine.errors);
-		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-	}
-
-	try
-	{	const program = await tsa.createDenoProgram(commandLine.fileNames, commandLine.options);
-		printDiagnostics(tsa.getPreEmitDiagnostics(program));
-
-		if (commandLine.options.outFile?.slice(-5).toLowerCase() === '.json')
-		{	const result = program.emitDoc();
-			await Deno.writeTextFile(commandLine.options.outFile, JSON.stringify(result));
+			// Save the result to file (or print to stdout), and exit
+			await writeTextFile(outFile, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+			Deno.exit();
 		}
-		else if (commandLine.options.outFile?.slice(-3).toLowerCase() === '.ts')
-		{	const host = tsa.createCompilerHost(commandLine.options);
-			const newLine = host.getNewLine();
+	);
+
+program
+	.command('bundle <file1.ts> [fileN.ts...]')
+	.description
+	(	'Bundle Typescript source files to single Javascript module.'
+	)
+	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const outFile = String(options.outFile || '/dev/stdout');
+			const entryPoints = [file1, ...files];
+
+			// Create program to bundle source files to single `.ts`
+			const program = await tsa.createDenoProgram(entryPoints);
+			printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+			// Bundle
 			const result = program.emitTs();
-			let str = '';
+			const host = tsa.createCompilerHost({});
+			const newLine = host.getNewLine();
 			const printer = tsa.createPrinter();
 			let lastSourceFile: tsa.SourceFile|undefined;
+			let text = '';
 			for (const {sourceFile, node} of result)
 			{	if (sourceFile != lastSourceFile)
 				{	lastSourceFile = sourceFile;
 					const loc = node.pos>=0 ? sourceFile.getLineAndCharacterOfPosition(node.pos) : undefined;
 					const info = sourceFile.fileName + (!loc ? '' : `, line ${loc.line + 1}`);
-					str += `// ` + info + newLine;
+					text += `// ` + info + newLine;
 					console.error(info);
 				}
 				const line = printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + newLine;
-				str += line;
+				text += line;
 			}
-			await Deno.writeTextFile(commandLine.options.outFile, str);
-		}
-		else
-		{	const result = program.emit();
-			printDiagnostics(result.diagnostics);
-			if (result.emitSkipped)
-			{	throw new Error('emit failed');
+
+			// Create second program to transpile the bundle to Javascript
+			const program2 = await tsa.createDenoProgram
+			(	['/dev/stdin'],
+				{	target: tsa.ScriptTarget.ESNext,
+					module: tsa.ModuleKind.ESNext,
+					outDir: '.',
+				},
+				{	resolve(specifier, referrer)
+					{	if (specifier == '/dev/stdin')
+						{	return specifier;
+						}
+						return defaultResolve(specifier, referrer);
+					},
+					async load(specifier, isDynamic)
+					{	if (specifier == '/dev/stdin')
+						{	return {kind: 'module', specifier: '/dev/stdin', content: text, headers: {'content-type': 'application/typescript'}};
+						}
+						return await defaultLoad(specifier, isDynamic);
+					}
+				}
+			);
+			printDiagnostics(tsa.getPreEmitDiagnostics(program2));
+
+			// Transpile
+			let contents = '';
+			const result2 = program2.emit
+			(	undefined,
+				(_fileName: string, text: string) =>
+				{	contents = text;
+				}
+			);
+			printDiagnostics(result2.diagnostics);
+			if (result2.emitSkipped)
+			{	Deno.exit(1);
 			}
+
+			// Save the result to file (or print to stdout), and exit
+			await writeTextFile(outFile, contents);
+			Deno.exit();
 		}
-	}
-	catch (e)
-	{	console.error(e.message);
-		return tsa.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-	}
+	);
 
-	return tsa.ExitStatus.Success;
-}
+program.parse(Deno.args);
 
-if (import.meta.main)
-{	Deno.exit(await main());
+async function writeTextFile(filename: string, contents: string)
+{	if (filename == '/dev/stdout')
+	{	// Support Windows
+		await writeAll(Deno.stdout, new TextEncoder().encode(contents));
+	}
+	else
+	{	await Deno.writeTextFile(filename, contents);
+	}
 }

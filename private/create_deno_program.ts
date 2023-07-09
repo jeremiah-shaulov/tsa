@@ -73,6 +73,13 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 		if (sourceFile)
 		{	return sourceFile;
 		}
+		// if is fake filename without extension (crafted with `Loader`), typescript adds the extension
+		if (filename.endsWith('.ts'))
+		{	const sourceFile = files.get(filename.slice(0, -3))?.sourceFile;
+			if (sourceFile)
+			{	return sourceFile;
+			}
+		}
 		// maybe a lib file (like `lib.esnext.d.ts`)
 		try
 		{	const origSpecifier = filename;
@@ -144,11 +151,12 @@ function setDefaultOptions(ts: typeof tsa, compilerOptions?: tsa.CompilerOptions
 async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|URL>, loader: Loader)
 {	const files = new Map<string, SourceFile>;
 	const entryPointsHrefs = new Array<string>;
+	const cwd = path.toFileUrl(await Deno.realPath(Deno.cwd())).href + '/';
 	await Promise.all
 	(	entryPoints.map
 		(	async (entryPoint, i) =>
 			{	// To absolute URL: `entryPoint` -> `entryPointHref`
-				let entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : path.toFileUrl(await Deno.realPath(entryPoint)).href;
+				let entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : await loader.resolve(entryPoint, cwd);
 				// If this is `npm:` URL, resolve it to internal path to the main module, like `npm:typescript@5.1.5` -> `npm:typescript@5.1.5/lib/typescript.d.ts`
 				// This is needed, because tsc wants to see file extension
 				entryPointHref = (await getNpmFilename(entryPointHref))?.specifier || entryPointHref;
