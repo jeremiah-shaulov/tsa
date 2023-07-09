@@ -4,7 +4,7 @@ import {printDiagnostics, formatDiagnostics, ensureTempFile} from '../util.ts';
 export async function testEmitTs(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, saveToFileTag='')
 {	// Emit ts
 	const program = await tsa.createDenoProgram(entryPoints, compilerOptions);
-	const result = program.emitTs();
+	const result = program.emitBundle();
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	let str = '';
 	const printer = tsa.createPrinter();

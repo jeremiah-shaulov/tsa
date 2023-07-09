@@ -1,12 +1,12 @@
-import {testEmitTs} from '../test-emit_ts.ts';
+import {testEmitTs} from '../test-emit_bundle.ts';
 import {tsa} from '../../tsa_ns.ts';
 
 const SAVE_TO_FILES = Deno.args.includes('--save-to-files');
 
 Deno.test
-(	'emit_ts-namespace',
+(	'emit_bundle-remote',
 	async () =>
-	{	const subj = new URL(`subj/emit_ts-namespace/mod.ts`, import.meta.url);
+	{	const subj = new URL(`subj/emit_bundle-remote/mod.ts`, import.meta.url);
 		await testEmitTs
 		(	[subj],
 			{	outFile: 'dist.js',
@@ -14,7 +14,7 @@ Deno.test
 				resolveJsonModule: false,
 				lib: ['lib.esnext.d.ts', 'lib.dom.d.ts'],
 			},
-			SAVE_TO_FILES ? 'emit_ts-namespace' : ''
+			SAVE_TO_FILES ? 'emit_bundle-remote' : ''
 		);
 	}
 );

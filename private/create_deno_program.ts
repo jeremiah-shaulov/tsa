@@ -7,7 +7,7 @@ import {getExtendedLibs} from './dts/mod.ts';
 import {existsSync, isUrl} from './util.ts';
 import {LoadOptions, Loader} from './load_options.ts';
 import {getNpmFilename} from './npm.ts';
-import {emitTs} from './emit_ts/mod.ts';
+import {emitBundle} from './emit_bundle/mod.ts';
 
 type SourceFile = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
@@ -112,8 +112,8 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 		return converter.convertEntryPoints();
 	};
 
-	(program as tsa.DenoProgram).emitTs = function()
-	{	return emitTs(ts, this, loader);
+	(program as tsa.DenoProgram).emitBundle = function()
+	{	return emitBundle(ts, this, loader);
 	};
 
 	return program as tsa.DenoProgram;

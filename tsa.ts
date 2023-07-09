@@ -60,7 +60,7 @@ program
 			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 			// Bundle
-			const result = program.emitTs();
+			const result = program.emitBundle();
 			const host = tsa.createCompilerHost({});
 			const newLine = host.getNewLine();
 			const printer = tsa.createPrinter();

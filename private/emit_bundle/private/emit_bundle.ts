@@ -2,7 +2,7 @@ import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
 import {Bundler} from './bundler.ts';
 
-export function emitTs(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader)
+export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, loader: Loader)
 {	const checker = program.getTypeChecker();
 	const entryPointsHrefs = program.getRootFileNames();
 	const modulesHrefs = entryPointsHrefs.slice();
