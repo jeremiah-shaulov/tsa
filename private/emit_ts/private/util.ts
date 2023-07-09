@@ -6,11 +6,13 @@ export function symbolIsType(ts: typeof tsa, resolvedSymbol: tsa.Symbol)
 
 /**	Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`), and is this node the **left** side of the property access?
  **/
-export function symbolIsNs(ts: typeof tsa, symbol: tsa.Symbol)
+export function symbolIsNs(ts: typeof tsa, node: tsa.Node, symbol: tsa.Symbol)
 {	if (symbol.flags & ts.SymbolFlags.Alias)
-	{	const declaration = symbol.getDeclarations()?.[0];
-		if (declaration)
-		{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
+	{	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.expression || ts.isQualifiedName(node.parent) && node==node.parent.left)
+		{	const declaration = symbol.getDeclarations()?.[0];
+			if (declaration)
+			{	return declaration.kind == ts.SyntaxKind.NamespaceImport || declaration.kind == ts.SyntaxKind.ImportSpecifier;
+			}
 		}
 	}
 	return false;

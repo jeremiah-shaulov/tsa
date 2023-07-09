@@ -62,7 +62,7 @@ export class Bundler
 			{	if (level > 0)
 				{	if (ts.isIdentifier(node))
 					{	const symbol = checker.getSymbolAtLocation(node);
-						if (symbol && !symbolIsNs(ts, symbol))
+						if (symbol && !symbolIsNs(ts, node, symbol))
 						{	// Does current statement use a module-level symbol?
 							const ref = moduleScope.get(symbol);
 							if (ref)
