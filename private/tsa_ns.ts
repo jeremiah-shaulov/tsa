@@ -3,7 +3,7 @@ import {createDenoProgram} from './create_deno_program.ts';
 import {LoadOptions} from './load_options.ts';
 import {DocNode} from './doc_node/mod.ts';
 import {EmitDocOptions} from './convert/mod.ts';
-import {NodeWithInfo} from './emit_bundle/private/bundler.ts';
+import {NodeWithInfo} from './emit_bundle/private/emit_bundle.ts';
 
 // deno-lint-ignore no-explicit-any
 type Any = any;

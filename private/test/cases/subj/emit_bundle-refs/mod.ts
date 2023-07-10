@@ -7,3 +7,7 @@ const value =
 export const value2 =
 {	value,
 };
+
+export class ForValue2
+{	static prop = value2;
+}

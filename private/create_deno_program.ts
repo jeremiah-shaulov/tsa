@@ -9,13 +9,13 @@ import {LoadOptions, Loader} from './load_options.ts';
 import {getNpmFilename} from './npm.ts';
 import {emitBundle} from './emit_bundle/mod.ts';
 
-type SourceFile = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
+export type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
 export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
 {	const ts = this;
 	compilerOptions = setDefaultOptions(this, compilerOptions);
 	const loader = await Loader.inst(loadOptions);
-	const {files, entryPointsHrefs} = await readAllFiles(ts, entryPoints, loader);
+	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, entryPoints, loader);
 	const host = ts.createCompilerHost(compilerOptions);
 	const libLocation = host.getDefaultLibLocation?.() ?? '';
 	const extendedLibs = await getExtendedLibs(this, libLocation);
@@ -32,16 +32,16 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 			const resolvedModules = new Array<tsa.ResolvedModuleWithFailedLookupLocations>;
 			for (const {text} of moduleLiterals)
 			{	const resolvedFileName = loader.resolved(text, containingFile);
-				const file = files.get(resolvedFileName);
+				const sourceFileAndKind = sourceFilesAndKinds.get(resolvedFileName);
 				resolvedModules.push
-				(	{	resolvedModule: file &&
+				(	{	resolvedModule: sourceFileAndKind &&
 						{	resolvedFileName,
 							isExternalLibraryImport: false,
 							extension:
-							(	file.scriptKind == ts.ScriptKind.TS ? ts.Extension.Ts :
-								file.scriptKind == ts.ScriptKind.TSX ? ts.Extension.Tsx :
-								file.scriptKind == ts.ScriptKind.JSON ? ts.Extension.Json :
-								file.scriptKind == ts.ScriptKind.JSX ? ts.Extension.Jsx :
+							(	sourceFileAndKind.scriptKind == ts.ScriptKind.TS ? ts.Extension.Ts :
+								sourceFileAndKind.scriptKind == ts.ScriptKind.TSX ? ts.Extension.Tsx :
+								sourceFileAndKind.scriptKind == ts.ScriptKind.JSON ? ts.Extension.Json :
+								sourceFileAndKind.scriptKind == ts.ScriptKind.JSX ? ts.Extension.Jsx :
 								ts.Extension.Js
 							),
 						}
@@ -56,9 +56,9 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 		{	const resolvedModules = new Array<tsa.ResolvedModule | undefined>();
 			for (const text of moduleLiterals)
 			{	const resolvedFileName = loader.resolved(text, containingFile);
-				const file = files.get(resolvedFileName);
+				const sourceFileAndKind = sourceFilesAndKinds.get(resolvedFileName);
 				resolvedModules.push
-				(	file &&
+				(	sourceFileAndKind &&
 					{	resolvedFileName,
 						isExternalLibraryImport: false,
 					}
@@ -69,15 +69,15 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	}
 
 	host.getSourceFile = function(filename, _languageVersionOrOptions, onError?: ((message: string) => void))
-	{	const sourceFile = files.get(filename)?.sourceFile;
-		if (sourceFile)
-		{	return sourceFile;
+	{	const sourceFileAndKind = sourceFilesAndKinds.get(filename);
+		if (sourceFileAndKind)
+		{	return sourceFileAndKind.sourceFile;
 		}
 		// if is fake filename without extension (crafted with `Loader`), typescript adds the extension
 		if (filename.endsWith('.ts'))
-		{	const sourceFile = files.get(filename.slice(0, -3))?.sourceFile;
-			if (sourceFile)
-			{	return sourceFile;
+		{	const sourceFileAndKind = sourceFilesAndKinds.get(filename.slice(0, -3));
+			if (sourceFileAndKind)
+			{	return sourceFileAndKind.sourceFile;
 			}
 		}
 		// maybe a lib file (like `lib.esnext.d.ts`)
@@ -113,7 +113,11 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	};
 
 	(program as tsa.DenoProgram).emitBundle = function()
-	{	return emitBundle(ts, this, loader);
+	{	return emitBundle
+		(	ts,
+			this,
+			(specifier, referrer) => loader.resolved(specifier, referrer)
+		);
 	};
 
 	return program as tsa.DenoProgram;
@@ -149,7 +153,7 @@ function setDefaultOptions(ts: typeof tsa, compilerOptions?: tsa.CompilerOptions
 }
 
 async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|URL>, loader: Loader)
-{	const files = new Map<string, SourceFile>;
+{	const sourceFilesAndKinds = new Map<string, SourceFileAndKind>;
 	const entryPointsHrefs = new Array<string>;
 	const cwd = path.toFileUrl(await Deno.realPath(Deno.cwd())).href + '/';
 	await Promise.all
@@ -163,18 +167,18 @@ async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|UR
 				// Add to `entryPointsHrefs` array
 				entryPointsHrefs[i] = entryPointHref;
 				// Read the file contents, and scan it for `import from` and `export from`
-				await forFile(ts, entryPointHref, files, loader);
+				await forFile(ts, entryPointHref, sourceFilesAndKinds, loader);
 			}
 		)
 	);
-	return {files, entryPointsHrefs};
+	return {sourceFilesAndKinds, entryPointsHrefs};
 }
 
-async function forFile(ts: typeof tsa, modHref: string, files: Map<string, SourceFile>, loader: Loader)
+async function forFile(ts: typeof tsa, modHref: string, sourceFilesAndKinds: Map<string, SourceFileAndKind>, loader: Loader)
 {	const promises = new Array<Promise<unknown>>;
-	if (!files.has(modHref))
-	{	const record: SourceFile = {scriptKind: ts.ScriptKind.JS};
-		files.set(modHref, record);
+	if (!sourceFilesAndKinds.has(modHref))
+	{	const record: SourceFileAndKind = {scriptKind: ts.ScriptKind.JS};
+		sourceFilesAndKinds.set(modHref, record);
 		const loadResponse = await loader.load(modHref, false);
 		if (loadResponse?.kind == 'module')
 		{	const {sourceFile, scriptKind} = createSourceFile(ts, loadResponse.content, modHref, loadResponse.specifier, loadResponse.headers?.['content-type']);
@@ -186,8 +190,8 @@ async function forFile(ts: typeof tsa, modHref: string, files: Map<string, Sourc
 				{	const {moduleSpecifier} = statement;
 					if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier))
 					{	const importHref = await loader.resolve(moduleSpecifier.text, modHref);
-						if (!files.has(importHref))
-						{	promises.push(forFile(ts, importHref, files, loader));
+						if (!sourceFilesAndKinds.has(importHref))
+						{	promises.push(forFile(ts, importHref, sourceFilesAndKinds, loader));
 						}
 					}
 				}
@@ -195,8 +199,8 @@ async function forFile(ts: typeof tsa, modHref: string, files: Map<string, Sourc
 			// Find `/// <reference path="..." />`
 			for (const {fileName} of sourceFile.referencedFiles)
 			{	const importHref = await loader.resolve(fileName, modHref);
-				if (!files.has(importHref))
-				{	promises.push(forFile(ts, importHref, files, loader));
+				if (!sourceFilesAndKinds.has(importHref))
+				{	promises.push(forFile(ts, importHref, sourceFilesAndKinds, loader));
 				}
 			}
 		}

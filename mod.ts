@@ -14,3 +14,4 @@ export type * from './private/doc_node/mod.ts';
 // TODO: support `node:`
 // TODO: docs from each function signature
 // TODO: remove inherited constructors and index signatures? (`// 22.` in `makeCompatible()`)
+// TODO: exclude dead code, and merge identical declarations
