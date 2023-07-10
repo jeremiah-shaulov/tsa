@@ -1,1 +1,1 @@
-export * from 'https://deno.land/x/mysql@v2.11.0/src/logger.ts';
+export * from 'https://deno.land/x/postgres@v0.17.0/mod.ts';

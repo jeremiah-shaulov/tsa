@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {getNames, nodeIsNs, resolveSymbol, symbolIsType, transformNode} from './util.ts';
+import {getNames, nodeIsNs, resolveSymbol, symbolIsType, transformNode, unexportStmt} from './util.ts';
 
 export type ResolveSync = (specifier: string, referrer: string) => string;
 
@@ -28,19 +28,24 @@ export type NodeWithInfo =
 		References `b` and `c`, and introduces `a`.
 	 **/
 	introduces: tsa.Symbol[];
+
+	/**	This statement introduces it's symbols with `export` keyword.
+	 **/
+	isExport: boolean;
 };
 
 export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: ResolveSync)
-{	const nodesWithInfo = new Array<NodeWithInfo>;
-	const symbolsNames = new Map<tsa.Symbol, string>;
-	const namesSymbols = new Map<string, tsa.Symbol>;
-	const nodesThatIntroduce = new Map<tsa.Symbol, NodeWithInfo>;
-	const wantExport = new Map<tsa.Symbol, tsa.Identifier|undefined>;
-	const wantExportNs = new Map<tsa.Identifier, tsa.Symbol[]>;
-	const entryPointsHrefs = program.getRootFileNames();
-	const modulesHrefs = entryPointsHrefs.slice();
+{	let nodesWithInfo = new Array<NodeWithInfo>; // all the top-level statements (except `import` and `export`) from all modules
+	let exportStmts: NodeWithInfo[] | undefined; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
+	const symbolsNames = new Map<tsa.Symbol, string>; // maps all symbols that top-level statements declare, to their names in the result (they can be renamed)
+	const namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
+	const nodesThatIntroduce = new Map<tsa.Symbol, NodeWithInfo>; // maps all top-level symbols, to elements in `nodesWithInfo`
+	const allRefs = new Set<tsa.Symbol>; // all top-level symbols, that are referenced from somewhere (that appear in some `nodesWithInfo[I].refs` or `nodesWithInfo[I].bodyRefs`), so they're not a dead code
+	const wantExport = new Map<tsa.Symbol, tsa.Identifier|string|undefined>; // top-level symbols from the first entry point, that are marked as `export`
+	const wantExportNs = new Map<tsa.Identifier, tsa.Symbol[]>; // top-level symbols from the first entry point, that are marked as `export * as ns`
+	const entryPointsHrefs = program.getRootFileNames(); // entry points given to `createProgram()`
+	const modulesHrefs = entryPointsHrefs.slice(); // i'll add to the entry points all referenced modules (that appear in `import from` and `export from`)
 	const checker = program.getTypeChecker();
-	let exportStmts: NodeWithInfo[] | undefined;
 
 	// 1. Index top-level symbols
 	for (let i=0; i<modulesHrefs.length; i++) // imported modules will be added to `modulesHrefs` while iterating
@@ -86,15 +91,20 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 				}
 				else
 				{	const introduces = new Array<tsa.Symbol>;
-					const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces};
+					const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, isExport: false};
 					if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-					{	const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+					{	const isExport = !!node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword);
+						nodeWithInfo.isExport = isExport;
+						const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
 						for (const name of names)
 						{	const symbol = checker.getSymbolAtLocation(name);
 							if (symbol)
 							{	addSymbol(symbolsNames, namesSymbols, symbol);
 								introduces.push(symbol);
 								nodesThatIntroduce.set(symbol, nodeWithInfo);
+								if (isExport && isFirstEntryPoint)
+								{	wantExport.set(symbol, undefined);
+								}
 							}
 						}
 					}
@@ -121,6 +131,11 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 				{	setUsedTopLevelSymbols(ts, checker, symbolsNames, h, introduces, refs);
 				}
 			}
+			if (node.typeParameters)
+			{	for (const param of node.typeParameters)
+				{	setUsedTopLevelSymbols(ts, checker, symbolsNames, param, introduces, bodyRefs);
+				}
+			}
 			for (const member of node.members)
 			{	if (ts.isPropertyDeclaration(member))
 				{	const isStatic = member.modifiers?.some(m => m.kind == ts.SyntaxKind.StaticKeyword);
@@ -136,10 +151,28 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 		}
 	}
 
-	// 3. Reorder statements according to dependency
+	// 3. Remove dead code. However classes and function used in type aliases will remain.
+	while (true)
+	{	allRefs.clear();
+		for (const {refs, bodyRefs} of nodesWithInfo)
+		{	for (const ref of refs)
+			{	allRefs.add(ref);
+			}
+			for (const ref of bodyRefs)
+			{	allRefs.add(ref);
+			}
+		}
+		const {length} = nodesWithInfo;
+		nodesWithInfo = nodesWithInfo.filter(n => n.introduces.length==0 || n.introduces.some(s => allRefs.has(s)));
+		if (length == nodesWithInfo.length)
+		{	break;
+		}
+	}
+
+	// 4. Reorder statements according to dependency
 	reorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
 
-	// 4. Rename symbols, and create exports
+	// 5. Rename symbols, and create exports
 	for (const nodeWithInfo of nodesWithInfo)
 	{	const stmt = nodeWithInfo.node;
 		nodeWithInfo.node = transformNode
@@ -159,25 +192,33 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 					}
 				}
 				else if (node == stmt)
-				{	const {sourceFile} = nodeWithInfo;
-					// Remove `export` keyword if this is not the first entry point
-					if (sourceFile.fileName != entryPointsHrefs[0])
-					{	//node = unexportStmt(ts, context, node);
+				{	const {isExport} = nodeWithInfo;
+					if (isExport)
+					{	// Remove `export` keyword
+						node = unexportStmt(ts, context, node);
+					}
+					else if (ts.isExportAssignment(node) && nodeWithInfo.sourceFile.fileName!=entryPointsHrefs[0]) // If this is not the first entry point
+					{	// Remove `export default` or `export =`
+						node = context.factory.createExpressionStatement(node.expression);
 					}
 					// Create exports if not yet created
 					if (!exportStmts)
 					{	exportStmts = [];
+						const sourceFile = program.getSourceFile(entryPointsHrefs[0]) ?? nodeWithInfo.sourceFile;
 						if (wantExport.size)
 						{	const exportStmt = context.factory.createExportDeclaration
 							(	undefined,
 								false,
 								context.factory.createNamedExports
 								(	[...wantExport.entries()].map
-									(	([e, rename]) => context.factory.createExportSpecifier(symbolIsType(ts, e), symbolsNames.get(e) ?? (rename && e.name), rename ?? e.name)
+									(	([e, alias]) =>
+										{	const name = symbolsNames.get(e);
+											return context.factory.createExportSpecifier(symbolIsType(ts, e), name!=e.name ? name : alias && e.name, alias ?? e.name);
+										}
 									)
 								)
 							);
-							exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: []});
+							exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], isExport: false});
 						}
 						for (const [alias, symbols] of wantExportNs)
 						{	const values = symbols.filter(s => !symbolIsType(ts, s));
@@ -195,7 +236,7 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 										ts.NodeFlags.Const
 									)
 								);
-								exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: []});
+								exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], isExport: false});
 							}
 						}
 					}
@@ -205,9 +246,8 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 		);
 	}
 
-	// 5. Done
-	//return !exportStmts ? nodesWithInfo : nodesWithInfo.concat(exportStmts);
-	return nodesWithInfo;
+	// 6. Done
+	return !exportStmts ? nodesWithInfo : nodesWithInfo.concat(exportStmts);
 }
 
 function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbolsNames: Map<tsa.Symbol, string>, node: tsa.Node|undefined, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>)
@@ -313,7 +353,7 @@ function *refsIter(ts: typeof tsa, nodesThatIntroduce: Map<tsa.Symbol, NodeWithI
 						}
 					}
 				}
-				else
+				else // TODO: class
 				{	yield symbol;
 				}
 			}

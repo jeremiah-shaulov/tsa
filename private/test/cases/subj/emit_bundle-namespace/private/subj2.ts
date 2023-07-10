@@ -5,3 +5,7 @@ const THREE = 3;
 export {ONE, TWO, THREE};
 
 export type Numbers = 1 | 2 | 3;
+
+export function join()
+{
+}

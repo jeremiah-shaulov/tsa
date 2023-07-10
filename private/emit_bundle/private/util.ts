@@ -54,78 +54,60 @@ export function getNames(ts: typeof tsa, name: tsa.BindingName, outNames=new Arr
 
 export function unexportStmt(ts: typeof tsa, context: tsa.TransformationContext, node: tsa.Node)
 {	if (ts.isFunctionDeclaration(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateFunctionDeclaration
-			(	node,
-				modifiers,
-				node.asteriskToken,
-				node.name,
-				node.typeParameters,
-				node.parameters,
-				node.type,
-				node.body
-			);
-		}
+	{	node = context.factory.updateFunctionDeclaration
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.asteriskToken,
+			node.name,
+			node.typeParameters,
+			node.parameters,
+			node.type,
+			node.body
+		);
 	}
 	else if (ts.isClassDeclaration(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateClassDeclaration
-			(	node,
-				modifiers,
-				node.name,
-				node.typeParameters,
-				node.heritageClauses,
-				node.members
-			);
-		}
+	{	node = context.factory.updateClassDeclaration
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.name,
+			node.typeParameters,
+			node.heritageClauses,
+			node.members
+		);
 	}
 	else if (ts.isInterfaceDeclaration(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateInterfaceDeclaration
-			(	node,
-				modifiers,
-				node.name,
-				node.typeParameters,
-				node.heritageClauses,
-				node.members
-			);
-		}
+	{	node = context.factory.updateInterfaceDeclaration
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.name,
+			node.typeParameters,
+			node.heritageClauses,
+			node.members
+		);
 	}
 	else if (ts.isEnumDeclaration(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateEnumDeclaration
-			(	node,
-				modifiers,
-				node.name,
-				node.members
-			);
-		}
+	{	node = context.factory.updateEnumDeclaration
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.name,
+			node.members
+		);
 	}
 	else if (ts.isTypeAliasDeclaration(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateTypeAliasDeclaration
-			(	node,
-				modifiers,
-				node.name,
-				node.typeParameters,
-				node.type
-			);
-		}
+	{	node = context.factory.updateTypeAliasDeclaration
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.name,
+			node.typeParameters,
+			node.type
+		);
 	}
 	else if (ts.isVariableStatement(node))
-	{	const modifiers = unexportModifiers(ts, node.modifiers);
-		if (modifiers)
-		{	node = context.factory.updateVariableStatement
-			(	node,
-				modifiers,
-				node.declarationList
-			);
-		}
+	{	node = context.factory.updateVariableStatement
+		(	node,
+			unexportModifiers(ts, node.modifiers),
+			node.declarationList
+		);
 	}
 	return node;
 }
@@ -133,8 +115,9 @@ export function unexportStmt(ts: typeof tsa, context: tsa.TransformationContext,
 function unexportModifiers(ts: typeof tsa, modifiers?: tsa.NodeArray<tsa.ModifierLike>)
 {	const i = modifiers?.findIndex(m => m.kind == ts.SyntaxKind.ExportKeyword) ?? -1;
 	if (i!=-1 && modifiers)
-	{	return modifiers.slice(0, i).concat(modifiers.slice(i+1))
+	{	return modifiers.slice(0, i).concat(modifiers.slice(i+1));
 	}
+	return modifiers;
 }
 
 export function transformNode
