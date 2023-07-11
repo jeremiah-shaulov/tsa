@@ -26,7 +26,12 @@ export function step1FindToplevelDeclarations
 						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
 							if (resolvedSymbol)
-							{	exportSymbols.addSymbol(resolvedSymbol, propertyName ? name : undefined);
+							{	if (!(resolvedSymbol.flags & ts.SymbolFlags.Module))
+								{	exportSymbols.addSymbol(resolvedSymbol, propertyName ? name : undefined);
+								}
+								else
+								{	exportSymbols.addModuleSymbol(ts, checker, resolvedSymbol, name);
+								}
 							}
 						}
 					}
