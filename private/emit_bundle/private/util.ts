@@ -1,5 +1,19 @@
 import {tsa} from '../../tsa_ns.ts';
 
+/**	For each `I`, remove `array[removeIndices[I]]`.
+	After the operation `removeIndices` will end up sorted.
+ **/
+export function massSpliceRemove<T>(array: Array<T>, removeIndices: number[])
+{	removeIndices.sort((a, b) => a - b); // ascendant order
+	for (let i=removeIndices.length-1; i>=0; i--)
+	{	const pos = i + 1;
+		while (i>0 && removeIndices[i-1] == removeIndices[i]-1)
+		{	i--;
+		}
+		array.splice(removeIndices[i], pos-i);
+	}
+}
+
 export function symbolIsType(ts: typeof tsa, resolvedSymbol: tsa.Symbol)
 {	return !!(resolvedSymbol.flags & (ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias));
 }

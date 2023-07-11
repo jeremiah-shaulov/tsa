@@ -1,4 +1,4 @@
-export * as letters from './private/subj1.ts';
+export * as letters from './private/subj1.ts'; // exports: A, B, C, type ABC, num={ONE, TWO, THREE, type Numbers, join}, joinPath
 
 const ONE = 'one';
 const A = null;

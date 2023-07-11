@@ -9,7 +9,7 @@ import {LoadOptions, Loader} from './load_options.ts';
 import {getNpmFilename} from './npm.ts';
 import {emitBundle} from './emit_bundle/mod.ts';
 
-export type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
+type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
 export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
 {	const ts = this;
@@ -113,11 +113,7 @@ export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyA
 	};
 
 	(program as tsa.DenoProgram).emitBundle = function()
-	{	return emitBundle
-		(	ts,
-			this,
-			(specifier, referrer) => loader.resolved(specifier, referrer)
-		);
+	{	return emitBundle(ts, this, libLocation);
 	};
 
 	return program as tsa.DenoProgram;

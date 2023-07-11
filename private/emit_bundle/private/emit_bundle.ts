@@ -1,7 +1,6 @@
 import {tsa} from '../../tsa_ns.ts';
-import {getNames, nodeIsNs, resolveSymbol, symbolIsType, transformNode, unexportStmt} from './util.ts';
-
-export type ResolveSync = (specifier: string, referrer: string) => string;
+import {ExportSymbols} from './export_symbols.ts';
+import {getNames, massSpliceRemove, nodeIsNs, resolveSymbol, transformNode, unexportStmt} from './util.ts';
 
 export type NodeWithInfo =
 {	/**	From what file this node originates. Even if `node.getSourceFile()` returns undefined.
@@ -34,88 +33,63 @@ export type NodeWithInfo =
 	isExport: boolean;
 };
 
-export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: ResolveSync)
+export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory: string)
 {	let nodesWithInfo = new Array<NodeWithInfo>; // all the top-level statements (except `import` and `export`) from all modules
 	let exportStmts: NodeWithInfo[] | undefined; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
 	const symbolsNames = new Map<tsa.Symbol, string>; // maps all symbols that top-level statements declare, to their names in the result (they can be renamed)
 	const namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
 	const nodesThatIntroduce = new Map<tsa.Symbol, NodeWithInfo>; // maps all top-level symbols, to elements in `nodesWithInfo`
 	const allRefs = new Set<tsa.Symbol>; // all top-level symbols, that are referenced from somewhere (that appear in some `nodesWithInfo[I].refs` or `nodesWithInfo[I].bodyRefs`), so they're not a dead code
-	const wantExport = new Map<tsa.Symbol, tsa.Identifier|string|undefined>; // top-level symbols from the first entry point, that are marked as `export`
-	const wantExportNs = new Map<tsa.Identifier, tsa.Symbol[]>; // top-level symbols from the first entry point, that are marked as `export * as ns`
-	const entryPointsHrefs = program.getRootFileNames(); // entry points given to `createProgram()`
-	const modulesHrefs = entryPointsHrefs.slice(); // i'll add to the entry points all referenced modules (that appear in `import from` and `export from`)
+	const exportSymbols = new ExportSymbols; // symbols that the first entry point exports
+	const sourceFiles = getSourceFiles(program, excludeLibDirectory);
 	const checker = program.getTypeChecker();
 
 	// 1. Index top-level symbols
-	for (let i=0; i<modulesHrefs.length; i++) // imported modules will be added to `modulesHrefs` while iterating
-	{	const moduleHref = modulesHrefs[i];
-		const sourceFile = program.getSourceFile(moduleHref);
-		if (sourceFile)
-		{	const isFirstEntryPoint = moduleHref == entryPointsHrefs[0];
-			for (const node of sourceFile.statements)
-			{	let moduleSpecifier;
-				if (ts.isExportDeclaration(node))
-				{	moduleSpecifier = node.moduleSpecifier;
-					if (isFirstEntryPoint)
-					{	if (node.exportClause && ts.isNamedExports(node.exportClause))
-						{	// `export {name1, name2}`
-							for (const {name, propertyName} of node.exportClause.elements)
-							{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
-								const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-								if (resolvedSymbol)
-								{	wantExport.set(resolvedSymbol, propertyName ? name : undefined);
-								}
-							}
-						}
-						else
-						{	// `export * from 'name'`
-							const moduleSymbol = moduleSpecifier && checker.getSymbolAtLocation(moduleSpecifier);
-							if (moduleSymbol)
-							{	const symbols = checker.getExportsOfModule(moduleSymbol);
-								const exportAs = node.exportClause && ts.isNamespaceExport(node.exportClause) ? node.exportClause.name : undefined; // TODO: ...
-								if (!exportAs)
-								{	for (const symbol of symbols)
-									{	wantExport.set(symbol, undefined);
-									}
-								}
-								else
-								{	wantExportNs.set(exportAs, symbols);
-								}
+	for (const sourceFile of sourceFiles)
+	{	const isFirstEntryPoint = sourceFile == sourceFiles[0];
+		for (const node of sourceFile.statements)
+		{	if (ts.isExportDeclaration(node))
+			{	if (isFirstEntryPoint)
+				{	if (node.exportClause && ts.isNamedExports(node.exportClause))
+					{	// `export {name1, name2}`
+						for (const {name, propertyName} of node.exportClause.elements)
+						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
+							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+							if (resolvedSymbol)
+							{	exportSymbols.addSymbol(resolvedSymbol, propertyName ? name : undefined);
 							}
 						}
 					}
+					else
+					{	// `export * from 'name'`
+						const moduleSymbol = node.moduleSpecifier && checker.getSymbolAtLocation(node.moduleSpecifier);
+						if (moduleSymbol)
+						{	const exportAsNs = node.exportClause && ts.isNamespaceExport(node.exportClause) ? node.exportClause.name : undefined;
+							exportSymbols.addModuleSymbol(ts, checker, moduleSymbol, exportAsNs);
+						}
+					}
 				}
-				else if (ts.isImportDeclaration(node))
-				{	moduleSpecifier = node.moduleSpecifier;
-				}
-				else
-				{	const introduces = new Array<tsa.Symbol>;
-					const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, isExport: false};
-					if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-					{	const isExport = !!node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword);
-						nodeWithInfo.isExport = isExport;
-						const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
-						for (const name of names)
-						{	const symbol = checker.getSymbolAtLocation(name);
-							if (symbol)
-							{	addSymbol(symbolsNames, namesSymbols, symbol);
-								introduces.push(symbol);
-								nodesThatIntroduce.set(symbol, nodeWithInfo);
-								if (isExport && isFirstEntryPoint)
-								{	wantExport.set(symbol, undefined);
-								}
+			}
+			else if (!ts.isImportDeclaration(node))
+			{	const introduces = new Array<tsa.Symbol>;
+				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, isExport: false};
+				if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
+				{	const isExport = !!node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword);
+					nodeWithInfo.isExport = isExport;
+					const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+					for (const name of names)
+					{	const symbol = checker.getSymbolAtLocation(name);
+						if (symbol)
+						{	addSymbol(symbolsNames, namesSymbols, symbol);
+							introduces.push(symbol);
+							nodesThatIntroduce.set(symbol, nodeWithInfo);
+							if (isExport && isFirstEntryPoint)
+							{	exportSymbols.addSymbol(symbol, undefined);
 							}
 						}
 					}
-					nodesWithInfo.push(nodeWithInfo);
 				}
-				if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier))
-				{	const importHref = resolve(moduleSpecifier.text, moduleHref);
-					if (!modulesHrefs.includes(importHref))
-					{	modulesHrefs.push(importHref);
-					}
-				}
+				nodesWithInfo.push(nodeWithInfo);
 			}
 		}
 	}
@@ -154,6 +128,9 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 	// 3. Remove dead code. However classes and function used in type aliases will remain.
 	while (true)
 	{	allRefs.clear();
+		for (const symbol of exportSymbols.symbolsFlat)
+		{	allRefs.add(symbol);
+		}
 		for (const {refs, bodyRefs} of nodesWithInfo)
 		{	for (const ref of refs)
 			{	allRefs.add(ref);
@@ -182,10 +159,10 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 			{	if (ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isQualifiedName(node))
 				{	const symbol = checker.getSymbolAtLocation(node);
 					const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-					if (resolvedSymbol)
+					if (symbol && resolvedSymbol)
 					{	const newName = symbolsNames.get(resolvedSymbol);
 						if (newName != undefined)
-						{	if (!ts.isIdentifier(node) || newName!=resolvedSymbol.name)
+						{	if (!ts.isIdentifier(node) || newName!=symbol.name)
 							{	node = context.factory.createIdentifier(newName);
 							}
 						}
@@ -197,47 +174,16 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 					{	// Remove `export` keyword
 						node = unexportStmt(ts, context, node);
 					}
-					else if (ts.isExportAssignment(node) && nodeWithInfo.sourceFile.fileName!=entryPointsHrefs[0]) // If this is not the first entry point
+					else if (ts.isExportAssignment(node) && nodeWithInfo.sourceFile!=sourceFiles[0]) // If this is not the first entry point
 					{	// Remove `export default` or `export =`
 						node = context.factory.createExpressionStatement(node.expression);
 					}
 					// Create exports if not yet created
 					if (!exportStmts)
 					{	exportStmts = [];
-						const sourceFile = program.getSourceFile(entryPointsHrefs[0]) ?? nodeWithInfo.sourceFile;
-						if (wantExport.size)
-						{	const exportStmt = context.factory.createExportDeclaration
-							(	undefined,
-								false,
-								context.factory.createNamedExports
-								(	[...wantExport.entries()].map
-									(	([e, alias]) =>
-										{	const name = symbolsNames.get(e);
-											return context.factory.createExportSpecifier(symbolIsType(ts, e), name!=e.name ? name : alias && e.name, alias ?? e.name);
-										}
-									)
-								)
-							);
-							exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], isExport: false});
-						}
-						for (const [alias, symbols] of wantExportNs)
-						{	const values = symbols.filter(s => !symbolIsType(ts, s));
-							if (values.length)
-							{	const exportStmt = context.factory.createVariableStatement
-								(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-									context.factory.createVariableDeclarationList
-									(	[	context.factory.createVariableDeclaration
-											(	alias,
-												undefined,
-												undefined,
-												createNamespace(ts, checker, context, symbolsNames, values)
-											)
-										],
-										ts.NodeFlags.Const
-									)
-								);
-								exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], isExport: false});
-							}
+						const sourceFile = sourceFiles[0];
+						for (const exportStmt of exportSymbols.getExportStmts(ts, context, symbolsNames))
+						{	exportStmts.push({sourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], isExport: false});
 						}
 					}
 				}
@@ -248,6 +194,22 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, resolve: Re
 
 	// 6. Done
 	return !exportStmts ? nodesWithInfo : nodesWithInfo.concat(exportStmts);
+}
+
+function getSourceFiles(program: tsa.Program, excludeLibDirectory: string)
+{	const sourceFiles = new Array<tsa.SourceFile>;
+	for (const moduleHref of program.getRootFileNames())
+	{	const sourceFile = program.getSourceFile(moduleHref);
+		if (sourceFile)
+		{	sourceFiles.push(sourceFile);
+		}
+	}
+	for (const sourceFile of program.getSourceFiles().toSorted((a, b) => a.fileName < b.fileName ? -1 : a.fileName > b.fileName ? +1 : 0))
+	{	if (!sourceFile.fileName.startsWith(excludeLibDirectory) && !sourceFiles.includes(sourceFile))
+		{	sourceFiles.push(sourceFile);
+		}
+	}
+	return sourceFiles;
 }
 
 function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbolsNames: Map<tsa.Symbol, string>, node: tsa.Node|undefined, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>)
@@ -300,8 +262,10 @@ L:	for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 						for (let j=i+1; j<iEnd; j++)
 						{	if (nodesWithInfo[j].sourceFile == toSourceFile)
 							{	// Want to bring `nodesWithInfo[i .. j]` to the end of array
-								const part = nodesWithInfo.splice(i, j-i);
-								nodesWithInfo.splice(nodesWithInfo.length, 0, ...part);
+								for (const p of nodesWithInfo.splice(i, j-i))
+								{	nodesWithInfo[nodesWithInfo.length] = p;
+								}
+								//
 								stack.push({fromSourceFile: sourceFile, symbol});
 								i--;
 								continue L;
@@ -315,11 +279,8 @@ L:	for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)
 						for (let j=stack.length-1; j>=0; j--)
 						{	if (getNodesThatIntroduce(ts, nodesWithInfo, nodesThatIntroduce, stack[j].symbol, newKnownSymbols, i, nodeIndices))
 							{	const nodes = nodeIndices.map(k => nodesWithInfo[k]);
-								nodeIndices.sort((a, b) => b - a); // descendant order
-								for (const k of nodeIndices)
-								{	nodesWithInfo.splice(k, 1);
-								}
-								nodesWithInfo.splice(i, 0, ...nodes);
+								massSpliceRemove(nodesWithInfo, nodeIndices); // for each I, remove nodesWithInfo[nodeIndices[I]]
+								nodesWithInfo.splice(i, 0, ...nodes); // insert `nodes` at `i`
 								knownSymbols = newKnownSymbols;
 								i += nodes.length - 1;
 								stack.length = 0;
@@ -365,8 +326,8 @@ function getNodesThatIntroduce(ts: typeof tsa, nodesWithInfo: NodeWithInfo[], no
 {	const found = nodesThatIntroduce.get(symbol);
 	knownSymbols.add(symbol);
 	if (found)
-	{	const i = nodesWithInfo.indexOf(found);
-		if (i<fromNode || visited.includes(i))
+	{	const i = nodesWithInfo.indexOf(found, fromNode);
+		if (i==-1 || visited.includes(i))
 		{	return false;
 		}
 		visited.push(i);
@@ -384,29 +345,4 @@ function getNodesThatIntroduce(ts: typeof tsa, nodesWithInfo: NodeWithInfo[], no
 		outNodeIndices.push(i);
 	}
 	return true;
-}
-
-function createNamespace(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, symbolsNames: Map<tsa.Symbol, string>, symbols: tsa.Symbol[]): tsa.ObjectLiteralExpression
-{	return context.factory.createObjectLiteralExpression
-	(	symbols.map
-		(	symbol =>
-			{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-				if (resolvedSymbol.flags & ts.SymbolFlags.Module)
-				{	return context.factory.createPropertyAssignment
-					(	symbol.name,
-						createNamespace(ts, checker, context, symbolsNames, checker.getExportsOfModule(resolvedSymbol).filter(s => !symbolIsType(ts, s)))
-					);
-				}
-				else if (!symbolsNames.has(symbol))
-				{	return context.factory.createShorthandPropertyAssignment(symbol.name);
-				}
-				else
-				{	return context.factory.createPropertyAssignment
-					(	symbol.name,
-						context.factory.createIdentifier(symbolsNames.get(symbol) ?? symbol.name)
-					);
-				}
-			}
-		)
-	);
 }
