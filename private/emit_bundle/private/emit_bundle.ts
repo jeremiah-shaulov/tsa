@@ -6,6 +6,12 @@ import {step3RemoveDeadCode} from './step3_remove_dead_code.ts';
 import {step4ReorderStmtsAccordingToDependency} from './step4_reorder_stmts_according_to_dependency.ts';
 import {step5TransformNodes} from './step5_transform_nodes.ts';
 
+export const enum StmtFlags
+{	NONE,
+	EXPORT,
+	EXPORT_UNNAMED_DEFAULT,
+}
+
 export type NodeWithInfo =
 {	/**	From what file this node originates. Even if `node.getSourceFile()` returns undefined.
 	 **/
@@ -32,9 +38,9 @@ export type NodeWithInfo =
 	 **/
 	introduces: tsa.Symbol[];
 
-	/**	This statement introduces it's symbols with `export` keyword.
+	/**	This statement introduces it's symbols with `export` keyword. Or it's `export default () => 'unnamed symbol'`
 	 **/
-	isExport: boolean;
+	stmtFlags: StmtFlags;
 };
 
 export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory?: string)

@@ -9,3 +9,7 @@ export type Numbers = 1 | 2 | 3;
 export function join()
 {
 }
+
+export default function()
+{	return 'fn';
+}

@@ -49,6 +49,7 @@ program
 	(	'Bundle Typescript source files to single Javascript module.'
 	)
 	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
+	.option('--ts', 'Bundle to `.ts`. If some of the sources is plain Javascript, the resulting bundle can be valid by the means of Typescript.')
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
@@ -78,44 +79,52 @@ program
 				text += line;
 			}
 
-			// Create second program to transpile the bundle to Javascript
-			const program2 = await tsa.createDenoProgram
-			(	['/dev/stdin'],
-				{	target: tsa.ScriptTarget.ESNext,
-					module: tsa.ModuleKind.ESNext,
-					outDir: '.',
-				},
-				{	resolve(specifier, referrer)
-					{	if (specifier == '/dev/stdin')
-						{	return specifier;
-						}
-						return defaultResolve(specifier, referrer);
+			if (options.ts)
+			{	// Save the result to file (or print to stdout)
+				await writeTextFile(outFile, text);
+			}
+			else
+			{	// Create second program to transpile the bundle to Javascript
+				const program2 = await tsa.createDenoProgram
+				(	['/dev/stdin'],
+					{	target: tsa.ScriptTarget.ESNext,
+						module: tsa.ModuleKind.ESNext,
+						outDir: '.',
 					},
-					async load(specifier, isDynamic)
-					{	if (specifier == '/dev/stdin')
-						{	return {kind: 'module', specifier: '/dev/stdin', content: text, headers: {'content-type': 'application/typescript'}};
+					{	resolve(specifier, referrer)
+						{	if (specifier == '/dev/stdin')
+							{	return specifier;
+							}
+							return defaultResolve(specifier, referrer);
+						},
+						async load(specifier, isDynamic)
+						{	if (specifier == '/dev/stdin')
+							{	return {kind: 'module', specifier: '/dev/stdin', content: text, headers: {'content-type': 'application/typescript'}};
+							}
+							return await defaultLoad(specifier, isDynamic);
 						}
-						return await defaultLoad(specifier, isDynamic);
 					}
-				}
-			);
-			printDiagnostics(tsa.getPreEmitDiagnostics(program2));
+				);
+				printDiagnostics(tsa.getPreEmitDiagnostics(program2));
 
-			// Transpile
-			let contents = '';
-			const result2 = program2.emit
-			(	undefined,
-				(_fileName: string, text: string) =>
-				{	contents = text;
+				// Transpile
+				let contents = '';
+				const result2 = program2.emit
+				(	undefined,
+					(_fileName: string, text: string) =>
+					{	contents = text;
+					}
+				);
+				printDiagnostics(result2.diagnostics);
+				if (result2.emitSkipped)
+				{	Deno.exit(1);
 				}
-			);
-			printDiagnostics(result2.diagnostics);
-			if (result2.emitSkipped)
-			{	Deno.exit(1);
+
+				// Save the result to file (or print to stdout)
+				await writeTextFile(outFile, contents);
 			}
 
-			// Save the result to file (or print to stdout), and exit
-			await writeTextFile(outFile, contents);
+			// Done
 			Deno.exit();
 		}
 	);

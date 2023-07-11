@@ -1,6 +1,6 @@
 import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
-import {nodeIsNs, resolveSymbol} from './util.ts';
+import {resolveSymbol} from './util.ts';
 
 export function step2FindRefs(ts: typeof tsa, checker: tsa.TypeChecker, nodesWithInfo: NodeWithInfo[], symbolsNames: Map<tsa.Symbol, string>)
 {	for (const {node, refs, bodyRefs, introduces} of nodesWithInfo)
@@ -53,4 +53,31 @@ function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbol
 			}
 		}
 	}
+}
+
+/**	Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`), and is this node the **left** side of the property access?
+ **/
+function nodeIsNs(ts: typeof tsa, checker: tsa.TypeChecker, node: tsa.Node, symbol: tsa.Symbol)
+{	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.expression || ts.isQualifiedName(node.parent) && node==node.parent.left)
+	{	return symbolIsNs(ts, checker, symbol);
+	}
+	return false;
+}
+
+function symbolIsNs(ts: typeof tsa, checker: tsa.TypeChecker, symbol: tsa.Symbol)
+{	if (symbol.flags & ts.SymbolFlags.Alias)
+	{	const declaration = symbol.getDeclarations()?.[0];
+		if (declaration)
+		{	if (declaration.kind == ts.SyntaxKind.NamespaceImport)
+			{	return true;
+			}
+			if (declaration.kind == ts.SyntaxKind.ImportSpecifier)
+			{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+				if (resolvedSymbol && resolvedSymbol.flags & ts.SymbolFlags.Module)
+				{	return true;
+				}
+			}
+		}
+	}
+	return false;
 }

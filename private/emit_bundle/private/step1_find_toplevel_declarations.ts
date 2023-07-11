@@ -1,9 +1,20 @@
 import {tsa} from '../../tsa_ns.ts';
-import {NodeWithInfo} from './emit_bundle.ts';
+import {StmtFlags, NodeWithInfo} from './emit_bundle.ts';
 import {ExportSymbols} from './export_symbols.ts';
-import {getNames, resolveSymbol} from './util.ts';
+import {getSymbolName, resolveSymbol} from './util.ts';
 
-export function step1FindToplevelDeclarations(ts: typeof tsa, checker: tsa.TypeChecker, nodesWithInfo: NodeWithInfo[], symbolsNames: Map<tsa.Symbol, string>, namesSymbols: Map<string, tsa.Symbol>, nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>, exportSymbols: ExportSymbols, sourceFiles: tsa.SourceFile[])
+const RE_MODULE_NAME = /(\w+?)(?:[\/\\](?:mod|index|main))?(?:\.\w{1,4})?(?:\.map)?$/i;
+
+export function step1FindToplevelDeclarations
+(	ts: typeof tsa,
+	checker: tsa.TypeChecker,
+	nodesWithInfo: NodeWithInfo[],
+	symbolsNames: Map<tsa.Symbol, string>,
+	namesSymbols: Map<string, tsa.Symbol>,
+	nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>,
+	exportSymbols: ExportSymbols,
+	sourceFiles: tsa.SourceFile[]
+)
 {	for (const sourceFile of sourceFiles)
 	{	const isFirstEntryPoint = sourceFile == sourceFiles[0];
 		for (const node of sourceFile.statements)
@@ -31,18 +42,25 @@ export function step1FindToplevelDeclarations(ts: typeof tsa, checker: tsa.TypeC
 			}
 			else if (!ts.isImportDeclaration(node))
 			{	const introduces = new Array<tsa.Symbol>;
-				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, isExport: false};
+				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, stmtFlags: StmtFlags.NONE};
 				if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-				{	const isExport = !!node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword);
-					nodeWithInfo.isExport = isExport;
-					const names = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+				{	let stmtFlags = node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword) ? StmtFlags.EXPORT : StmtFlags.NONE;
+					const names: Array<tsa.Identifier | tsa.ModifierLike> = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+					if (names.length==0 && stmtFlags!=StmtFlags.NONE)
+					{	const defaultKeyword = node.modifiers?.find(m => m.kind == ts.SyntaxKind.DefaultKeyword);
+						if (defaultKeyword)
+						{	names.push(defaultKeyword);
+							stmtFlags = StmtFlags.EXPORT_UNNAMED_DEFAULT;
+						}
+					}
+					nodeWithInfo.stmtFlags = stmtFlags;
 					for (const name of names)
 					{	const symbol = checker.getSymbolAtLocation(name);
 						if (symbol)
-						{	addSymbol(symbolsNames, namesSymbols, symbol);
+						{	addSymbol(ts, symbolsNames, namesSymbols, sourceFile, symbol);
 							introduces.push(symbol);
 							nodesThatIntroduce.set(symbol, nodeWithInfo);
-							if (isExport && isFirstEntryPoint)
+							if (stmtFlags!=StmtFlags.NONE && isFirstEntryPoint)
 							{	exportSymbols.addSymbol(symbol, undefined);
 							}
 						}
@@ -54,9 +72,13 @@ export function step1FindToplevelDeclarations(ts: typeof tsa, checker: tsa.TypeC
 	}
 }
 
-function addSymbol(symbolsNames: Map<tsa.Symbol, string>, namesSymbols: Map<string, tsa.Symbol>, symbol: tsa.Symbol)
+function addSymbol(ts: typeof tsa, symbolsNames: Map<tsa.Symbol, string>, namesSymbols: Map<string, tsa.Symbol>, sourceFile: tsa.SourceFile, symbol: tsa.Symbol)
 {	if (symbolsNames.get(symbol) == undefined)
-	{	const name = !namesSymbols.get(symbol.name) ? symbol.name : getUniqueName(namesSymbols, symbol.name);
+	{	let baseName = getSymbolName(ts, symbol);
+		if (!baseName)
+		{	baseName = sourceFile.fileName.match(RE_MODULE_NAME)?.[1] ?? 'defaultExport';
+		}
+		const name = !namesSymbols.get(baseName) ? baseName : getUniqueName(namesSymbols, baseName);
 		symbolsNames.set(symbol, name);
 		namesSymbols.set(name, symbol);
 	}
@@ -69,4 +91,18 @@ function getUniqueName(namesSymbols: Map<string, tsa.Symbol>, base: string)
 		{	return name;
 		}
 	}
+}
+
+function getNames(ts: typeof tsa, name: tsa.BindingName, outNames=new Array<tsa.Identifier>)
+{	if (!ts.isIdentifier(name))
+	{	for (const e of name.elements)
+		{	if (!ts.isOmittedExpression(e))
+			{	getNames(ts, e.name, outNames);
+			}
+		}
+	}
+	else
+	{	outNames.push(name);
+	}
+	return outNames;
 }
