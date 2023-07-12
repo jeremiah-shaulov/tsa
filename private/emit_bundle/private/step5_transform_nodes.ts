@@ -2,7 +2,7 @@ import {tsa} from '../../tsa_ns.ts';
 import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {KnownSymbols} from './known_symbols.ts';
 import {ExportSymbols} from './export_symbols.ts';
-import {resolveSymbol} from './util.ts';
+import {isNamespaceButNotFromLib, resolveSymbol} from './util.ts';
 
 export function step5TransformNodes
 (	ts: typeof tsa,
@@ -10,9 +10,10 @@ export function step5TransformNodes
 	nodesWithInfo: NodeWithInfo[],
 	knownSymbols: KnownSymbols,
 	exportSymbols: ExportSymbols,
-	firstSourceFile: tsa.SourceFile
+	firstSourceFile: tsa.SourceFile,
+	excludeLibDirectory: string
 )
-{	let exportStmts: NodeWithInfo[] | undefined; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
+{	const exportStmts = new Array<NodeWithInfo>; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
 	for (let i=0; i<nodesWithInfo.length; i++)
 	{	const nodeWithInfo = nodesWithInfo[i];
 		const {sourceFile, node: stmt, introduces, nodeExportType} = nodeWithInfo;
@@ -30,10 +31,10 @@ export function step5TransformNodes
 							{	node = context.factory.createIdentifier(name);
 							}
 						}
-						else if (resolvedSymbol.flags & ts.SymbolFlags.Module)
+						else if (isNamespaceButNotFromLib(ts, excludeLibDirectory, resolvedSymbol))
 						{	// namespace name is used as value, like `import * as ns from '...'; const ns2 = ns`
 							const addNodesWithInfo = new Array<NodeWithInfo>;
-							const nsName = exportSymbols.getNamespaceAsValue(ts, checker, context, sourceFile, knownSymbols, addNodesWithInfo, resolvedSymbol);
+							const nsName = exportSymbols.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, addNodesWithInfo, resolvedSymbol);
 							for (const n of addNodesWithInfo)
 							{	nodesWithInfo.splice(i++, 0, n);
 							}
@@ -107,22 +108,17 @@ export function step5TransformNodes
 					{	// Remove `export default` or `export =`
 						node = context.factory.createExpressionStatement(node.expression);
 					}
-					// Create exports if not yet created
-					if (!exportStmts)
-					{	exportStmts = [];
-						for (const exportStmt of exportSymbols.getExportStmts(ts, context, knownSymbols))
-						{	exportStmts.push({sourceFile: firstSourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], nodeExportType: NodeExportType.NONE});
-						}
+					// Create exports if this is the last statement
+					if (i == nodesWithInfo.length-1)
+					{	exportSymbols.getExportStmts(ts, checker, context, firstSourceFile, excludeLibDirectory, knownSymbols, exportStmts);
 					}
 				}
 				return node;
 			}
 		);
 	}
-	if (exportStmts)
-	{	for (const exportStmt of exportStmts)
-		{	nodesWithInfo.push(exportStmt);
-		}
+	for (const exportStmt of exportStmts)
+	{	nodesWithInfo.push(exportStmt);
 	}
 }
 

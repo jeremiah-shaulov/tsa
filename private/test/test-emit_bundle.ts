@@ -1,24 +1,18 @@
 import {tsa} from '../tsa_ns.ts';
 import {printDiagnostics, formatDiagnostics, ensureTempFile} from '../util.ts';
 
-export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, saveToFileTag='')
+export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, testName: string, compilerOptions?: tsa.CompilerOptions)
 {	// Emit ts
 	const program = await tsa.createTsaProgram(entryPoints, compilerOptions);
 	const bundle = program.emitBundle();
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	// Transpile the ts to js to see that it's valid
-	const program2 = await bundle.toProgram();
-	let js = '';
-	const result2 = program2.emit
-	(	undefined,
-		(fileName, text) =>
-		{	js = text;
-			console.log(`File ${fileName}: ${text.length} chars`);
-		}
-	);
+	const outFile = await ensureTempFile(`tsa-${testName}.js`);
+	const program2 = await bundle.toProgram({outFile});
+	const result2 = program2.emit();
 	// Save `.ts` if needed
-	if (saveToFileTag)
-	{	const filename = await ensureTempFile(`deno-${saveToFileTag}.ts`);
+	if (testName)
+	{	const filename = await ensureTempFile(`tsa-${testName}.ts`);
 		await Deno.writeTextFile(filename, bundle.toTs());
 	}
 	// If there were errors during transpiling, throw exception
@@ -27,5 +21,5 @@ export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, com
 	{	printDiagnostics(diagnostics);
 		throw new Error(formatDiagnostics(diagnostics));
 	}
-	return js;
+	return outFile;
 }

@@ -55,3 +55,7 @@ export function getSymbolName(ts: typeof tsa, symbol: tsa.Symbol)
 	}
 	return name;
 }
+
+export function isNamespaceButNotFromLib(ts: typeof tsa, excludeLibDirectory: string, symbol: tsa.Symbol)
+{	return symbol.flags & ts.SymbolFlags.Module && symbol.valueDeclaration?.getSourceFile()?.fileName.startsWith(excludeLibDirectory) === false;
+}

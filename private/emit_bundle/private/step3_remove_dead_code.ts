@@ -6,7 +6,7 @@ export function step3RemoveDeadCode(nodesWithInfo: NodeWithInfo[], exportSymbols
 {	const allRefs = new Set<tsa.Symbol>; // all top-level symbols, that are referenced from somewhere (that appear in some `nodesWithInfo[I].refs` or `nodesWithInfo[I].bodyRefs`), so they're not a dead code
 	while (true)
 	{	allRefs.clear();
-		for (const symbol of exportSymbols.symbolsFlat)
+		for (const symbol of exportSymbols.refs)
 		{	allRefs.add(symbol);
 		}
 		for (const {refs, bodyRefs} of nodesWithInfo)

@@ -69,7 +69,7 @@ program
 			}
 			else
 			{	// Create second program to transpile the bundle to Javascript
-				const program2 = await bundle.toProgram();
+				const program2 = await bundle.toProgram({outFile});
 				printDiagnostics(tsa.getPreEmitDiagnostics(program2));
 
 				// Transpile

@@ -1,45 +1,38 @@
 import {tsa} from '../../tsa_ns.ts';
 import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {KnownSymbols} from './known_symbols.ts';
-import {resolveSymbol, symbolIsType} from './util.ts';
+import {isNamespaceButNotFromLib, resolveSymbol, symbolIsType} from './util.ts';
 
 type ExportSymbolsAlias = tsa.Identifier|string|undefined;
 
-/**	Maps exported symbol to alias. The exported symbol can be namespace (nested `ExportSymbolsMap`).
- **/
-type ExportSymbolsMap = Map<tsa.Symbol|ExportSymbolsMap, ExportSymbolsAlias>;
-
 export class ExportSymbols
-{	#symbols: ExportSymbolsMap = new Map; // symbols that the first entry point exports
-	symbolsFlat = new Set<tsa.Symbol>; // all the symbols that are found in `#symbols`
+{	#exports = new Map<tsa.Symbol, ExportSymbolsAlias>; // symbols that the first entry point exports
+	refs = new Set<tsa.Symbol>; // all the symbols that are found in `#symbols`
 
-	addSymbol(resolvedSymbol: tsa.Symbol, alias: ExportSymbolsAlias)
-	{	this.#symbols.set(resolvedSymbol, alias);
-		this.symbolsFlat.add(resolvedSymbol);
+	addExport(ts: typeof tsa, checker: tsa.TypeChecker, excludeLibDirectory: string, symbol: tsa.Symbol, alias: ExportSymbolsAlias)
+	{	this.#exports.set(symbol, alias);
+		this.#moduleAddRefs(ts, checker, excludeLibDirectory, symbol);
 	}
 
-	addModuleSymbol(ts: typeof tsa, checker: tsa.TypeChecker, moduleSymbol: tsa.Symbol, exportAsNs: ExportSymbolsAlias, symbols=this.#symbols)
-	{	let addTo = symbols;
-		if (exportAsNs)
-		{	addTo = new Map;
-			symbols.set(addTo, exportAsNs);
+	#moduleAddRefs(ts: typeof tsa, checker: tsa.TypeChecker, excludeLibDirectory: string, symbol: tsa.Symbol, visited=new Set<tsa.Symbol>)
+	{	if (isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol))
+		{	for (const symbol2 of checker.getExportsOfModule(symbol))
+			{	const resolvedSymbol = resolveSymbol(ts, checker, symbol2);
+				if (resolvedSymbol && !visited.has(resolvedSymbol))
+				{	visited.add(resolvedSymbol);
+					this.#moduleAddRefs(ts, checker, excludeLibDirectory, resolvedSymbol, visited);
+				}
+			}
 		}
-		for (const symbol of checker.getExportsOfModule(moduleSymbol))
-		{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-			if (resolvedSymbol.flags & ts.SymbolFlags.Module)
-			{	this.addModuleSymbol(ts, checker, resolvedSymbol, symbol.name, addTo);
-			}
-			else
-			{	addTo.set(resolvedSymbol, resolvedSymbol.name==symbol.name ? undefined : symbol.name);
-				this.symbolsFlat.add(resolvedSymbol);
-			}
+		else
+		{	this.refs.add(symbol);
 		}
 	}
 
-	getNamespaceAsValue(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, knownSymbols: KnownSymbols, nodesWithInfo: NodeWithInfo[], moduleSymbol: tsa.Symbol, visited=new Map<tsa.Symbol, string>)
+	getNamespaceAsValue(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, excludeLibDirectory: string, knownSymbols: KnownSymbols, nodesWithInfo: NodeWithInfo[], moduleSymbol: tsa.Symbol, visited=new Map<tsa.Symbol, string>)
 	{	let nsName = knownSymbols.symbolsNames.get(moduleSymbol);
 		if (nsName == undefined)
-		{	nsName = knownSymbols.add(ts, sourceFile, moduleSymbol);
+		{	nsName = knownSymbols.add(ts, sourceFile, excludeLibDirectory, moduleSymbol);
 			visited.set(moduleSymbol, nsName);
 			const props = new Array<tsa.ObjectLiteralElementLike>;
 			const refs = new Set<tsa.Symbol>;
@@ -49,7 +42,7 @@ export class ExportSymbols
 				{	refs.add(resolvedSymbol);
 					const circular = visited.get(resolvedSymbol);
 					if (!circular)
-					{	const name = resolvedSymbol.flags & ts.SymbolFlags.Module ? this.getNamespaceAsValue(ts, checker, context, sourceFile, knownSymbols, nodesWithInfo, resolvedSymbol, visited) : knownSymbols.symbolsNames.get(symbol);
+					{	const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, nodesWithInfo, resolvedSymbol, visited);
 						const rename = name!=symbol.name ? name : undefined;
 						if (rename == undefined)
 						{	props[props.length] = context.factory.createShorthandPropertyAssignment(symbol.name);
@@ -92,32 +85,12 @@ export class ExportSymbols
 		return nsName;
 	}
 
-	getExportStmts(ts: typeof tsa, context: tsa.TransformationContext, knownSymbols: KnownSymbols)
-	{	const exportStmts = new Array<tsa.Node>;
-		const exportSpecifiers = new Array<tsa.ExportSpecifier>;
-		for (const [symbol, alias] of this.#symbols)
-		{	if (symbol instanceof Map)
-			{	if (alias != undefined) // i always add namespaces with names
-				{	const props = this.#createNamespace(ts, context, knownSymbols, symbol); // TODO: create typescript namespace
-					exportStmts.push
-					(	context.factory.createVariableStatement
-						(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-							context.factory.createVariableDeclarationList
-							(	[	context.factory.createVariableDeclaration
-									(	alias,
-										undefined,
-										undefined,
-										props
-									)
-								],
-								ts.NodeFlags.Const
-							)
-						)
-					);
-				}
-			}
-			else
-			{	const name = knownSymbols.symbolsNames.get(symbol);
+	getExportStmts(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, excludeLibDirectory: string, knownSymbols: KnownSymbols, outExportStmts: NodeWithInfo[])
+	{	const exportSpecifiers = new Array<tsa.ExportSpecifier>;
+		for (const [symbol, alias] of this.#exports)
+		{	const isModule = isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol);
+			if (!isModule || alias)
+			{	const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, symbol);
 				exportSpecifiers.push
 				(	context.factory.createExportSpecifier
 					(	symbolIsType(ts, symbol),
@@ -126,38 +99,30 @@ export class ExportSymbols
 					)
 				);
 			}
-		}
-		if (exportSpecifiers.length)
-		{	exportStmts.push
-			(	context.factory.createExportDeclaration(undefined, false, context.factory.createNamedExports(exportSpecifiers))
-			);
-		}
-		return exportStmts;
-	}
-
-	#createNamespace(ts: typeof tsa, context: tsa.TransformationContext, knownSymbols: KnownSymbols, symbols: ExportSymbolsMap)
-	{	const props = new Array<tsa.ObjectLiteralElementLike>;
-		for (const [symbol, alias] of symbols)
-		{	if (symbol instanceof Map)
-			{	if (alias != undefined) // i always add namespaces with names
-				{	const subProps = this.#createNamespace(ts, context, knownSymbols, symbol);
-					props[props.length] = context.factory.createPropertyAssignment(alias, subProps);
-				}
-			}
-			else if (!symbolIsType(ts, symbol))
-			{	const name = knownSymbols.symbolsNames.get(symbol);
-				const rename = name!=symbol.name ? name : undefined;
-				if (rename==undefined && alias==undefined)
-				{	props[props.length] = context.factory.createShorthandPropertyAssignment(symbol.name);
-				}
-				else
-				{	props[props.length] = context.factory.createPropertyAssignment
-					(	alias ?? symbol.name,
-						typeof(rename)=='object' ? rename : context.factory.createIdentifier(rename ?? symbol.name)
+			else
+			{	for (const symbol2 of checker.getExportsOfModule(symbol))
+				{	const resolvedSymbol = resolveSymbol(ts, checker, symbol2);
+					const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, resolvedSymbol);
+					exportSpecifiers.push
+					(	context.factory.createExportSpecifier
+						(	symbolIsType(ts, resolvedSymbol),
+							name!=symbol2.name ? name : alias && symbol2.name,
+							alias ?? symbol2.name
+						)
 					);
 				}
 			}
 		}
-		return context.factory.createObjectLiteralExpression(props);
+		if (exportSpecifiers.length)
+		{	outExportStmts.push
+			(	{	sourceFile,
+					node: context.factory.createExportDeclaration(undefined, false, context.factory.createNamedExports(exportSpecifiers)),
+					refs: new Set,
+					bodyRefs: new Set,
+					introduces: [],
+					nodeExportType: NodeExportType.NONE
+				}
+			);
+		}
 	}
 }

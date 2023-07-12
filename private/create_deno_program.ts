@@ -13,7 +13,19 @@ type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKin
 
 export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
 {	const ts = this;
-	compilerOptions = setDefaultOptions(this, compilerOptions);
+
+	const DEFAULT_COMPILER_OPTIONS =
+	{	lib: ['lib.deno.ns.d.ts'],
+		allowJs: true,
+		resolveJsonModule: true,
+		allowSyntheticDefaultImports: true,
+		target: ts.ScriptTarget.ESNext,
+		module: ts.ModuleKind.ESNext,
+		moduleResolution: ts.ModuleResolutionKind.NodeNext,
+	};
+	compilerOptions = {...DEFAULT_COMPILER_OPTIONS, ...compilerOptions};
+	delete compilerOptions.allowImportingTsExtensions;
+
 	const loader = await Loader.inst(loadOptions);
 	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, entryPoints, loader);
 	const host = ts.createCompilerHost(compilerOptions);
@@ -113,39 +125,10 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	};
 
 	(program as tsa.DenoProgram).emitBundle = function()
-	{	return emitBundle(ts, this, libLocation);
+	{	return emitBundle(ts, this, compilerOptions?.lib, libLocation);
 	};
 
 	return program as tsa.DenoProgram;
-}
-
-function setDefaultOptions(ts: typeof tsa, compilerOptions?: tsa.CompilerOptions): tsa.CompilerOptions
-{	if (!compilerOptions)
-	{	compilerOptions = {};
-	}
-	if (compilerOptions.lib == undefined)
-	{	compilerOptions.lib = ['lib.deno.ns.d.ts'];
-	}
-	if (compilerOptions.allowJs == undefined)
-	{	compilerOptions.allowJs = true;
-	}
-	if (compilerOptions.resolveJsonModule == undefined)
-	{	compilerOptions.resolveJsonModule = true;
-	}
-	if (compilerOptions.allowSyntheticDefaultImports == undefined)
-	{	compilerOptions.allowSyntheticDefaultImports = true;
-	}
-	if (compilerOptions.target == undefined)
-	{	compilerOptions.target = ts.ScriptTarget.ESNext;
-	}
-	if (compilerOptions.module == undefined)
-	{	compilerOptions.module = ts.ModuleKind.ESNext;
-	}
-	if (compilerOptions.moduleResolution == undefined)
-	{	compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeNext;
-	}
-	delete compilerOptions.allowImportingTsExtensions; // TODO: implement filenames without extension
-	return compilerOptions;
 }
 
 async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|URL>, loader: Loader)

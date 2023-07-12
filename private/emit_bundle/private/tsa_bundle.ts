@@ -1,10 +1,11 @@
+import {path} from '../../deps.ts';
 import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
 
 export class TsaBundle
 {	#text: string | undefined;
 
-	constructor(public nodesWithInfo: NodeWithInfo[], private newLine: string)
+	constructor(public nodesWithInfo: NodeWithInfo[], private lib: string[]|undefined, private newLine: string)
 	{
 	}
 
@@ -32,24 +33,41 @@ export class TsaBundle
 		return this.#text;
 	}
 
-	async toProgram(logToConsole=false, fakeTsFilename='/dev/stdin')
-	{	const text = this.toTs(logToConsole);
+	async toProgram(compilerOptions?: tsa.CompilerOptions, logToConsole=false)
+	{	const outFile = compilerOptions?.outFile;
+		if (!outFile)
+		{	throw new Error(`Please, specify outFile`);
+		}
+		if (outFile.slice(-3).toLowerCase() == '.ts')
+		{	throw new Error(`Cannot emit to a .ts file`);
+		}
+		const inFile = outFile.replace(/\.\w{1,5}$/, '.ts');
+		if (inFile.slice(-3).toLowerCase() != '.ts')
+		{	throw new Error(`File without extension: ${outFile}`);
+		}
+		const outDir = path.dirname(await Deno.realPath(outFile));
+		compilerOptions =
+		{	target: tsa.ScriptTarget.ESNext,
+			module: tsa.ModuleKind.ESNext,
+			lib: this.lib,
+			...compilerOptions,
+			outDir,
+			outFile: undefined, // reset
+		};
+		const text = this.toTs(logToConsole);
 		return await tsa.createTsaProgram
-		(	[fakeTsFilename],
-			{	target: tsa.ScriptTarget.ESNext,
-				module: tsa.ModuleKind.ESNext,
-				outDir: '.',
-			},
+		(	[inFile],
+			compilerOptions,
 			{	resolve(specifier, _referrer)
-				{	if (specifier == fakeTsFilename)
+				{	if (specifier == inFile)
 					{	return specifier;
 					}
 					return '';
 				},
 				// deno-lint-ignore require-await
 				async load(specifier, _isDynamic)
-				{	if (specifier == fakeTsFilename)
-					{	return {kind: 'module', specifier: fakeTsFilename, content: text, headers: {'content-type': 'application/typescript'}};
+				{	if (specifier == inFile)
+					{	return {kind: 'module', specifier: inFile, content: text, headers: {'content-type': 'application/typescript'}};
 					}
 				}
 			}

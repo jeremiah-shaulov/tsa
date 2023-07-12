@@ -1,20 +1,22 @@
 import {testEmitBundle} from '../test-emit_bundle.ts';
 import {tsa} from '../../tsa_ns.ts';
-
-const SAVE_TO_FILES = Deno.args.includes('--save-to-files');
+import {assertEquals} from '../deps.ts';
 
 Deno.test
 (	'emit_bundle-circular',
 	async () =>
 	{	const subj = new URL(`subj/emit_bundle-circular/mod.ts`, import.meta.url);
-		await testEmitBundle
+		const outFile = await testEmitBundle
 		(	[subj],
+			'emit_bundle-circular',
 			{	outFile: 'dist.js',
 				module: tsa.ModuleKind.System,
 				resolveJsonModule: false,
 				lib: ['lib.esnext.d.ts', 'lib.dom.d.ts'],
-			},
-			SAVE_TO_FILES ? 'emit_bundle-circular' : ''
+			}
 		);
+		const mod = await import(outFile);
+		assertEquals(Object.keys(mod).sort(), ['Class1', 'mark1', 'Class2'].sort());
+		assertEquals(mod.Class2, 0);
 	}
 );

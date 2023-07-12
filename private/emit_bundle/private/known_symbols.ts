@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {getSymbolName} from './util.ts';
+import {getSymbolName, isNamespaceButNotFromLib} from './util.ts';
 
 const RE_MODULE_NAME = /(\w+?)(?:[\/\\](?:mod|index|main))?(?:\.\w{1,4})?(?:\.map)?"?$/i; // `symbol.name` for module can be quoted
 
@@ -7,12 +7,12 @@ export class KnownSymbols
 {	symbolsNames = new Map<tsa.Symbol, string>; // maps all symbols that top-level statements declare, to their names in the result (they can be renamed)
 	namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
 
-	add(ts: typeof tsa, sourceFile: tsa.SourceFile, symbol: tsa.Symbol)
+	add(ts: typeof tsa, sourceFile: tsa.SourceFile, excludeLibDirectory: string, symbol: tsa.Symbol)
 	{	const {symbolsNames, namesSymbols} = this;
 		let name = symbolsNames.get(symbol);
 		if (name == undefined)
 		{	let baseName = '';
-			if (symbol.flags & ts.SymbolFlags.Module)
+			if (isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol))
 			{	baseName = symbol.name.match(RE_MODULE_NAME)?.[1] ?? 'ns';
 			}
 			else

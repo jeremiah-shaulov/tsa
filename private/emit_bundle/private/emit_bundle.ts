@@ -45,7 +45,7 @@ export type NodeWithInfo =
 	nodeExportType: NodeExportType;
 };
 
-export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory?: string, newLine?: string)
+export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, lib?: string[], excludeLibDirectory?: string, newLine?: string)
 {	if (!excludeLibDirectory || !newLine)
 	{	const host = ts.createCompilerHost({});
 		if (!excludeLibDirectory)
@@ -69,12 +69,12 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibD
 		- Adds export declarations to `exportSymbols`.
 		- Adds all the top-level statements except import and export to `nodesWithInfo`. At this point `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs` are not set.
 	 */
-	step1FindToplevelDeclarations(ts, checker, nodesWithInfo, knownSymbols, nodesThatIntroduce, exportSymbols, sourceFiles);
+	step1FindToplevelDeclarations(ts, checker, nodesWithInfo, knownSymbols, nodesThatIntroduce, exportSymbols, sourceFiles, excludeLibDirectory);
 
 	/*	2. Find what symbol does each statement reference (use), and store this information in `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs`.
 		Only references to top-level symbols present in `symbolsNames` (that is populated in step 1) are counted.
 	 */
-	step2FindRefs(ts, checker, nodesWithInfo, knownSymbols);
+	step2FindRefs(ts, checker, nodesWithInfo, knownSymbols, excludeLibDirectory);
 
 	/*	3. Now when i know all the top-level symbols: where they introduced and referenced, i can remove the dead code.
 		However classes and function used in type aliases will remain.
@@ -89,11 +89,11 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibD
 	/*	5. Rename symbols, and create exports.
 		After step 1 the `symbolsNames` variable contains symbol names as they must be in the resulting bundle.
 	 */
-	step5TransformNodes(ts, checker, nodesWithInfo, knownSymbols, exportSymbols, sourceFiles[0]);
+	step5TransformNodes(ts, checker, nodesWithInfo, knownSymbols, exportSymbols, sourceFiles[0], excludeLibDirectory);
 
 	/*	6. Done.
 	 */
-	return new TsaBundle(nodesWithInfo, newLine);
+	return new TsaBundle(nodesWithInfo, lib, newLine);
 }
 
 function getSourceFiles(program: tsa.Program, excludeLibDirectory: string)

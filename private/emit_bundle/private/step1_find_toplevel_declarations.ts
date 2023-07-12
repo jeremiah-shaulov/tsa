@@ -11,7 +11,8 @@ export function step1FindToplevelDeclarations
 	knownSymbols: KnownSymbols,
 	nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>,
 	exportSymbols: ExportSymbols,
-	sourceFiles: tsa.SourceFile[]
+	sourceFiles: tsa.SourceFile[],
+	excludeLibDirectory: string
 )
 {	for (const sourceFile of sourceFiles)
 	{	const isFirstEntryPoint = sourceFile == sourceFiles[0];
@@ -24,12 +25,7 @@ export function step1FindToplevelDeclarations
 						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
 							if (resolvedSymbol)
-							{	if (!(resolvedSymbol.flags & ts.SymbolFlags.Module))
-								{	exportSymbols.addSymbol(resolvedSymbol, propertyName ? name : undefined);
-								}
-								else
-								{	exportSymbols.addModuleSymbol(ts, checker, resolvedSymbol, name);
-								}
+							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, resolvedSymbol, propertyName ? name : undefined);
 							}
 						}
 					}
@@ -38,7 +34,7 @@ export function step1FindToplevelDeclarations
 						const moduleSymbol = node.moduleSpecifier && checker.getSymbolAtLocation(node.moduleSpecifier);
 						if (moduleSymbol)
 						{	const exportAsNs = node.exportClause && ts.isNamespaceExport(node.exportClause) ? node.exportClause.name : undefined;
-							exportSymbols.addModuleSymbol(ts, checker, moduleSymbol, exportAsNs);
+							exportSymbols.addExport(ts, checker, excludeLibDirectory, moduleSymbol, exportAsNs);
 						}
 					}
 				}
@@ -60,11 +56,11 @@ export function step1FindToplevelDeclarations
 					for (const name of names)
 					{	const symbol = checker.getSymbolAtLocation(name);
 						if (symbol)
-						{	knownSymbols.add(ts, sourceFile, symbol);
+						{	knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol);
 							introduces.push(symbol);
 							nodesThatIntroduce.set(symbol, nodeWithInfo);
 							if (nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)
-							{	exportSymbols.addSymbol(symbol, undefined);
+							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, symbol, undefined);
 							}
 						}
 					}
