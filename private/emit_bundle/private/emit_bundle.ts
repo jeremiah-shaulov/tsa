@@ -1,12 +1,11 @@
 import {tsa} from '../../tsa_ns.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {step1FindToplevelDeclarations} from './step1_find_toplevel_declarations.ts';
-import {step2FindRefs} from './step2_find_refs.ts';
-import {step3RemoveDeadCode} from './step3_remove_dead_code.ts';
-import {step4ReorderStmtsAccordingToDependency} from './step4_reorder_stmts_according_to_dependency.ts';
-import {step5TransformNodes} from './step5_transform_nodes.ts';
+import {step2RemoveDeadCode} from './step2_remove_dead_code.ts';
+import {step3ReorderStmtsAccordingToDependency} from './step3_reorder_stmts_according_to_dependency.ts';
+import {step4TransformNodes} from './step4_transform_nodes.ts';
 
-export const enum StmtFlags
+export const enum NodeExportType
 {	NONE,
 	EXPORT,
 	EXPORT_UNNAMED_DEFAULT,
@@ -25,7 +24,7 @@ export type NodeWithInfo =
 	 **/
 	refs: Set<tsa.Symbol>;
 
-	/**	If this node introduces a function or a method, here is what the function body references.
+	/**	If this node introduces a function or a method, here is what the function body references (uses).
 	 **/
 	bodyRefs: Set<tsa.Symbol>;
 
@@ -40,7 +39,7 @@ export type NodeWithInfo =
 
 	/**	This statement introduces it's symbols with `export` keyword. Or it's `export default () => 'unnamed symbol'`
 	 **/
-	stmtFlags: StmtFlags;
+	nodeExportType: NodeExportType;
 };
 
 export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory?: string)
@@ -53,22 +52,31 @@ export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibD
 	const sourceFiles = getSourceFiles(ts, program, excludeLibDirectory);
 	const checker = program.getTypeChecker();
 
-	// 1. Find top-level declarations
+	/*	1. Find top-level declarations.
+		This step runs through `sourceFiles`, and:
+		- Adds occured top-level symbols of each module to `symbolsNames` and `namesSymbols`.
+		- Adds export declarations to `exportSymbols`.
+		- Adds all the top-level statements except import and export to `nodesWithInfo`.
+	 */
 	step1FindToplevelDeclarations(ts, checker, nodesWithInfo, symbolsNames, namesSymbols, nodesThatIntroduce, exportSymbols, sourceFiles);
 
-	// 2. Find what symbol does each statement reference (use)
-	step2FindRefs(ts, checker, nodesWithInfo, symbolsNames);
+	/*	2. Now when i know all the top-level symbols: where they introduced and referenced, i can remove the dead code.
+		However classes and function used in type aliases will remain.
+	 */
+	nodesWithInfo = step2RemoveDeadCode(nodesWithInfo, allRefs, exportSymbols);
 
-	// 3. Remove dead code. However classes and function used in type aliases will remain.
-	nodesWithInfo = step3RemoveDeadCode(nodesWithInfo, allRefs, exportSymbols);
+	/*	3. Reorder statements according to dependency.
+		In order to avoid reading values of constants before their declaration.
+	 */
+	step3ReorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
 
-	// 4. Reorder statements according to dependency
-	step4ReorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
+	/*	4. Rename symbols, and create exports.
+		After step 1 the `symbolsNames` variable contains symbol names as they must be in the resulting bundle.
+	 */
+	step4TransformNodes(ts, checker, nodesWithInfo, symbolsNames, exportSymbols, sourceFiles[0]);
 
-	// 5. Rename symbols, and create exports
-	step5TransformNodes(ts, checker, nodesWithInfo, symbolsNames, exportSymbols, sourceFiles[0]);
-
-	// 6. Done
+	/*	5. Done.
+	 */
 	return nodesWithInfo;
 }
 

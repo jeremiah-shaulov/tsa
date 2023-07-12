@@ -40,7 +40,7 @@ export class ExportSymbols
 		for (const [symbol, alias] of this.#symbols)
 		{	if (symbol instanceof Map)
 			{	if (alias != undefined) // i always add namespaces with names
-				{	const props = this.#createNamespace(ts, context, symbolsNames, symbol);
+				{	const props = this.#createNamespace(ts, context, symbolsNames, symbol); // TODO: create typescript namespace
 					exportStmts.push
 					(	context.factory.createVariableStatement
 						(	[context.factory.createModifier(ts.SyntaxKind.ExportKeyword)],

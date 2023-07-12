@@ -2,7 +2,7 @@ import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
 import {massSpliceRemove} from './util.ts';
 
-export function step4ReorderStmtsAccordingToDependency(ts: typeof tsa, nodesWithInfo: NodeWithInfo[], nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>)
+export function step3ReorderStmtsAccordingToDependency(ts: typeof tsa, nodesWithInfo: NodeWithInfo[], nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>)
 {	let knownSymbols = new Set<tsa.Symbol>;
 	const stack = new Array<{fromSourceFile: tsa.SourceFile, symbol: tsa.Symbol}>;
 L:	for (let i=0, iEnd=nodesWithInfo.length; i<iEnd; i++)

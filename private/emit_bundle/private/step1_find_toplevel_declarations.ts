@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {StmtFlags, NodeWithInfo} from './emit_bundle.ts';
+import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {getSymbolName, resolveSymbol} from './util.ts';
 
@@ -47,30 +47,31 @@ export function step1FindToplevelDeclarations
 			}
 			else if (!ts.isImportDeclaration(node))
 			{	const introduces = new Array<tsa.Symbol>;
-				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, stmtFlags: StmtFlags.NONE};
+				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, nodeExportType: NodeExportType.NONE};
 				if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-				{	let stmtFlags = node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword) ? StmtFlags.EXPORT : StmtFlags.NONE;
+				{	let nodeExportType = node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword) ? NodeExportType.EXPORT : NodeExportType.NONE;
 					const names: Array<tsa.Identifier | tsa.ModifierLike> = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
-					if (names.length==0 && stmtFlags!=StmtFlags.NONE)
+					if (names.length==0 && nodeExportType!=NodeExportType.NONE)
 					{	const defaultKeyword = node.modifiers?.find(m => m.kind == ts.SyntaxKind.DefaultKeyword);
 						if (defaultKeyword)
 						{	names.push(defaultKeyword);
-							stmtFlags = StmtFlags.EXPORT_UNNAMED_DEFAULT;
+							nodeExportType = NodeExportType.EXPORT_UNNAMED_DEFAULT;
 						}
 					}
-					nodeWithInfo.stmtFlags = stmtFlags;
+					nodeWithInfo.nodeExportType = nodeExportType;
 					for (const name of names)
 					{	const symbol = checker.getSymbolAtLocation(name);
 						if (symbol)
 						{	addSymbol(ts, symbolsNames, namesSymbols, sourceFile, symbol);
 							introduces.push(symbol);
 							nodesThatIntroduce.set(symbol, nodeWithInfo);
-							if (stmtFlags!=StmtFlags.NONE && isFirstEntryPoint)
+							if (nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)
 							{	exportSymbols.addSymbol(symbol, undefined);
 							}
 						}
 					}
 				}
+				findRefs(ts, checker, nodeWithInfo, symbolsNames);
 				nodesWithInfo.push(nodeWithInfo);
 			}
 		}
@@ -110,4 +111,83 @@ function getNames(ts: typeof tsa, name: tsa.BindingName, outNames=new Array<tsa.
 	{	outNames.push(name);
 	}
 	return outNames;
+}
+
+function findRefs(ts: typeof tsa, checker: tsa.TypeChecker, nodeWithInfo: NodeWithInfo, symbolsNames: Map<tsa.Symbol, string>)
+{	const {node, refs, bodyRefs, introduces} = nodeWithInfo;
+	if (ts.isFunctionDeclaration(node))
+	{	setUsedTopLevelSymbols(ts, checker, symbolsNames, node, introduces, bodyRefs);
+	}
+	else if (ts.isClassDeclaration(node))
+	{	if (node.heritageClauses)
+		{	for (const h of node.heritageClauses)
+			{	setUsedTopLevelSymbols(ts, checker, symbolsNames, h, introduces, refs);
+			}
+		}
+		if (node.typeParameters)
+		{	for (const param of node.typeParameters)
+			{	setUsedTopLevelSymbols(ts, checker, symbolsNames, param, introduces, bodyRefs);
+			}
+		}
+		for (const member of node.members)
+		{	if (ts.isPropertyDeclaration(member))
+			{	const isStatic = member.modifiers?.some(m => m.kind == ts.SyntaxKind.StaticKeyword);
+				setUsedTopLevelSymbols(ts, checker, symbolsNames, member, introduces, isStatic ? refs : bodyRefs);
+			}
+			else
+			{	setUsedTopLevelSymbols(ts, checker, symbolsNames, member, introduces, bodyRefs);
+			}
+		}
+	}
+	else
+	{	setUsedTopLevelSymbols(ts, checker, symbolsNames, node, introduces, refs);
+	}
+}
+
+function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbolsNames: Map<tsa.Symbol, string>, node: tsa.Node|undefined, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>)
+{	node?.forEachChild(visit);
+
+	function visit(node: tsa.Node)
+	{	node.forEachChild(visit);
+		let symbol;
+		if (ts.isIdentifier(node))
+		{	symbol = checker.getSymbolAtLocation(node);
+		}
+		else if (ts.isShorthandPropertyAssignment(node))
+		{	symbol = checker.getShorthandAssignmentValueSymbol(node);
+		}
+		if (symbol && !nodeIsNs(ts, checker, node, symbol))
+		{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+			if (resolvedSymbol && symbolsNames.has(resolvedSymbol) && !introduces.includes(resolvedSymbol)) // If resolves to a top-level symbol
+			{	refs.add(resolvedSymbol);
+			}
+		}
+	}
+}
+
+/**	Is `node.parent` a property access like `ns.name`, where `ns` is a namespace alias (from `import * as ns`), and is this node the **left** side of the property access?
+ **/
+function nodeIsNs(ts: typeof tsa, checker: tsa.TypeChecker, node: tsa.Node, symbol: tsa.Symbol)
+{	if (ts.isPropertyAccessExpression(node.parent) && node==node.parent.expression || ts.isQualifiedName(node.parent) && node==node.parent.left)
+	{	return symbolIsNs(ts, checker, symbol);
+	}
+	return false;
+}
+
+function symbolIsNs(ts: typeof tsa, checker: tsa.TypeChecker, symbol: tsa.Symbol)
+{	if (symbol.flags & ts.SymbolFlags.Alias)
+	{	const declaration = symbol.getDeclarations()?.[0];
+		if (declaration)
+		{	if (declaration.kind == ts.SyntaxKind.NamespaceImport)
+			{	return true;
+			}
+			if (declaration.kind == ts.SyntaxKind.ImportSpecifier)
+			{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+				if (resolvedSymbol && resolvedSymbol.flags & ts.SymbolFlags.Module)
+				{	return true;
+				}
+			}
+		}
+	}
+	return false;
 }

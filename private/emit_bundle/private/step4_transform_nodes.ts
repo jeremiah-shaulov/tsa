@@ -1,9 +1,9 @@
 import {tsa} from '../../tsa_ns.ts';
-import {StmtFlags, NodeWithInfo} from './emit_bundle.ts';
+import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {resolveSymbol} from './util.ts';
 
-export function step5TransformNodes
+export function step4TransformNodes
 (	ts: typeof tsa,
 	checker: tsa.TypeChecker,
 	nodesWithInfo: NodeWithInfo[],
@@ -13,7 +13,7 @@ export function step5TransformNodes
 )
 {	let exportStmts: NodeWithInfo[] | undefined; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
 	for (const nodeWithInfo of nodesWithInfo)
-	{	const {sourceFile, node: stmt, introduces, stmtFlags} = nodeWithInfo;
+	{	const {sourceFile, node: stmt, introduces, nodeExportType} = nodeWithInfo;
 		nodeWithInfo.node = transformNode
 		(	ts,
 			stmt,
@@ -45,10 +45,10 @@ export function step5TransformNodes
 					}
 				}
 				else if (node == stmt)
-				{	if (stmtFlags != StmtFlags.NONE)
+				{	if (nodeExportType != NodeExportType.NONE)
 					{	// Remove `export` and `default` keywords
 						node = unexportStmt(ts, context, node);
-						if (stmtFlags == StmtFlags.EXPORT_UNNAMED_DEFAULT)
+						if (nodeExportType == NodeExportType.EXPORT_UNNAMED_DEFAULT)
 						{	const name = introduces[0] && symbolsNames.get(introduces[0]);
 							if (name)
 							{	// Add name to unnamed expression
@@ -100,7 +100,7 @@ export function step5TransformNodes
 					if (!exportStmts)
 					{	exportStmts = [];
 						for (const exportStmt of exportSymbols.getExportStmts(ts, context, symbolsNames))
-						{	exportStmts.push({sourceFile: firstSourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], stmtFlags: StmtFlags.NONE});
+						{	exportStmts.push({sourceFile: firstSourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], nodeExportType: NodeExportType.NONE});
 						}
 					}
 				}
