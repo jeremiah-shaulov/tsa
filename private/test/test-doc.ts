@@ -486,7 +486,7 @@ export async function testDoc(subjUrl: URL, compilerOptions?: tsa.CompilerOption
 		emitDeclarationOnly: true,
 		...compilerOptions,
 	};
-	const program = await tsa.createDenoProgram([subjUrl.href], compilerOptions, loadOptions);
+	const program = await tsa.createTsaProgram([subjUrl.href], compilerOptions, loadOptions);
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	console.time('tsa');

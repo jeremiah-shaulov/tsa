@@ -2,8 +2,9 @@ import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
 import {ExportSymbols} from './export_symbols.ts';
 
-export function step2RemoveDeadCode(nodesWithInfo: NodeWithInfo[], allRefs: Set<tsa.Symbol>, exportSymbols: ExportSymbols)
-{	while (true)
+export function step3RemoveDeadCode(nodesWithInfo: NodeWithInfo[], exportSymbols: ExportSymbols)
+{	const allRefs = new Set<tsa.Symbol>; // all top-level symbols, that are referenced from somewhere (that appear in some `nodesWithInfo[I].refs` or `nodesWithInfo[I].bodyRefs`), so they're not a dead code
+	while (true)
 	{	allRefs.clear();
 		for (const symbol of exportSymbols.symbolsFlat)
 		{	allRefs.add(symbol);

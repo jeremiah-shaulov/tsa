@@ -472,7 +472,7 @@ export interface Location {
   filename: string;
   line: number;
   col: number;
-  /** If the filename corresponds to one of the entry points passed to `createDenoProgram()`.
+  /** If the filename corresponds to one of the entry points passed to `createTsaProgram()`.
    * `filename` here is always absolute URL, even if a relative path was passed.
    **/
   entryPointNumber?: number;

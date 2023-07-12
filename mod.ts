@@ -8,6 +8,7 @@ export {formatDiagnostics, printDiagnostics} from './private/util.ts';
 export {defaultResolve, defaultLoad, type LoadOptions} from './private/load_options.ts';
 export {type EmitDocOptions} from './private/convert/mod.ts';
 export type * from './private/doc_node/mod.ts';
+export {type NodeWithInfo, TsaBundle} from './private/emit_bundle/mod.ts';
 
 // TODO: command line arguments for emit to disable flags enabled by default
 // TODO: `emit()` from `npm:`

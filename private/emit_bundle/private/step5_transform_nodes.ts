@@ -3,7 +3,7 @@ import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {resolveSymbol} from './util.ts';
 
-export function step4TransformNodes
+export function step5TransformNodes
 (	ts: typeof tsa,
 	checker: tsa.TypeChecker,
 	nodesWithInfo: NodeWithInfo[],

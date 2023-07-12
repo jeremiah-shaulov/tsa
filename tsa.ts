@@ -31,7 +31,7 @@ program
 			const entryPoints = [file1, ...files];
 
 			// Create program
-			const program = await tsa.createDenoProgram(entryPoints);
+			const program = await tsa.createTsaProgram(entryPoints);
 			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 			// Generate doc
@@ -57,54 +57,19 @@ program
 			const entryPoints = [file1, ...files];
 
 			// Create program to bundle source files to single `.ts`
-			const program = await tsa.createDenoProgram(entryPoints);
+			const program = await tsa.createTsaProgram(entryPoints);
 			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 			// Bundle
-			const result = program.emitBundle();
-			const host = tsa.createCompilerHost({});
-			const newLine = host.getNewLine();
-			const printer = tsa.createPrinter();
-			let lastSourceFile: tsa.SourceFile|undefined;
-			let text = '';
-			for (const {sourceFile, node} of result)
-			{	if (sourceFile != lastSourceFile)
-				{	lastSourceFile = sourceFile;
-					const loc = node.pos>=0 ? sourceFile.getLineAndCharacterOfPosition(node.pos) : undefined;
-					const info = sourceFile.fileName + (!loc ? '' : `, line ${loc.line + 1}`);
-					text += `// ` + info + newLine;
-					console.error(info);
-				}
-				const line = printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + newLine;
-				text += line;
-			}
+			const bundle = program.emitBundle();
 
 			if (options.ts)
 			{	// Save the result to file (or print to stdout)
-				await writeTextFile(outFile, text);
+				await writeTextFile(outFile, bundle.toTs());
 			}
 			else
 			{	// Create second program to transpile the bundle to Javascript
-				const program2 = await tsa.createDenoProgram
-				(	['/dev/stdin'],
-					{	target: tsa.ScriptTarget.ESNext,
-						module: tsa.ModuleKind.ESNext,
-						outDir: '.',
-					},
-					{	resolve(specifier, referrer)
-						{	if (specifier == '/dev/stdin')
-							{	return specifier;
-							}
-							return defaultResolve(specifier, referrer);
-						},
-						async load(specifier, isDynamic)
-						{	if (specifier == '/dev/stdin')
-							{	return {kind: 'module', specifier: '/dev/stdin', content: text, headers: {'content-type': 'application/typescript'}};
-							}
-							return await defaultLoad(specifier, isDynamic);
-						}
-					}
-				);
+				const program2 = await bundle.toProgram();
 				printDiagnostics(tsa.getPreEmitDiagnostics(program2));
 
 				// Transpile

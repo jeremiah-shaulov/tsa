@@ -1,9 +1,11 @@
 import {tsa} from '../../tsa_ns.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {step1FindToplevelDeclarations} from './step1_find_toplevel_declarations.ts';
-import {step2RemoveDeadCode} from './step2_remove_dead_code.ts';
-import {step3ReorderStmtsAccordingToDependency} from './step3_reorder_stmts_according_to_dependency.ts';
-import {step4TransformNodes} from './step4_transform_nodes.ts';
+import {step2FindRefs} from './step2_find_refs.ts';
+import {step3RemoveDeadCode} from './step3_remove_dead_code.ts';
+import {step4ReorderStmtsAccordingToDependency} from './step4_reorder_stmts_according_to_dependency.ts';
+import {step5TransformNodes} from './step5_transform_nodes.ts';
+import {TsaBundle} from './tsa_bundle.ts';
 
 export const enum NodeExportType
 {	NONE,
@@ -42,47 +44,60 @@ export type NodeWithInfo =
 	nodeExportType: NodeExportType;
 };
 
-export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory?: string)
-{	let nodesWithInfo = new Array<NodeWithInfo>; // all the top-level statements (except `import` and `export`) from all modules
+export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, excludeLibDirectory?: string, newLine?: string)
+{	if (!excludeLibDirectory || !newLine)
+	{	const host = ts.createCompilerHost({});
+		if (!excludeLibDirectory)
+		{	excludeLibDirectory = host.getDefaultLibLocation?.() ?? '';
+		}
+		if (!newLine)
+		{	newLine = host.getNewLine();
+		}
+	}
+
+	let nodesWithInfo = new Array<NodeWithInfo>; // all the top-level statements (except `import` and `export`) from all modules
 	const symbolsNames = new Map<tsa.Symbol, string>; // maps all symbols that top-level statements declare, to their names in the result (they can be renamed)
 	const namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
 	const nodesThatIntroduce = new Map<tsa.Symbol, NodeWithInfo>; // maps all top-level symbols, to elements in `nodesWithInfo`
-	const allRefs = new Set<tsa.Symbol>; // all top-level symbols, that are referenced from somewhere (that appear in some `nodesWithInfo[I].refs` or `nodesWithInfo[I].bodyRefs`), so they're not a dead code
 	const exportSymbols = new ExportSymbols; // symbols that the first entry point exports
-	const sourceFiles = getSourceFiles(ts, program, excludeLibDirectory);
+	const sourceFiles = getSourceFiles(program, excludeLibDirectory);
 	const checker = program.getTypeChecker();
 
 	/*	1. Find top-level declarations.
 		This step runs through `sourceFiles`, and:
 		- Adds occured top-level symbols of each module to `symbolsNames` and `namesSymbols`.
 		- Adds export declarations to `exportSymbols`.
-		- Adds all the top-level statements except import and export to `nodesWithInfo`.
+		- Adds all the top-level statements except import and export to `nodesWithInfo`. At this point `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs` are not set.
 	 */
 	step1FindToplevelDeclarations(ts, checker, nodesWithInfo, symbolsNames, namesSymbols, nodesThatIntroduce, exportSymbols, sourceFiles);
 
-	/*	2. Now when i know all the top-level symbols: where they introduced and referenced, i can remove the dead code.
+	/*	2. Find what symbol does each statement reference (use), and store this information in `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs`.
+		Only references to top-level symbols present in `symbolsNames` (that is populated in step 1) are counted.
+	 */
+	step2FindRefs(ts, checker, nodesWithInfo, symbolsNames);
+
+	/*	3. Now when i know all the top-level symbols: where they introduced and referenced, i can remove the dead code.
 		However classes and function used in type aliases will remain.
 	 */
-	nodesWithInfo = step2RemoveDeadCode(nodesWithInfo, allRefs, exportSymbols);
+	//nodesWithInfo = step3RemoveDeadCode(nodesWithInfo, exportSymbols);
 
-	/*	3. Reorder statements according to dependency.
+	/*	4. Reorder statements according to dependency.
 		In order to avoid reading values of constants before their declaration.
 	 */
-	step3ReorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
+	step4ReorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
 
-	/*	4. Rename symbols, and create exports.
+	/*	5. Rename symbols, and create exports.
 		After step 1 the `symbolsNames` variable contains symbol names as they must be in the resulting bundle.
 	 */
-	step4TransformNodes(ts, checker, nodesWithInfo, symbolsNames, exportSymbols, sourceFiles[0]);
+	step5TransformNodes(ts, checker, nodesWithInfo, symbolsNames, exportSymbols, sourceFiles[0]);
 
-	/*	5. Done.
+	/*	6. Done.
 	 */
-	return nodesWithInfo;
+	return new TsaBundle(nodesWithInfo, newLine);
 }
 
-function getSourceFiles(ts: typeof tsa, program: tsa.Program, excludeLibDirectory?: string)
-{	excludeLibDirectory ??= ts.createCompilerHost({}).getDefaultLibLocation?.();
-	const sourceFiles = new Array<tsa.SourceFile>;
+function getSourceFiles(program: tsa.Program, excludeLibDirectory: string)
+{	const sourceFiles = new Array<tsa.SourceFile>;
 	for (const moduleHref of program.getRootFileNames())
 	{	const sourceFile = program.getSourceFile(moduleHref);
 		if (sourceFile)

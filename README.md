@@ -44,7 +44,7 @@ export const emitDocOptions: EmitDocOptions =
  **/
 export async function writeSelfDocToFile(filename: string)
 {	// Create typescript program from the source code of this file
-	const program = await tsa.createDenoProgram([import.meta.url], compilerOptions, loadOptions);
+	const program = await tsa.createTsaProgram([import.meta.url], compilerOptions, loadOptions);
 	// Print errors and warnings (if any)
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	// Generate the docs
@@ -81,7 +81,7 @@ tsa --declaration --emitDeclarationOnly --outFile /tmp/ast.json 'https://deno.la
 This library exports the following symbols:
 - `tsa` - Namespace that contains everything from the underlying Typescript Compiler. It's the same namespace that `npm:typescript` exports, with 2 extensions:
 	1. type `DenoProgram`, that is extension of `Program`, that adds `emitDoc()` method
-	2. function `createDenoProgram()`, that is similar to `createProgram()`, but returns `DenoProgram` instead of `Program`
+	2. function `createTsaProgram()`, that is similar to `createProgram()`, but returns `DenoProgram` instead of `Program`
 - `LoadOptions` - Configures how to resolve module specifiers, and how to load module contents
 - `defaultResolve()` - Function that is used by default if `LoadOptions.resolve()` is not set
 - `defaultLoad()` - Function that is used by default if `LoadOptions.load()` is not set. It loads from files or external URLs, and caches external resources.
@@ -93,7 +93,7 @@ This library exports the following symbols:
 They are assignable to the same types from [x/deno_doc@0.62.0](https://deno.land/x/deno_doc@0.62.0).
 
 ```ts
-function DenoProgram.createDenoProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
+function DenoProgram.createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions): Promise<tsa.DenoProgram>;
 
 interface DenoProgram extends tsa.Program
 {	emitDoc(options?: EmitDocOptions): DocNode[];
@@ -108,7 +108,7 @@ To understand the information each `DocNode` contains, you need to start from le
 This library adds additional information to `DocNode`:
 
 - `Location` has additional `entryPointNumber` field.
-You can pass relative paths to `createDenoProgram()` as entry points, but `Location.filename` always contains corresponding absolute URL. If this filename is one of the entry points, the `entryPointNumber` field will contain the index in `entryPoints` array.
+You can pass relative paths to `createTsaProgram()` as entry points, but `Location.filename` always contains corresponding absolute URL. If this filename is one of the entry points, the `entryPointNumber` field will contain the index in `entryPoints` array.
 - `DocNode` has additional `exports` field. If a symbol is reexported from several places, those places will be recorded here (including current location).
 - `ClassPropertyDef` has additional `init` field that contains property initializer (if any).
 - `EnumDef` has additional `isConst` field for `const enum`s.
@@ -124,7 +124,7 @@ If the type is an enum member, also `nodeSubIndex` will be set to member number.
 
 ## Configuration options for the Typescript Compiler (tsa.CompilerOptions)
 
-You can pass `tsa.CompilerOptions` to `tsa.createDenoProgram()`. It works in the same fashion as `typescript.CompilerOptions` for `typescript.createProgram()`, with the following differences:
+You can pass `tsa.CompilerOptions` to `tsa.createTsaProgram()`. It works in the same fashion as `typescript.CompilerOptions` for `typescript.createProgram()`, with the following differences:
 - `lib` has 2 additional options that you can provide: `lib.deno.ns.d.ts` and `lib.deno.unstable.d.ts`. If you don't specify `lib` explicitly, the default is `lib.deno.ns.d.ts`.
 - default value for `allowJs` is `true`.
 - default value for `resolveJsonModule` is `true`.
@@ -136,7 +136,7 @@ You can pass `tsa.CompilerOptions` to `tsa.createDenoProgram()`. It works in the
 
 ## Module resolution and loading options (LoadOptions)
 
-You can pass `LoadOptions` to `tsa.createDenoProgram()` that allow to configure the way modules are resolved and loaded.
+You can pass `LoadOptions` to `tsa.createTsaProgram()` that allow to configure the way modules are resolved and loaded.
 
 ```ts
 type LoadOptions =
@@ -170,7 +170,7 @@ import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.1
  **/
 export async function writeSelfDocToFile(filename: string)
 {	// Create typescript program from the source code of this file
-	const program = await tsa.createDenoProgram
+	const program = await tsa.createTsaProgram
 	(	[import.meta.url],
 		{	declaration: true,
 			emitDeclarationOnly: true,
@@ -264,7 +264,7 @@ import tsaSubstitute from 'npm:typescript@3.9.3';
 const entryPoint = 'https://deno.land/x/case@2.1.1/mod.ts';
 
 // Use `call()` to substitute the typescript namespace
-const program = await tsa.createDenoProgram.call(tsaSubstitute, [entryPoint]);
+const program = await tsa.createTsaProgram.call(tsaSubstitute, [entryPoint]);
 
 const docNodes = program.emitDoc();
 await Deno.writeTextFile('/tmp/doc.json', JSON.stringify(docNodes, undefined, '\t'));

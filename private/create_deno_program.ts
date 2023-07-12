@@ -11,7 +11,7 @@ import {emitBundle} from './emit_bundle/mod.ts';
 
 type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
-export async function createDenoProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
+export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
 {	const ts = this;
 	compilerOptions = setDefaultOptions(this, compilerOptions);
 	const loader = await Loader.inst(loadOptions);
