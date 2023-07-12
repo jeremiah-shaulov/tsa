@@ -1,16 +1,14 @@
 import {tsa} from '../../tsa_ns.ts';
 import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
+import {KnownSymbols} from './known_symbols.ts';
 import {ExportSymbols} from './export_symbols.ts';
-import {getSymbolName, resolveSymbol} from './util.ts';
-
-const RE_MODULE_NAME = /(\w+?)(?:[\/\\](?:mod|index|main))?(?:\.\w{1,4})?(?:\.map)?$/i;
+import {resolveSymbol} from './util.ts';
 
 export function step1FindToplevelDeclarations
 (	ts: typeof tsa,
 	checker: tsa.TypeChecker,
 	nodesWithInfo: NodeWithInfo[],
-	symbolsNames: Map<tsa.Symbol, string>,
-	namesSymbols: Map<string, tsa.Symbol>,
+	knownSymbols: KnownSymbols,
 	nodesThatIntroduce: Map<tsa.Symbol, NodeWithInfo>,
 	exportSymbols: ExportSymbols,
 	sourceFiles: tsa.SourceFile[]
@@ -62,7 +60,7 @@ export function step1FindToplevelDeclarations
 					for (const name of names)
 					{	const symbol = checker.getSymbolAtLocation(name);
 						if (symbol)
-						{	addSymbol(ts, symbolsNames, namesSymbols, sourceFile, symbol);
+						{	knownSymbols.add(ts, sourceFile, symbol);
 							introduces.push(symbol);
 							nodesThatIntroduce.set(symbol, nodeWithInfo);
 							if (nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)
@@ -73,27 +71,6 @@ export function step1FindToplevelDeclarations
 				}
 				nodesWithInfo.push(nodeWithInfo);
 			}
-		}
-	}
-}
-
-function addSymbol(ts: typeof tsa, symbolsNames: Map<tsa.Symbol, string>, namesSymbols: Map<string, tsa.Symbol>, sourceFile: tsa.SourceFile, symbol: tsa.Symbol)
-{	if (symbolsNames.get(symbol) == undefined)
-	{	let baseName = getSymbolName(ts, symbol);
-		if (!baseName)
-		{	baseName = sourceFile.fileName.match(RE_MODULE_NAME)?.[1] ?? 'defaultExport';
-		}
-		const name = !namesSymbols.get(baseName) ? baseName : getUniqueName(namesSymbols, baseName);
-		symbolsNames.set(symbol, name);
-		namesSymbols.set(name, symbol);
-	}
-}
-
-function getUniqueName(namesSymbols: Map<string, tsa.Symbol>, base: string)
-{	for (let i=2; true; i++)
-	{	const name = base + i.toString(16);
-		if (!namesSymbols.has(name))
-		{	return name;
 		}
 	}
 }

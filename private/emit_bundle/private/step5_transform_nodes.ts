@@ -1,5 +1,6 @@
 import {tsa} from '../../tsa_ns.ts';
 import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
+import {KnownSymbols} from './known_symbols.ts';
 import {ExportSymbols} from './export_symbols.ts';
 import {resolveSymbol} from './util.ts';
 
@@ -7,13 +8,14 @@ export function step5TransformNodes
 (	ts: typeof tsa,
 	checker: tsa.TypeChecker,
 	nodesWithInfo: NodeWithInfo[],
-	symbolsNames: Map<tsa.Symbol, string>,
+	knownSymbols: KnownSymbols,
 	exportSymbols: ExportSymbols,
 	firstSourceFile: tsa.SourceFile
 )
 {	let exportStmts: NodeWithInfo[] | undefined; // at the end i'll create `export {name1, name2, ...}`, and `export const ns = {...}`
-	for (const nodeWithInfo of nodesWithInfo)
-	{	const {sourceFile, node: stmt, introduces, nodeExportType} = nodeWithInfo;
+	for (let i=0; i<nodesWithInfo.length; i++)
+	{	const nodeWithInfo = nodesWithInfo[i];
+		const {sourceFile, node: stmt, introduces, nodeExportType} = nodeWithInfo;
 		nodeWithInfo.node = transformNode
 		(	ts,
 			stmt,
@@ -22,11 +24,20 @@ export function step5TransformNodes
 				{	const symbol = checker.getSymbolAtLocation(node);
 					const resolvedSymbol = resolveSymbol(ts, checker, symbol);
 					if (symbol && resolvedSymbol)
-					{	const newName = symbolsNames.get(resolvedSymbol);
-						if (newName != undefined)
-						{	if (newName!=symbol.name || !ts.isIdentifier(node))
-							{	node = context.factory.createIdentifier(newName);
+					{	const name = knownSymbols.symbolsNames.get(resolvedSymbol);
+						if (name != undefined)
+						{	if (name!=symbol.name || !ts.isIdentifier(node))
+							{	node = context.factory.createIdentifier(name);
 							}
+						}
+						else if (resolvedSymbol.flags & ts.SymbolFlags.Module)
+						{	// namespace name is used as value, like `import * as ns from '...'; const ns2 = ns`
+							const addNodesWithInfo = new Array<NodeWithInfo>;
+							const nsName = exportSymbols.getNamespaceAsValue(ts, checker, context, sourceFile, knownSymbols, addNodesWithInfo, resolvedSymbol);
+							for (const n of addNodesWithInfo)
+							{	nodesWithInfo.splice(i++, 0, n);
+							}
+							node = context.factory.createIdentifier(nsName);
 						}
 					}
 				}
@@ -35,10 +46,10 @@ export function step5TransformNodes
 					{	const symbol = checker.getShorthandAssignmentValueSymbol(node);
 						const resolvedSymbol = resolveSymbol(ts, checker, symbol);
 						if (symbol && resolvedSymbol)
-						{	const newName = symbolsNames.get(resolvedSymbol);
-							if (newName != undefined)
-							{	if (newName != symbol.name)
-								{	node = context.factory.createPropertyAssignment(node.name, context.factory.createIdentifier(newName));
+						{	const name = knownSymbols.symbolsNames.get(resolvedSymbol);
+							if (name != undefined)
+							{	if (name != symbol.name)
+								{	node = context.factory.createPropertyAssignment(node.name, context.factory.createIdentifier(name));
 								}
 							}
 						}
@@ -49,7 +60,7 @@ export function step5TransformNodes
 					{	// Remove `export` and `default` keywords
 						node = unexportStmt(ts, context, node);
 						if (nodeExportType == NodeExportType.EXPORT_UNNAMED_DEFAULT)
-						{	const name = introduces[0] && symbolsNames.get(introduces[0]);
+						{	const name = introduces[0] && knownSymbols.symbolsNames.get(introduces[0]);
 							if (name)
 							{	// Add name to unnamed expression
 								if (ts.isExpression(node))
@@ -99,7 +110,7 @@ export function step5TransformNodes
 					// Create exports if not yet created
 					if (!exportStmts)
 					{	exportStmts = [];
-						for (const exportStmt of exportSymbols.getExportStmts(ts, context, symbolsNames))
+						for (const exportStmt of exportSymbols.getExportStmts(ts, context, knownSymbols))
 						{	exportStmts.push({sourceFile: firstSourceFile, node: exportStmt, refs: new Set, bodyRefs: new Set, introduces: [], nodeExportType: NodeExportType.NONE});
 						}
 					}

@@ -7,3 +7,6 @@ import * as num2 from './private/subj2.ts';
 import {num, joinPath} from './private/subj1.ts';
 import defaultFunc from  './private/subj1.ts';
 console.log(ONE, A, num2.ONE, num.ONE, joinPath(), defaultFunc());
+
+const num4 = num2;
+console.log(num4.ONE);

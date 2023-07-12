@@ -1,40 +1,41 @@
 import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
+import {KnownSymbols} from './known_symbols.ts';
 import {resolveSymbol} from './util.ts';
 
-export function step2FindRefs(ts: typeof tsa, checker: tsa.TypeChecker, nodesWithInfo: NodeWithInfo[], symbolsNames: Map<tsa.Symbol, string>)
+export function step2FindRefs(ts: typeof tsa, checker: tsa.TypeChecker, nodesWithInfo: NodeWithInfo[], knownSymbols: KnownSymbols)
 {	for (const {node, refs, bodyRefs, introduces} of nodesWithInfo)
 	{	if (ts.isFunctionDeclaration(node))
-		{	setUsedTopLevelSymbols(ts, checker, symbolsNames, node, introduces, bodyRefs);
+		{	setUsedTopLevelSymbols(ts, checker, knownSymbols, node, introduces, bodyRefs);
 		}
 		else if (ts.isClassDeclaration(node))
 		{	if (node.heritageClauses)
 			{	for (const h of node.heritageClauses)
-				{	setUsedTopLevelSymbols(ts, checker, symbolsNames, h, introduces, refs);
+				{	setUsedTopLevelSymbols(ts, checker, knownSymbols, h, introduces, refs);
 				}
 			}
 			if (node.typeParameters)
 			{	for (const param of node.typeParameters)
-				{	setUsedTopLevelSymbols(ts, checker, symbolsNames, param, introduces, bodyRefs);
+				{	setUsedTopLevelSymbols(ts, checker, knownSymbols, param, introduces, bodyRefs);
 				}
 			}
 			for (const member of node.members)
 			{	if (ts.isPropertyDeclaration(member))
 				{	const isStatic = member.modifiers?.some(m => m.kind == ts.SyntaxKind.StaticKeyword);
-					setUsedTopLevelSymbols(ts, checker, symbolsNames, member, introduces, isStatic ? refs : bodyRefs);
+					setUsedTopLevelSymbols(ts, checker, knownSymbols, member, introduces, isStatic ? refs : bodyRefs);
 				}
 				else
-				{	setUsedTopLevelSymbols(ts, checker, symbolsNames, member, introduces, bodyRefs);
+				{	setUsedTopLevelSymbols(ts, checker, knownSymbols, member, introduces, bodyRefs);
 				}
 			}
 		}
 		else
-		{	setUsedTopLevelSymbols(ts, checker, symbolsNames, node, introduces, refs);
+		{	setUsedTopLevelSymbols(ts, checker, knownSymbols, node, introduces, refs);
 		}
 	}
 }
 
-function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbolsNames: Map<tsa.Symbol, string>, node: tsa.Node|undefined, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>)
+function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, knownSymbols: KnownSymbols, node: tsa.Node|undefined, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>)
 {	node?.forEachChild(visit);
 
 	function visit(node: tsa.Node)
@@ -47,9 +48,21 @@ function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, symbol
 		{	symbol = checker.getShorthandAssignmentValueSymbol(node);
 		}
 		if (symbol && !nodeIsNs(ts, checker, node, symbol))
-		{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-			if (resolvedSymbol && symbolsNames.has(resolvedSymbol) && !introduces.includes(resolvedSymbol)) // If resolves to a top-level symbol
-			{	refs.add(resolvedSymbol);
+		{	addRef(ts, checker, knownSymbols, symbol, introduces, refs);
+		}
+	}
+}
+
+function addRef(ts: typeof tsa, checker: tsa.TypeChecker, knownSymbols: KnownSymbols, symbol: tsa.Symbol, introduces: tsa.Symbol[], refs: Set<tsa.Symbol>, visited=new Set<tsa.Symbol>)
+{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+	if (resolvedSymbol && !visited.has(resolvedSymbol))
+	{	visited.add(resolvedSymbol);
+		if (knownSymbols.symbolsNames.has(resolvedSymbol) && !introduces.includes(resolvedSymbol)) // If resolves to a top-level symbol
+		{	refs.add(resolvedSymbol);
+		}
+		else if (resolvedSymbol.flags & ts.SymbolFlags.Module)
+		{	for (const symbol2 of checker.getExportsOfModule(resolvedSymbol))
+			{	addRef(ts, checker, knownSymbols, symbol2, introduces, refs, visited);
 			}
 		}
 	}
