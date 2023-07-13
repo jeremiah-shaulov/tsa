@@ -9,9 +9,21 @@ import {step5TransformNodes} from './step5_transform_nodes.ts';
 import {TsaBundle} from './tsa_bundle.ts';
 
 export const enum NodeExportType
-{	NONE,
+{	/**	Like `function f() {}`.
+	 **/
+	NONE,
+
+	/**	Like `export function f() {}`.
+	 **/
 	EXPORT,
-	EXPORT_UNNAMED_DEFAULT,
+
+	/**	Like `export default function f() {}`.
+	 **/
+	EXPORT_DEFAULT,
+
+	/**	Like `export default function() {}`.
+	 **/
+	EXPORT_DEFAULT_UNNAMED,
 }
 
 export type NodeWithInfo =
@@ -45,7 +57,7 @@ export type NodeWithInfo =
 	nodeExportType: NodeExportType;
 };
 
-export function emitTsaBundle(ts: typeof tsa, program: tsa.DenoProgram, lib?: string[], excludeLibDirectory?: string, newLine?: string)
+export function emitTsaBundle(ts: typeof tsa, program: tsa.TsaProgram, lib?: string[], excludeLibDirectory?: string, newLine?: string)
 {	if (!excludeLibDirectory || !newLine)
 	{	const host = ts.createCompilerHost({});
 		if (!excludeLibDirectory)

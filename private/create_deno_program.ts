@@ -119,16 +119,16 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 
 	const program = this.createProgram(entryPointsHrefs, compilerOptions, host);
 
-	(program as tsa.DenoProgram).emitDoc = function(options?: EmitDocOptions)
+	(program as tsa.TsaProgram).emitDoc = function(options?: EmitDocOptions)
 	{	const converter = new Converter(ts, this, loader, libLocation, options);
 		return converter.convertEntryPoints();
 	};
 
-	(program as tsa.DenoProgram).emitTsaBundle = function()
+	(program as tsa.TsaProgram).emitTsaBundle = function()
 	{	return emitTsaBundle(ts, this, compilerOptions?.lib, libLocation);
 	};
 
-	return program as tsa.DenoProgram;
+	return program as tsa.TsaProgram;
 }
 
 async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|URL>, loader: Loader)

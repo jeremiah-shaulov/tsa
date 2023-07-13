@@ -13,12 +13,12 @@ type Any = any;
 (typescript as Any).createTsaProgram = createTsaProgram;
 
 declare module 'npm:typescript@5.1.6'
-{	interface DenoProgram extends Program
+{	interface TsaProgram extends Program
 	{	emitDoc(options?: EmitDocOptions): DocNode[];
 		emitTsaBundle(): TsaBundle;
 	}
 
-	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;
+	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<TsaProgram>;
 }
 
 // 2. Reexport the `typescript`

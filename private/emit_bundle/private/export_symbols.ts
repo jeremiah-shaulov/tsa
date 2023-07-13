@@ -91,38 +91,13 @@ export class ExportSymbols
 		{	const isModule = isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol);
 			if (!isModule || alias)
 			{	const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, symbol);
-				exportSpecifiers.push
-				(	context.factory.createExportSpecifier
-					(	symbolIsType(ts, symbol),
-						name!=symbol.name ? name : alias && symbol.name,
-						alias ?? symbol.name
-					)
-				);
+				this.#createExportSpecifier(ts, context, sourceFile, symbol, symbol, name, alias, exportSpecifiers, outExportStmts);
 			}
 			else
 			{	for (const symbol2 of checker.getExportsOfModule(symbol))
 				{	const resolvedSymbol = resolveSymbol(ts, checker, symbol2);
 					const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, resolvedSymbol);
-					if (resolvedSymbol.name == 'default')
-					{	outExportStmts.push
-						(	{	sourceFile,
-								node: context.factory.createExportDefault(context.factory.createIdentifier(name)),
-								refs: new Set,
-								bodyRefs: new Set,
-								introduces: [],
-								nodeExportType: NodeExportType.NONE
-							}
-						);
-					}
-					else
-					{	exportSpecifiers.push
-						(	context.factory.createExportSpecifier
-							(	symbolIsType(ts, resolvedSymbol),
-								name!=symbol2.name ? name : alias && symbol2.name,
-								alias ?? symbol2.name
-							)
-						);
-					}
+					this.#createExportSpecifier(ts, context, sourceFile, symbol2, resolvedSymbol, name, alias, exportSpecifiers, outExportStmts);
 				}
 			}
 		}
@@ -135,6 +110,29 @@ export class ExportSymbols
 					introduces: [],
 					nodeExportType: NodeExportType.NONE
 				}
+			);
+		}
+	}
+
+	#createExportSpecifier(ts: typeof tsa, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, symbol: tsa.Symbol, resolvedSymbol: tsa.Symbol, name: string, alias: ExportSymbolsAlias, outExportSpecifiers: Array<tsa.ExportSpecifier>, outExportStmts: NodeWithInfo[])
+	{	if (resolvedSymbol.name == 'default')
+		{	outExportStmts.push
+			(	{	sourceFile,
+					node: context.factory.createExportDefault(context.factory.createIdentifier(name)),
+					refs: new Set,
+					bodyRefs: new Set,
+					introduces: [],
+					nodeExportType: NodeExportType.NONE
+				}
+			);
+		}
+		else
+		{	outExportSpecifiers.push
+			(	context.factory.createExportSpecifier
+				(	symbolIsType(ts, resolvedSymbol),
+					name!=symbol.name ? name : alias && symbol.name,
+					alias ?? symbol.name
+				)
 			);
 		}
 	}

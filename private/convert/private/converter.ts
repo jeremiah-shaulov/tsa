@@ -6,7 +6,7 @@ import {convertModuleDoc} from './convert_module_doc.ts';
 import {convertSymbol} from './convert_symbol.ts';
 import {resolveSymbolWithTrace} from './util.ts';
 
-/**	Options that you can provide to {@link DenoProgram#emitDoc}.
+/**	Options that you can provide to {@link TsaProgram#emitDoc}.
  **/
 export type EmitDocOptions =
 {	/**	Work not only on entry points, but on every module that appears in `import from` or `export from` statements.

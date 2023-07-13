@@ -82,7 +82,7 @@ export function step5TransformNodes
 			{	if (nodeExportType != NodeExportType.NONE)
 				{	// Remove `export` and `default` keywords
 					node = unexportStmt(ts, context, node);
-					if (nodeExportType == NodeExportType.EXPORT_UNNAMED_DEFAULT)
+					if (nodeExportType == NodeExportType.EXPORT_DEFAULT_UNNAMED)
 					{	const name = introduces[0] && knownSymbols.symbolsNames.get(introduces[0]);
 						if (name)
 						{	// Add name to unnamed expression

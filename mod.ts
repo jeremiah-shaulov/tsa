@@ -17,3 +17,4 @@ export {type NodeWithInfo, TsaBundle} from './private/emit_bundle/mod.ts';
 // TODO: remove inherited constructors and index signatures? (`// 22.` in `makeCompatible()`)
 // TODO: exclude dead code, and merge identical declarations
 // TODO: source maps
+// TODO: gen .d.ts

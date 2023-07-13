@@ -39,13 +39,10 @@ export class TsaBundle
 		{	throw new Error(`Please, specify outFile`);
 		}
 		if (outFile.slice(-3).toLowerCase() == '.ts')
-		{	throw new Error(`Cannot emit to a .ts file`);
+		{	throw new Error(`Cannot transpile to a .ts file`);
 		}
-		const inFile = outFile.replace(/\.\w{1,5}$/, '.ts');
-		if (inFile.slice(-3).toLowerCase() != '.ts')
-		{	throw new Error(`File without extension: ${outFile}`);
-		}
-		const outDir = path.dirname(await Deno.realPath(outFile));
+		const inFile = outFile.slice(-3).toLowerCase()=='.js' ? outFile.slice(0, -2)+'ts' : outFile+'.ts';
+		const outDir = path.dirname(outFile);
 		compilerOptions =
 		{	target: tsa.ScriptTarget.ESNext,
 			module: tsa.ModuleKind.ESNext,

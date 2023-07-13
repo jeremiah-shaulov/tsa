@@ -43,14 +43,13 @@ export function step1FindToplevelDeclarations
 			{	const introduces = new Array<tsa.Symbol>;
 				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, nodeExportType: NodeExportType.NONE};
 				if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
-				{	let nodeExportType = node.modifiers?.some(m => m.kind == ts.SyntaxKind.ExportKeyword) ? NodeExportType.EXPORT : NodeExportType.NONE;
+				{	const exportKeyword = node.modifiers?.find(m => m.kind == ts.SyntaxKind.ExportKeyword);
+					const defaultKeyword = exportKeyword && node.modifiers?.find(m => m.kind == ts.SyntaxKind.DefaultKeyword);
+					let nodeExportType = !exportKeyword ? NodeExportType.NONE : !defaultKeyword ? NodeExportType.EXPORT : NodeExportType.EXPORT_DEFAULT;
 					const names: Array<tsa.Identifier | tsa.ModifierLike> = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
-					if (names.length==0 && nodeExportType!=NodeExportType.NONE)
-					{	const defaultKeyword = node.modifiers?.find(m => m.kind == ts.SyntaxKind.DefaultKeyword);
-						if (defaultKeyword)
-						{	names.push(defaultKeyword);
-							nodeExportType = NodeExportType.EXPORT_UNNAMED_DEFAULT;
-						}
+					if (names.length==0 && defaultKeyword)
+					{	names.push(defaultKeyword);
+						nodeExportType = NodeExportType.EXPORT_DEFAULT_UNNAMED;
 					}
 					nodeWithInfo.nodeExportType = nodeExportType;
 					for (const name of names)
