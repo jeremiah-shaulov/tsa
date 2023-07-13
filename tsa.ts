@@ -61,7 +61,7 @@ program
 			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 			// Bundle
-			const bundle = program.emitBundle();
+			const bundle = program.emitTsaBundle();
 
 			if (options.ts)
 			{	// Save the result to file (or print to stdout)

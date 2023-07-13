@@ -33,8 +33,8 @@ export class TsaBundle
 		return this.#text;
 	}
 
-	async toProgram(compilerOptions?: tsa.CompilerOptions, logToConsole=false)
-	{	const outFile = compilerOptions?.outFile;
+	async toProgram(compilerOptions: tsa.CompilerOptions, logToConsole=false)
+	{	const outFile = compilerOptions.outFile;
 		if (!outFile)
 		{	throw new Error(`Please, specify outFile`);
 		}

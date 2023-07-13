@@ -21,19 +21,23 @@ export class KnownSymbols
 				{	baseName = sourceFile.fileName.match(RE_MODULE_NAME)?.[1] ?? 'defaultExport';
 				}
 			}
-			name = !namesSymbols.get(baseName) ? baseName : getUniqueName(namesSymbols, baseName);
+			name = this.#getUniqueName(baseName);
 			symbolsNames.set(symbol, name);
 			namesSymbols.set(name, symbol);
 		}
 		return name;
 	}
-}
 
-function getUniqueName(namesSymbols: Map<string, tsa.Symbol>, base: string)
-{	for (let i=2; true; i++)
-	{	const name = base + i.toString(16);
-		if (!namesSymbols.has(name))
-		{	return name;
+	#getUniqueName(base: string)
+	{	const {namesSymbols} = this;
+		if (!namesSymbols.has(base))
+		{	return base;
+		}
+		for (let i=2; true; i++)
+		{	const name = base + i.toString(16);
+			if (!namesSymbols.has(name))
+			{	return name;
+			}
 		}
 	}
 }

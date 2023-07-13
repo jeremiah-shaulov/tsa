@@ -45,7 +45,7 @@ export type NodeWithInfo =
 	nodeExportType: NodeExportType;
 };
 
-export function emitBundle(ts: typeof tsa, program: tsa.DenoProgram, lib?: string[], excludeLibDirectory?: string, newLine?: string)
+export function emitTsaBundle(ts: typeof tsa, program: tsa.DenoProgram, lib?: string[], excludeLibDirectory?: string, newLine?: string)
 {	if (!excludeLibDirectory || !newLine)
 	{	const host = ts.createCompilerHost({});
 		if (!excludeLibDirectory)

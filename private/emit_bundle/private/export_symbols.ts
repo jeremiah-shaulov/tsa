@@ -103,13 +103,26 @@ export class ExportSymbols
 			{	for (const symbol2 of checker.getExportsOfModule(symbol))
 				{	const resolvedSymbol = resolveSymbol(ts, checker, symbol2);
 					const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, resolvedSymbol);
-					exportSpecifiers.push
-					(	context.factory.createExportSpecifier
-						(	symbolIsType(ts, resolvedSymbol),
-							name!=symbol2.name ? name : alias && symbol2.name,
-							alias ?? symbol2.name
-						)
-					);
+					if (resolvedSymbol.name == 'default')
+					{	outExportStmts.push
+						(	{	sourceFile,
+								node: context.factory.createExportDefault(context.factory.createIdentifier(name)),
+								refs: new Set,
+								bodyRefs: new Set,
+								introduces: [],
+								nodeExportType: NodeExportType.NONE
+							}
+						);
+					}
+					else
+					{	exportSpecifiers.push
+						(	context.factory.createExportSpecifier
+							(	symbolIsType(ts, resolvedSymbol),
+								name!=symbol2.name ? name : alias && symbol2.name,
+								alias ?? symbol2.name
+							)
+						);
+					}
 				}
 			}
 		}

@@ -4,7 +4,7 @@ import {printDiagnostics, formatDiagnostics, ensureTempFile} from '../util.ts';
 export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, testName: string, compilerOptions?: tsa.CompilerOptions)
 {	// Emit ts
 	const program = await tsa.createTsaProgram(entryPoints, compilerOptions);
-	const bundle = program.emitBundle();
+	const bundle = program.emitTsaBundle();
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 	// Transpile the ts to js to see that it's valid
 	const outFile = await ensureTempFile(`tsa-${testName}.js`);

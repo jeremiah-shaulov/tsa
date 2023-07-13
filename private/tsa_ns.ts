@@ -15,7 +15,7 @@ type Any = any;
 declare module 'npm:typescript@5.1.6'
 {	interface DenoProgram extends Program
 	{	emitDoc(options?: EmitDocOptions): DocNode[];
-		emitBundle(): TsaBundle;
+		emitTsaBundle(): TsaBundle;
 	}
 
 	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<DenoProgram>;
