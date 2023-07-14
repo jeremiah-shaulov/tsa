@@ -17,28 +17,31 @@ export function step5TransformNodes
 	for (let i=0; i<nodesWithInfo.length; i++)
 	{	const nodeWithInfo = nodesWithInfo[i];
 		const {sourceFile, node: stmt, introduces, nodeExportType} = nodeWithInfo;
+		const exportDefaultDefForSubst = sourceFile!=firstSourceFile && ts.isExportAssignment(stmt) ? stmt.expression : undefined;
 		nodeWithInfo.node = transformNode
 		(	ts,
 			stmt,
 			(node, context) =>
 			{	if (ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isQualifiedName(node))
-				{	const symbol = checker.getSymbolAtLocation(node);
-					const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-					if (symbol && resolvedSymbol)
-					{	const name = knownSymbols.symbolsNames.get(resolvedSymbol);
-						if (name != undefined)
-						{	if (name!=symbol.name || !ts.isIdentifier(node))
-							{	node = context.factory.createIdentifier(name);
+				{	if (node != exportDefaultDefForSubst)
+					{	const symbol = checker.getSymbolAtLocation(node);
+						const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+						if (symbol && resolvedSymbol)
+						{	const name = knownSymbols.symbolsNames.get(resolvedSymbol);
+							if (name != undefined)
+							{	if (name!=symbol.name || !ts.isIdentifier(node))
+								{	node = context.factory.createIdentifier(name);
+								}
 							}
-						}
-						else if (isNamespaceButNotFromLib(ts, excludeLibDirectory, resolvedSymbol))
-						{	// namespace name is used as value, like `import * as ns from '...'; const ns2 = ns`
-							const addNodesWithInfo = new Array<NodeWithInfo>;
-							const nsName = exportSymbols.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, addNodesWithInfo, resolvedSymbol);
-							for (const n of addNodesWithInfo)
-							{	nodesWithInfo.splice(i++, 0, n);
+							else if (isNamespaceButNotFromLib(ts, excludeLibDirectory, resolvedSymbol))
+							{	// namespace name is used as value, like `import * as ns from '...'; const ns2 = ns`
+								const addNodesWithInfo = new Array<NodeWithInfo>;
+								const nsName = exportSymbols.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, addNodesWithInfo, resolvedSymbol);
+								for (const n of addNodesWithInfo)
+								{	nodesWithInfo.splice(i++, 0, n);
+								}
+								node = context.factory.createIdentifier(nsName);
 							}
-							node = context.factory.createIdentifier(nsName);
 						}
 					}
 				}
@@ -126,9 +129,28 @@ export function step5TransformNodes
 						}
 					}
 				}
-				else if (ts.isExportAssignment(node) && sourceFile!=firstSourceFile) // If this is not the first entry point
+				else if (exportDefaultDefForSubst)
 				{	// Remove `export default` or `export =`
-					node = context.factory.createExpressionStatement(node.expression);
+					const symbol = checker.getSymbolAtLocation(exportDefaultDefForSubst);
+					const name = symbol && knownSymbols.symbolsNames.get(symbol);
+					if (name)
+					{	node = context.factory.createVariableStatement
+						(	undefined,
+							context.factory.createVariableDeclarationList
+							(	[	context.factory.createVariableDeclaration
+									(	name,
+										undefined,
+										undefined,
+										exportDefaultDefForSubst
+									)
+								],
+								ts.NodeFlags.Const
+							)
+						);
+					}
+					else
+					{	node = context.factory.createExpressionStatement(exportDefaultDefForSubst);
+					}
 				}
 				// Create exports if this is the last statement
 				if (i == nodesWithInfo.length-1)

@@ -6,14 +6,7 @@ Deno.test
 (	'emit_bundle-remote',
 	async () =>
 	{	const subj = new URL(`subj/emit_bundle-remote/mod.ts`, import.meta.url);
-		const outFile = await testEmitBundle
-		(	[subj],
-			'emit_bundle-remote',
-			{	outFile: 'dist.js',
-				module: tsa.ModuleKind.System,
-				resolveJsonModule: false,
-			}
-		);
+		const outFile = await testEmitBundle([subj],'emit_bundle-remote');
 
 		const mod = await import(outFile);
 		assertEquals(Object.keys(mod).sort(), ['default'].sort());

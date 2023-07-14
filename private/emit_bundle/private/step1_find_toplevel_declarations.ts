@@ -24,8 +24,8 @@ export function step1FindToplevelDeclarations
 						for (const {name, propertyName} of node.exportClause.elements)
 						{	const symbol = checker.getSymbolAtLocation(propertyName ?? name);
 							const resolvedSymbol = resolveSymbol(ts, checker, symbol);
-							if (resolvedSymbol)
-							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, resolvedSymbol, propertyName ? name : undefined);
+							if (symbol && resolvedSymbol)
+							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, resolvedSymbol, propertyName ? name : resolvedSymbol.name!=symbol.name ? symbol.name: undefined);
 							}
 						}
 					}
@@ -62,6 +62,15 @@ export function step1FindToplevelDeclarations
 							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, symbol, undefined);
 							}
 						}
+					}
+				}
+				else if (ts.isExportAssignment(node) && !isFirstEntryPoint) // for the first entry point i'll leave the `export default ...` alone
+				{	if (ts.isIdentifier(node.expression))
+					{	continue;
+					}
+					const symbol = checker.getSymbolAtLocation(node.expression);
+					if (symbol)
+					{	knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol);
 					}
 				}
 				nodesWithInfo.push(nodeWithInfo);

@@ -89,16 +89,16 @@ export class ExportSymbols
 	{	const exportSpecifiers = new Array<tsa.ExportSpecifier>;
 		for (const [symbol, alias] of this.#exports)
 		{	const isModule = isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol);
-			if (!isModule || alias)
-			{	const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, symbol);
-				this.#createExportSpecifier(ts, context, sourceFile, symbol, symbol, name, alias, exportSpecifiers, outExportStmts);
-			}
-			else
+			if (isModule && !alias)
 			{	for (const symbol2 of checker.getExportsOfModule(symbol))
 				{	const resolvedSymbol = resolveSymbol(ts, checker, symbol2);
 					const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, resolvedSymbol);
 					this.#createExportSpecifier(ts, context, sourceFile, symbol2, resolvedSymbol, name, alias, exportSpecifiers, outExportStmts);
 				}
+			}
+			else
+			{	const name = this.getNamespaceAsValue(ts, checker, context, sourceFile, excludeLibDirectory, knownSymbols, outExportStmts, symbol);
+				this.#createExportSpecifier(ts, context, sourceFile, symbol, symbol, name, alias, exportSpecifiers, outExportStmts);
 			}
 		}
 		if (exportSpecifiers.length)
@@ -115,7 +115,7 @@ export class ExportSymbols
 	}
 
 	#createExportSpecifier(ts: typeof tsa, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, symbol: tsa.Symbol, resolvedSymbol: tsa.Symbol, name: string, alias: ExportSymbolsAlias, outExportSpecifiers: Array<tsa.ExportSpecifier>, outExportStmts: NodeWithInfo[])
-	{	if (resolvedSymbol.name == 'default')
+	{	if (alias ? alias==='default' : symbol.name=='default')
 		{	outExportStmts.push
 			(	{	sourceFile,
 					node: context.factory.createExportDefault(context.factory.createIdentifier(name)),
