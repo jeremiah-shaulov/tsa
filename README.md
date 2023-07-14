@@ -181,27 +181,27 @@ const OUT_FILE = '/tmp/doc.json';
 
 // Create typescript program
 const program = await tsa.createTsaProgram
-	(	[DOCS_FOR],
-		{	declaration: true,
-			emitDeclarationOnly: true,
-		},
-		{	async load(specifier, isDynamic)
-			{	// Load the module contents
-				const result = await defaultLoad(specifier, isDynamic);
-				// If the module was found, substitute it's contents
-				if (result?.kind == 'module')
-				{	result.content =
-					`	/**	Example module.
-							@module
-						 **/
-						${result.content}
-					`;
-				}
-				// Return the result
-				return result;
+(	[DOCS_FOR],
+	{	declaration: true,
+		emitDeclarationOnly: true,
+	},
+	{	async load(specifier, isDynamic)
+		{	// Load the module contents
+			const result = await defaultLoad(specifier, isDynamic);
+			// If the module was found, substitute it's contents
+			if (result?.kind == 'module')
+			{	result.content =
+				`	/**	Example module.
+						@module
+						**/
+					${result.content}
+				`;
 			}
+			// Return the result
+			return result;
 		}
-	);
+	}
+);
 
 // Print errors and warnings (if any)
 printDiagnostics(tsa.getPreEmitDiagnostics(program));
@@ -232,24 +232,24 @@ const INPUT =
 // Create typescript program
 const fakeInputFilename = 'main.ts';
 const program = await tsa.createTsaProgram
-	(	[fakeInputFilename],
-		{	declaration: true,
-			emitDeclarationOnly: true,
-		},
-		{	resolve(specifier, _referrer)
-			{	if (specifier == fakeInputFilename)
-				{	return specifier;
-				}
-				return defaultResolve(specifier, _referrer);
-			},
-			async load(specifier, isDynamic)
-			{	if (specifier == fakeInputFilename)
-				{	return {kind: 'module', specifier: fakeInputFilename, content: INPUT, headers: {'content-type': 'application/typescript'}};
-				}
-				return await defaultLoad(specifier, isDynamic);
+(	[fakeInputFilename],
+	{	declaration: true,
+		emitDeclarationOnly: true,
+	},
+	{	resolve(specifier, _referrer)
+		{	if (specifier == fakeInputFilename)
+			{	return specifier;
 			}
+			return defaultResolve(specifier, _referrer);
+		},
+		async load(specifier, isDynamic)
+		{	if (specifier == fakeInputFilename)
+			{	return {kind: 'module', specifier: fakeInputFilename, content: INPUT, headers: {'content-type': 'application/typescript'}};
+			}
+			return await defaultLoad(specifier, isDynamic);
 		}
-	);
+	}
+);
 
 // Print errors and warnings (if any)
 printDiagnostics(tsa.getPreEmitDiagnostics(program));
