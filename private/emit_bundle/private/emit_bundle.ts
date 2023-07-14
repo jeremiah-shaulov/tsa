@@ -105,7 +105,7 @@ export function emitTsaBundle(ts: typeof tsa, program: tsa.TsaProgram, lib?: str
 
 	/*	6. Done.
 	 */
-	return new TsaBundle(nodesWithInfo, lib, newLine);
+	return new TsaBundle(ts, nodesWithInfo, lib, newLine);
 }
 
 function getSourceFiles(program: tsa.Program, excludeLibDirectory: string)

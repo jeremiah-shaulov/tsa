@@ -5,14 +5,14 @@ import {NodeWithInfo} from './emit_bundle.ts';
 export class TsaBundle
 {	#text: string | undefined;
 
-	constructor(public nodesWithInfo: NodeWithInfo[], private lib: string[]|undefined, private newLine: string)
+	constructor(private ts: typeof tsa, public nodesWithInfo: NodeWithInfo[], private lib: string[]|undefined, private newLine: string)
 	{
 	}
 
 	toTs(logToConsole=false)
 	{	if (this.#text == undefined)
 		{	const {nodesWithInfo, newLine} = this;
-			const printer = tsa.createPrinter();
+			const printer = this.ts.createPrinter();
 			let lastSourceFile: tsa.SourceFile|undefined;
 			let text = '';
 			for (const {sourceFile, node} of nodesWithInfo)
@@ -25,7 +25,7 @@ export class TsaBundle
 					{	console.error(info);
 					}
 				}
-				const line = printer.printNode(tsa.EmitHint.Unspecified, node, sourceFile) + newLine;
+				const line = printer.printNode(this.ts.EmitHint.Unspecified, node, sourceFile) + newLine;
 				text += line;
 			}
 			this.#text = text;
@@ -44,27 +44,23 @@ export class TsaBundle
 		const inFile = outFile.slice(-3).toLowerCase()=='.js' ? outFile.slice(0, -2)+'ts' : outFile+'.ts';
 		const outDir = path.dirname(outFile);
 		compilerOptions =
-		{	target: tsa.ScriptTarget.ESNext,
-			module: tsa.ModuleKind.ESNext,
+		{	target: this.ts.ScriptTarget.ESNext,
+			module: this.ts.ModuleKind.ESNext,
 			lib: this.lib,
 			...compilerOptions,
 			outDir,
 			outFile: undefined, // reset
 		};
 		const text = this.toTs(logToConsole);
-		return await tsa.createTsaProgram
+		return await this.ts.createTsaProgram
 		(	[inFile],
 			compilerOptions,
 			{	resolve(specifier, _referrer)
-				{	if (specifier == inFile)
-					{	return specifier;
-					}
-					return '';
+				{	return specifier;
 				},
-				// deno-lint-ignore require-await
-				async load(specifier, _isDynamic)
+				load(specifier, _isDynamic)
 				{	if (specifier == inFile)
-					{	return {kind: 'module', specifier: inFile, content: text, headers: {'content-type': 'application/typescript'}};
+					{	return {kind: 'module', specifier, content: text, headers: {'content-type': 'application/typescript'}};
 					}
 				}
 			}

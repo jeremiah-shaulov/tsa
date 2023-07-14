@@ -1,9 +1,11 @@
+import {tsa} from './tsa_ns.ts';
 import {cache, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} from './deps.ts';
 import {getNpmFilename} from './npm.ts';
 import {isUrl} from './util.ts';
 
 type Resolve = (specifier: string, referrer: string) => string | Promise<string>;
-type Load = (specifier: string, isDynamic: boolean) => Promise<LoadResponse|undefined>;
+type Load = (specifier: string, isDynamic: boolean) => LoadResponse | undefined | Promise<LoadResponse|undefined>;
+type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind) => tsa.SourceFile;
 
 export type LoadOptions =
 {	/** An optional URL or path to an import map to be loaded and used to resolve
@@ -41,11 +43,14 @@ export type LoadOptions =
 		                 dynamically
 	 **/
 	load?: Load;
+
+	createSourceFile?: CreateSourceFile;
 };
 
 export class Loader
 {	#useResolve: Resolve;
 	#useLoad: Load;
+	#useCreateSourceFile: CreateSourceFile;
 	#resolved = new Map<string, Map<string, string>>;
 
 	static async inst(loadOptions?: LoadOptions)
@@ -57,12 +62,14 @@ export class Loader
 		const load = loadOptions?.load;
 		const useLoad = load ?? defaultLoad;
 		const useResolve = !importMap ? (resolve ?? defaultResolve) : await getResolveWithImportMap(importMap, useLoad);
-		return new Loader(useResolve, useLoad);
+		const useCreateSourceFile = loadOptions?.createSourceFile ?? defaultCreateSourceFile;
+		return new Loader(useResolve, useLoad, useCreateSourceFile);
 	}
 
-	protected constructor(useResolve: Resolve, useLoad: Load)
+	protected constructor(useResolve: Resolve, useLoad: Load, useCreateSourceFile: CreateSourceFile)
 	{	this.#useResolve = useResolve;
 		this.#useLoad = useLoad;
+		this.#useCreateSourceFile = useCreateSourceFile;
 	}
 
 	/**	Resolve, and remember how it was resolved.
@@ -87,6 +94,10 @@ export class Loader
 	 **/
 	resolved(specifier: string, referrer: string)
 	{	return this.#resolved.get(referrer)?.get(specifier) ?? defaultResolveSync(specifier, referrer);
+	}
+
+	createSourceFile(ts: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind)
+	{	return this.#useCreateSourceFile.call(ts, origSpecifier, content, scriptKind);
 	}
 }
 
@@ -161,4 +172,10 @@ export async function defaultLoad(specifier: string, _isDynamic: boolean): Promi
 		headers,
 		content: await Deno.readTextFile(filename),
 	};
+}
+
+function defaultCreateSourceFile(this: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind)
+{	// deno-lint-ignore no-this-alias
+	const ts = this;
+	return ts.createSourceFile(origSpecifier, content, scriptKind==ts.ScriptKind.JSON ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest, undefined, scriptKind);
 }

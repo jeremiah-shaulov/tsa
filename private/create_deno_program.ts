@@ -110,7 +110,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 			{	filename = extendedLibs[fileUrl.href];
 			}
 			const content = Deno.readTextFileSync(filename);
-			return createSourceFile(ts, content, origSpecifier, filename).sourceFile;
+			return createSourceFile(ts, loader, content, origSpecifier, filename).sourceFile;
 		}
 		catch (e)
 		{	onError?.(e.message);
@@ -160,7 +160,7 @@ async function forFile(ts: typeof tsa, modHref: string, sourceFilesAndKinds: Map
 		sourceFilesAndKinds.set(modHref, record);
 		const loadResponse = await loader.load(modHref, false);
 		if (loadResponse?.kind == 'module')
-		{	const {sourceFile, scriptKind} = createSourceFile(ts, loadResponse.content, modHref, loadResponse.specifier, loadResponse.headers?.['content-type']);
+		{	const {sourceFile, scriptKind} = createSourceFile(ts, loader, loadResponse.content, modHref, loadResponse.specifier, loadResponse.headers?.['content-type']);
 			record.scriptKind = scriptKind;
 			record.sourceFile = sourceFile;
 			// Find `import from` and `export from`
@@ -187,7 +187,7 @@ async function forFile(ts: typeof tsa, modHref: string, sourceFilesAndKinds: Map
 	await Promise.all(promises);
 }
 
-function createSourceFile(ts: typeof tsa, content: string, origSpecifier: string, specifier: string, contentType?: string)
+function createSourceFile(ts: typeof tsa, loader: Loader, content: string, origSpecifier: string, specifier: string, contentType?: string)
 {	const scriptKind =
 	(	contentType?.endsWith('typescript') ? ts.ScriptKind.TS :
 		contentType?.endsWith('/tsx') ? ts.ScriptKind.TSX :
@@ -199,6 +199,6 @@ function createSourceFile(ts: typeof tsa, content: string, origSpecifier: string
 		specifier.slice(-4).toLowerCase() == '.jsx' ? ts.ScriptKind.JSX :
 		ts.ScriptKind.JS
 	);
-	const sourceFile = ts.createSourceFile(origSpecifier, content, scriptKind==ts.ScriptKind.JSON ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest, undefined, scriptKind);
+	const sourceFile = loader.createSourceFile(ts, origSpecifier, content, scriptKind);
 	return {sourceFile, scriptKind};
 }
