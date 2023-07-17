@@ -159,6 +159,7 @@ type LoadOptions =
 {	importMap?: string | URL;
 	resolve?(specifier: string, referrer: string): string | Promise<string>;
 	load?(specifier: string, isDynamic: boolean): LoadResponse | undefined | Promise<LoadResponse|undefined>;
+	createSourceFile?(this: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind): tsa.SourceFile;
 };
 ```
 
@@ -171,6 +172,7 @@ The callback then returns a resolved URL to the module file.
 - `load()` - An optional callback that is called with the URL string of the resource to be loaded.
 The callback should return a `LoadResponse` or `undefined` if the module is not found.
 If there are other errors encountered, a rejected promise should be returned.
+- `createSourceFile()` - Hook on creation `tsa.SourceFile` object from source code string.
 
 For example `LoadOptions` allow to substitute source code of a module during loading.
 

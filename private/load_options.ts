@@ -44,6 +44,14 @@ export type LoadOptions =
 	 **/
 	load?: Load;
 
+	/**	Hook on creation `tsa.SourceFile` object from source code string.
+		The default implementation is:
+		```ts
+		function defaultCreateSourceFile(origSpecifier: string, content: string, scriptKind: tsa.ScriptKind)
+		{	return tsa.createSourceFile(origSpecifier, content, scriptKind==tsa.ScriptKind.JSON ? tsa.ScriptTarget.JSON : tsa.ScriptTarget.Latest, undefined, scriptKind);
+		}
+		```
+	 **/
 	createSourceFile?: CreateSourceFile;
 };
 
