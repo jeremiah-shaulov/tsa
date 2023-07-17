@@ -16,15 +16,20 @@ This tool can be used as command-line script, or from Deno projects.
 First install the tool:
 
 ```bash
-deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.14/tsa.ts
+deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.15/tsa.ts
 ```
 
-The command supports 2 operations:
+The command supports 3 operations:
 - `tsa doc` - generate JSON AST (abstract syntax tree) that contains functions and classes of the project together with their doc-comments.
+- `tsa types` - generate `.d.ts` file with type declarations.
 - `tsa bundle` - generate `.js` bundle that contains all the files of the project as single ECMA module.
 
 ```bash
 tsa doc --pretty https://deno.land/x/dir@1.5.1/mod.ts
+```
+
+```bash
+tsa types https://deno.land/x/dir@1.5.1/mod.ts
 ```
 
 ```bash
@@ -35,10 +40,10 @@ tsa bundle https://deno.land/x/dir@1.5.1/mod.ts
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.14/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example1.ts
 
-import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -153,7 +158,7 @@ You can pass `LoadOptions` to `tsa.createTsaProgram()` that allow to configure t
 type LoadOptions =
 {	importMap?: string | URL;
 	resolve?(specifier: string, referrer: string): string | Promise<string>;
-	load?(specifier: string, isDynamic: boolean): Promise<LoadResponse|undefined>;
+	load?(specifier: string, isDynamic: boolean): LoadResponse | undefined | Promise<LoadResponse|undefined>;
 };
 ```
 
@@ -171,10 +176,10 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.14/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example2.ts
 
-import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -219,7 +224,7 @@ console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, ''
 In the following example i use fake input file:
 
 ```ts
-import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 
 const INPUT =
 `	/**	The main function.
@@ -296,7 +301,7 @@ Specify this callback to potentially include other symbols.
 It's possible to assemble all the source files to a single file.
 
 ```ts
-import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 
 const BUNDLE_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_TS_FILE = '/tmp/dist.ts';
@@ -343,10 +348,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.14/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -354,10 +359,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.14/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.14/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';

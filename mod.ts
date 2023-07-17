@@ -9,6 +9,7 @@ export {defaultResolve, defaultLoad, type LoadOptions} from './private/load_opti
 export {type EmitDocOptions} from './private/convert/mod.ts';
 export type * from './private/doc_node/mod.ts';
 export {type NodeWithInfo, TsaBundle} from './private/emit_bundle/mod.ts';
+export type {LoadResponse} from './private/deps.ts';
 
 // TODO: command line arguments for emit to disable flags enabled by default
 // TODO: `emit()` from `npm:`
@@ -17,4 +18,3 @@ export {type NodeWithInfo, TsaBundle} from './private/emit_bundle/mod.ts';
 // TODO: remove inherited constructors and index signatures? (`// 22.` in `makeCompatible()`)
 // TODO: exclude dead code, and merge identical declarations
 // TODO: source maps
-// TODO: gen .d.ts

@@ -2,7 +2,6 @@
 
 import {tsa, printDiagnostics} from './mod.ts';
 import {Command, writeAll} from './private/deps.ts';
-import {defaultLoad, defaultResolve} from './private/load_options.ts';
 
 const program = new Command('tsa');
 
@@ -31,7 +30,7 @@ program
 			const entryPoints = [file1, ...files];
 
 			// Create program
-			const program = await tsa.createTsaProgram(entryPoints);
+			const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 			printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 			// Generate doc
@@ -39,6 +38,40 @@ program
 
 			// Save the result to file (or print to stdout), and exit
 			await writeTextFile(outFile, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+			Deno.exit();
+		}
+	);
+
+program
+	.command('types <file1.ts> [fileN.ts...]')
+	.description
+	(	'Generate type declarations file (DTS).'
+	)
+	.option('--outFile <out.d.ts>', 'Where to save the result (default: stdout).')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const outFile = String(options.outFile || '/dev/stdout');
+			const entryPoints = [file1, ...files];
+
+			// Create program
+			const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true, outFile});
+			printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+			// Generate the DTS
+			let contents = '';
+			const result = program.emit
+			(	undefined,
+				(_fileName: string, text: string) =>
+				{	contents = text;
+				}
+			);
+			printDiagnostics(result.diagnostics);
+
+			// Save the result to file (or print to stdout)
+			await writeTextFile(outFile, contents);
+
+			// Done
 			Deno.exit();
 		}
 	);
