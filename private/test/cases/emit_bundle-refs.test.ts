@@ -1,5 +1,4 @@
 import {testEmitBundle} from '../test-emit_bundle.ts';
-import {tsa} from '../../tsa_ns.ts';
 import {assertEquals} from '../deps.ts';
 
 Deno.test

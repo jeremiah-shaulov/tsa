@@ -11,10 +11,10 @@ export type * from './private/doc_node/mod.ts';
 export {type NodeWithInfo, TsaBundle} from './private/emit_bundle/mod.ts';
 export type {LoadResponse} from './private/deps.ts';
 
-// TODO: command line arguments for emit to disable flags enabled by default
-// TODO: `emit()` from `npm:`
-// TODO: support `node:`
+// TODO: more command line arguments for `tsa`
+// TODO: support `npm:` and `node:`
 // TODO: docs from each function signature
 // TODO: remove inherited constructors and index signatures? (`// 22.` in `makeCompatible()`)
 // TODO: exclude dead code, and merge identical declarations
 // TODO: source maps
+// TODO: different lib.deno.ns versions
