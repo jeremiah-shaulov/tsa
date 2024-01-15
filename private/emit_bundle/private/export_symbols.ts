@@ -7,7 +7,7 @@ type ExportSymbolsAlias = tsa.Identifier|string|undefined;
 
 export class ExportSymbols
 {	#exports = new Map<tsa.Symbol, ExportSymbolsAlias>; // symbols that the first entry point exports
-	refs = new Set<tsa.Symbol>; // all the symbols that are found in `#symbols`
+	refs = new Set<tsa.Symbol>; // all the symbols that are found in `#exports`
 
 	addExport(ts: typeof tsa, checker: tsa.TypeChecker, excludeLibDirectory: string, symbol: tsa.Symbol, alias: ExportSymbolsAlias)
 	{	this.#exports.set(symbol, alias);

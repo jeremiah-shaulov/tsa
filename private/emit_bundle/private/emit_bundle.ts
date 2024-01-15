@@ -77,19 +77,20 @@ export function emitTsaBundle(ts: typeof tsa, program: tsa.TsaProgram, lib?: str
 
 	/*	1. Find top-level declarations.
 		This step runs through `sourceFiles`, and:
-		- Adds occured top-level symbols of each module to `symbolsNames` and `namesSymbols`.
+		- Adds occured top-level symbols of each module to `knownSymbols`.
 		- Adds export declarations to `exportSymbols`.
 		- Adds all the top-level statements except import and export to `nodesWithInfo`. At this point `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs` are not set.
 	 */
 	step1FindToplevelDeclarations(ts, checker, nodesWithInfo, knownSymbols, nodesThatIntroduce, exportSymbols, sourceFiles, excludeLibDirectory);
 
 	/*	2. Find what symbol does each statement reference (use), and store this information in `nodeWithInfo.refs` and `nodeWithInfo.bodyRefs`.
-		Only references to top-level symbols present in `symbolsNames` (that is populated in step 1) are counted.
+		Only references to top-level symbols present in `knownSymbols` (that is populated in step 1) are counted.
 	 */
 	step2FindRefs(ts, checker, nodesWithInfo, knownSymbols, excludeLibDirectory);
 
 	/*	3. Now when i know all the top-level symbols: where they introduced and referenced, i can remove the dead code.
-		However classes and function used in type aliases will remain.
+		However classes and functions used in type aliases will remain,
+		i.e. if class `C` is not used in code, but appears somewhere as `let v: Array<C>`, it will not be considered a dead code.
 	 */
 	nodesWithInfo = step3RemoveDeadCode(nodesWithInfo, exportSymbols);
 
@@ -99,7 +100,7 @@ export function emitTsaBundle(ts: typeof tsa, program: tsa.TsaProgram, lib?: str
 	step4ReorderStmtsAccordingToDependency(ts, nodesWithInfo, nodesThatIntroduce);
 
 	/*	5. Rename symbols, and create exports.
-		After step 1 the `symbolsNames` variable contains symbol names as they must be in the resulting bundle.
+		After step 1 the `knownSymbols` variable contains symbol names as they must be in the resulting bundle.
 	 */
 	step5TransformNodes(ts, checker, nodesWithInfo, knownSymbols, exportSymbols, sourceFiles[0], excludeLibDirectory);
 
