@@ -397,18 +397,22 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 26. Fix doc-comments: when dataDoc has comment combined from several declarations, and dataDenoDoc has only the comment from the first declaration, copy from dataDoc
+		// 26. Fix "return void" on setters: dataDenoDoc has it
+		if (dataDoc.functionDef && dataDoc.functionDef.returnType==undefined && dataDenoDoc.functionDef?.returnType?.keyword==='void' && dataDenoDoc.kind==='setter')
+		{	delete dataDenoDoc.functionDef.returnType;
+		}
+		// 27. Fix doc-comments: when dataDoc has comment combined from several declarations, and dataDenoDoc has only the comment from the first declaration, copy from dataDoc
 		if (parentKey=='jsDoc' && typeof(dataDenoDoc.doc)=='string' && typeof(dataDoc.doc)=='string' && dataDenoDoc.doc!=dataDoc.doc && dataDoc.doc.startsWith(dataDenoDoc.doc) && dataDoc.docTokens?.[0]?.text==dataDenoDoc.doc && dataDoc.docTokens[1]?.kind=='lineBreak')
 		{	dataDenoDoc.doc = dataDoc.doc;
 		}
-		// 27. Fix tsType: when dataDenoDoc has `string`, and dataDoc has specific string literal, copy from dataDoc
+		// 28. Fix tsType: when dataDenoDoc has `string`, and dataDoc has specific string literal, copy from dataDoc
 		if (parentKey=='tsType' && dataDenoDoc.keyword==='string' && dataDoc.literal?.kind==='string')
 		{	dataDenoDoc.repr = dataDoc.repr;
 			dataDenoDoc.kind = dataDoc.kind;
 			dataDenoDoc.literal = dataDoc.literal;
 			delete dataDenoDoc.keyword;
 		}
-		// 28. Fix accessibility and readonly: if they come from doc-comments tags, set them on dataDenoDoc
+		// 29. Fix accessibility and readonly: if they come from doc-comments tags, set them on dataDenoDoc
 		if (dataDenoDoc.properties && dataDoc.properties)
 		{	for (let i=0; i<dataDenoDoc.properties.length && dataDoc.properties.length; i++)
 			{	if (dataDenoDoc.properties[i].accessibility==undefined && dataDoc.properties[i].accessibility!=undefined && dataDoc.properties[i].jsDoc?.tags)
@@ -424,11 +428,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 29. Fix `exports`: if dataDoc has them, copy to dataDenoDoc
+		// 30. Fix `exports`: if dataDoc has them, copy to dataDenoDoc
 		if (parentKey=='' && Array.isArray(dataDoc.exports) && !dataDenoDoc.exports)
 		{	dataDenoDoc.exports = dataDoc.exports;
 		}
-		// 30. Fix computed properties: if dataDenoDoc has `['name']: type` (with constant name), and dataDoc has `name: type`, then copy the property name from dataDoc
+		// 31. Fix computed properties: if dataDenoDoc has `['name']: type` (with constant name), and dataDoc has `name: type`, then copy the property name from dataDoc
 		if (dataDenoDoc.properties && dataDoc.properties)
 		{	for (let i=0; i<dataDenoDoc.properties.length && dataDoc.properties.length; i++)
 			{	if (dataDenoDoc.properties[i].name != dataDoc.properties[i].name && dataDenoDoc.properties[i].name[0]=='[' && (dataDenoDoc.properties[i].name==`['${dataDoc.properties[i].name}']` || dataDenoDoc.properties[i].name==`["${dataDoc.properties[i].name}"]`))

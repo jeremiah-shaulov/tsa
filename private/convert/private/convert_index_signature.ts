@@ -3,6 +3,8 @@ import {TsTypeTypePredicateDef, ClassIndexSignatureDef} from '../../doc_node/mod
 import {convertType} from './convert_type.ts';
 import {getText} from './util.ts';
 import {Converter} from './converter.ts';
+import {convertJsDoc} from './convert_js_doc.ts';
+import {convertLocation} from './convert_location.ts';
 
 export function convertSignatureReturnType(ts: typeof tsa, converter: Converter, sig?: tsa.Signature)
 {	const predicate = sig && converter.checker.getTypePredicateOfSignature(sig);
@@ -34,11 +36,17 @@ export function createPredicate(ts: typeof tsa, converter: Converter, asserts: b
 }
 
 export function convertIndexSignature(ts: typeof tsa, converter: Converter, index: tsa.IndexInfo): ClassIndexSignatureDef
-{	return {
+{	const {declaration} = index;
+	// i don't know how to get to the symbol using public API, so i'll use hack:
+	// TODO: stop using hack
+	const symbol = declaration && 'symbol' in declaration ? declaration.symbol as tsa.Symbol : undefined;
+	return {
+		...(symbol && declaration && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration))),
+		...(declaration && {location: convertLocation(ts, converter, declaration)}),
 		readonly: index.isReadonly,
 		params:
 		[	{	kind: 'identifier',
-				name: getText(ts, index.declaration?.parameters[0]?.name) || 'key',
+				name: getText(ts, declaration?.parameters[0]?.name) || 'key',
 				optional: false,
 				tsType: convertType(ts, converter, index.keyType),
 			}
