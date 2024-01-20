@@ -16,7 +16,7 @@ This tool can be used as command-line script, or from Deno projects.
 First install the tool:
 
 ```bash
-deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.15/tsa.ts
+deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.16/tsa.ts
 ```
 
 The command supports 3 operations:
@@ -43,7 +43,7 @@ tsa bundle https://deno.land/x/dir@1.5.1/mod.ts
 // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example1.ts
 
-import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -181,7 +181,7 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example2.ts
 
-import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -226,7 +226,7 @@ console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, ''
 In the following example i use fake input file:
 
 ```ts
-import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 
 const INPUT =
 `	/**	The main function.
@@ -303,7 +303,7 @@ Specify this callback to potentially include other symbols.
 It's possible to assemble all the source files to a single file.
 
 ```ts
-import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 
 const BUNDLE_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_TS_FILE = '/tmp/dist.ts';
@@ -353,7 +353,7 @@ This library contains typescript compiler inside, and it's version is predefined
 // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example3.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -364,7 +364,7 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.15/README.md' | perl -ne '$y=$1 if /^```(ts\\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example4.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.15/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.16/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
