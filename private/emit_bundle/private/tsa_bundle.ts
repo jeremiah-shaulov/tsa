@@ -46,6 +46,7 @@ export class TsaBundle
 		compilerOptions =
 		{	target: this.ts.ScriptTarget.ESNext,
 			module: this.ts.ModuleKind.ESNext,
+			moduleResolution: this.ts.ModuleResolutionKind.Bundler ?? this.ts.ModuleResolutionKind.NodeNext,
 			lib: this.lib,
 			...compilerOptions,
 			outDir,

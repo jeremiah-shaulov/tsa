@@ -9,6 +9,8 @@ Deno.test
 		(	[subj],
 			{	outFile: 'dist.js',
 				module: tsa.ModuleKind.AMD,
+				moduleResolution: tsa.ModuleResolutionKind.Classic,
+				resolveJsonModule: false,
 				lib: ['lib.deno.ns.d.ts'],
 			}
 		);

@@ -1,4 +1,4 @@
-import typescript from 'npm:typescript@5.1.6';
+import typescript from 'npm:typescript@5.3.3';
 import {createTsaProgram} from './create_deno_program.ts';
 import {LoadOptions} from './load_options.ts';
 import {DocNode} from './doc_node/mod.ts';
@@ -12,7 +12,7 @@ type Any = any;
 
 (typescript as Any).createTsaProgram = createTsaProgram;
 
-declare module 'npm:typescript@5.1.6'
+declare module 'npm:typescript@5.3.3'
 {	interface TsaProgram extends Program
 	{	emitDoc(options?: EmitDocOptions): DocNode[];
 		emitTsaBundle(): TsaBundle;

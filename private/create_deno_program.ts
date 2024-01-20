@@ -20,7 +20,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 		resolveJsonModule: true,
 		allowSyntheticDefaultImports: true,
 		target: ts.ScriptTarget.ESNext,
-		module: ts.ModuleKind.ESNext,
+		module: ts.ModuleKind.NodeNext,
 		moduleResolution: ts.ModuleResolutionKind.NodeNext,
 	};
 	compilerOptions = {...DEFAULT_COMPILER_OPTIONS, ...compilerOptions};
