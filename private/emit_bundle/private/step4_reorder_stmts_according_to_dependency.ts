@@ -70,8 +70,9 @@ function *refsIter(ts: typeof tsa, nodesThatIntroduce: Map<tsa.Symbol, NodeWithI
 						}
 					}
 				}
-				else // TODO: class
-				{	yield symbol;
+				else if (!(symbol.flags & ts.SymbolFlags.FunctionScopedVariable)) // vars can be declared later
+				{	// TODO: class
+					yield symbol;
 				}
 			}
 		}
