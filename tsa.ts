@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
 import {tsa, printDiagnostics} from './mod.ts';
-import {Command, writeAll} from './private/deps.ts';
+import {Command} from './private/deps.ts';
 
 const program = new Command('tsa');
 
@@ -132,7 +132,13 @@ program.parse(Deno.args);
 async function writeTextFile(filename: string, contents: string)
 {	if (filename == '/dev/stdout')
 	{	// Support Windows
-		await writeAll(Deno.stdout, new TextEncoder().encode(contents));
+		const writer = Deno.stdout.writable.getWriter();
+		try
+		{	await writer.write(new TextEncoder().encode(contents));
+		}
+		finally
+		{	writer.releaseLock();
+		}
 	}
 	else
 	{	await Deno.writeTextFile(filename, contents);

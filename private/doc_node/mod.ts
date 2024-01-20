@@ -1,4 +1,4 @@
-/** This file is downloaded from: `https://github.com/denoland/deno_doc/blob/main/js/types.d.ts`.
+/** This file is downloaded from: `https://github.com/denoland/deno_doc/blob/0.69.2/js/types.d.ts`.
     Then modified. Use file comparator to find what's changed.
 
     In brief:
