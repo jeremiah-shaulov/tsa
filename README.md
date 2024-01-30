@@ -243,15 +243,15 @@ const program = await tsa.createTsaProgram
 	{	declaration: true,
 		emitDeclarationOnly: true,
 	},
-	{	resolve(specifier, _referrer)
+	{	resolve(specifier, referrer)
 		{	if (specifier == fakeInputFilename)
 			{	return specifier;
 			}
-			return defaultResolve(specifier, _referrer);
+			return defaultResolve(specifier, referrer);
 		},
 		async load(specifier, isDynamic)
 		{	if (specifier == fakeInputFilename)
-			{	return {kind: 'module', specifier: fakeInputFilename, content: INPUT, headers: {'content-type': 'application/typescript'}};
+			{	return {kind: 'module', specifier, content: INPUT, headers: {'content-type': 'application/typescript'}};
 			}
 			return await defaultLoad(specifier, isDynamic);
 		}
