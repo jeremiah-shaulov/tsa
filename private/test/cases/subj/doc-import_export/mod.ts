@@ -17,7 +17,7 @@ export {Numbers, EvenNumbers2 as EvenNumbers3, type OddNumbers2 as OddNumbers3, 
 
 export * as subj3 from './private/subj3.ts';
 
-export {Client} from 'https://deno.land/x/mysql@v2.11.0/mod.ts';
+export {Client} from 'https://deno.land/x/mysql@v2.12.1/mod.ts';
 
 function defaultHello(a: number) {return a+''}
 export default defaultHello;
