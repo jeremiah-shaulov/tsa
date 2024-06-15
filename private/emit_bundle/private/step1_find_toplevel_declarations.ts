@@ -55,7 +55,8 @@ export function step1FindToplevelDeclarations
 					for (const name of names)
 					{	const symbol = checker.getSymbolAtLocation(name);
 						if (symbol)
-						{	knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol);
+						{	const isAmbient = !!node.modifiers?.find(m => m.kind == ts.SyntaxKind.DeclareKeyword);
+							knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol, isAmbient);
 							introduces.push(symbol);
 							nodesThatIntroduce.set(symbol, nodeWithInfo);
 							if (nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)

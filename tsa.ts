@@ -82,12 +82,30 @@ program
 	(	'Bundle Typescript source files to single Javascript module.'
 	)
 	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
+	.option('--target <ESNext>', 'Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).')
 	.option('--ts', 'Bundle to `.ts`. If some of the sources is plain Javascript, the resulting bundle can be valid by the means of Typescript.')
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
 			const outFile = String(options.outFile || '/dev/stdout');
 			const entryPoints = [file1, ...files];
+			let target = tsa.ScriptTarget.ESNext;
+			if (options.target)
+			{	switch (options.target)
+				{	case 'ES2015': target = tsa.ScriptTarget.ES2015; break;
+					case 'ES2016': target = tsa.ScriptTarget.ES2016; break;
+					case 'ES2017': target = tsa.ScriptTarget.ES2017; break;
+					case 'ES2018': target = tsa.ScriptTarget.ES2018; break;
+					case 'ES2019': target = tsa.ScriptTarget.ES2019; break;
+					case 'ES2020': target = tsa.ScriptTarget.ES2020; break;
+					case 'ES2021': target = tsa.ScriptTarget.ES2021; break;
+					case 'ES2022': target = tsa.ScriptTarget.ES2022; break;
+					case 'ESNext': target = tsa.ScriptTarget.ESNext; break;
+					default:
+						console.error(`Target not supported: ${options.target}`);
+						Deno.exit();
+				}
+			}
 
 			// Create program to bundle source files to single `.ts`
 			const program = await tsa.createTsaProgram(entryPoints);
@@ -102,7 +120,7 @@ program
 			}
 			else
 			{	// Create second program to transpile the bundle to Javascript
-				const program2 = await bundle.toProgram({outFile});
+				const program2 = await bundle.toProgram({outFile, target});
 				printDiagnostics(tsa.getPreEmitDiagnostics(program2));
 
 				// Transpile

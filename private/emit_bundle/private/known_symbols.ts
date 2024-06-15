@@ -15,12 +15,16 @@ const KEYWORDS = new Set
 export class KnownSymbols
 {	symbolsNames = new Map<tsa.Symbol, string>; // maps all symbols that top-level statements declare, to their names in the result (they can be renamed)
 	namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
+	ambientSymbols = new Set<tsa.Symbol>;
 
-	add(ts: typeof tsa, sourceFile: tsa.SourceFile, excludeLibDirectory: string, symbol: tsa.Symbol)
-	{	const {symbolsNames, namesSymbols} = this;
+	add(ts: typeof tsa, sourceFile: tsa.SourceFile, excludeLibDirectory: string, symbol: tsa.Symbol, isAmbient=false)
+	{	const {symbolsNames, namesSymbols, ambientSymbols} = this;
 		let name = symbolsNames.get(symbol);
 		if (name == undefined)
-		{	let baseName = '';
+		{	if (isAmbient)
+			{	ambientSymbols.add(symbol);
+			}
+			let baseName = '';
 			if (isNamespaceButNotFromLib(ts, excludeLibDirectory, symbol))
 			{	baseName = pathMaybeQuotedToModuleName(symbol.name) ?? 'ns';
 			}
@@ -30,22 +34,29 @@ export class KnownSymbols
 				{	baseName = pathMaybeQuotedToModuleName(sourceFile.fileName) ?? 'default';
 				}
 			}
-			name = this.#getUniqueName(baseName);
+			name = this.#getUniqueName(baseName, isAmbient);
 			symbolsNames.set(symbol, name);
 			namesSymbols.set(name, symbol);
 		}
 		return name;
 	}
 
-	#getUniqueName(base: string)
-	{	const {namesSymbols} = this;
-		if (!namesSymbols.has(base) && !KEYWORDS.has(base))
+	#getUniqueName(base: string, isAmbient: boolean)
+	{	const {symbolsNames, namesSymbols, ambientSymbols} = this;
+		const already = namesSymbols.get(base);
+		if (!already && !KEYWORDS.has(base))
 		{	return base;
 		}
 		for (let i=2; true; i++)
 		{	const name = base + i.toString(16);
 			if (!namesSymbols.has(name) && !KEYWORDS.has(name))
-			{	return name;
+			{	if (isAmbient && already && !ambientSymbols.has(already))
+				{	// prefer renaming non-ambient symbols
+					symbolsNames.set(already, name);
+					namesSymbols.set(name, already);
+					return base;
+				}
+				return name;
 			}
 		}
 	}
