@@ -163,6 +163,7 @@ export function step5TransformNodes
 	for (const exportStmt of exportStmts)
 	{	nodesWithInfo.push(exportStmt);
 	}
+	return exportStmts.length > 0;
 }
 
 function transformNode

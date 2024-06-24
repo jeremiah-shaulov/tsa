@@ -102,11 +102,11 @@ export function emitTsaBundle(ts: typeof tsa, program: tsa.TsaProgram, lib?: str
 	/*	5. Rename symbols, and create exports.
 		After step 1 the `knownSymbols` variable contains symbol names as they must be in the resulting bundle.
 	 */
-	step5TransformNodes(ts, checker, nodesWithInfo, knownSymbols, exportSymbols, sourceFiles[0], excludeLibDirectory);
+	const hasExports = step5TransformNodes(ts, checker, nodesWithInfo, knownSymbols, exportSymbols, sourceFiles[0], excludeLibDirectory);
 
 	/*	6. Done.
 	 */
-	return new TsaBundle(ts, nodesWithInfo, lib, newLine);
+	return new TsaBundle(ts, nodesWithInfo, hasExports, lib, newLine);
 }
 
 function getSourceFiles(program: tsa.Program, excludeLibDirectory: string)

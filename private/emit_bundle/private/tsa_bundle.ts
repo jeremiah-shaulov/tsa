@@ -5,7 +5,7 @@ import {NodeWithInfo} from './emit_bundle.ts';
 export class TsaBundle
 {	#text: string | undefined;
 
-	constructor(private ts: typeof tsa, public nodesWithInfo: NodeWithInfo[], private lib: string[]|undefined, private newLine: string)
+	constructor(private ts: typeof tsa, public nodesWithInfo: NodeWithInfo[], public hasExports: boolean, private lib: string[]|undefined, private newLine: string)
 	{
 	}
 

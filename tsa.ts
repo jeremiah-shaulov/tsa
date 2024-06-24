@@ -116,7 +116,7 @@ program
 
 			if (options.ts)
 			{	// Save the result to file (or print to stdout)
-				await writeTextFile(outFile, bundle.toTs());
+				await writeTextFile(outFile, bundle.toTs(), !bundle.hasExports);
 			}
 			else
 			{	// Create second program to transpile the bundle to Javascript
@@ -137,7 +137,7 @@ program
 				}
 
 				// Save the result to file (or print to stdout)
-				await writeTextFile(outFile, contents);
+				await writeTextFile(outFile, contents, !bundle.hasExports);
 			}
 
 			// Done
@@ -147,8 +147,11 @@ program
 
 program.parse(Deno.args);
 
-async function writeTextFile(filename: string, contents: string)
-{	if (filename == '/dev/stdout')
+async function writeTextFile(filename: string, contents: string, wrapInAsyncScope=false)
+{	if (wrapInAsyncScope)
+	{	contents = `(async function() {\n${contents}\n})()`;
+	}
+	if (filename == '/dev/stdout')
 	{	// Support Windows
 		const writer = Deno.stdout.writable.getWriter();
 		try
