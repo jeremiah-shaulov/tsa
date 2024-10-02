@@ -2,7 +2,7 @@
 	so they can be given to the `tsa.CompilerOptions.lib` compiler option.
 
 	The compiler doesn't expose public API to allow extra libraries to be available.
-	But version `5.3.3` (and maybe others) have 2 private variables that let me hook on the library lookup process:
+	But version `5.6.2` (and maybe others) have 2 private variables that let me hook on the library lookup process:
 	- `ts.libMap`
 	- `ts.libs`
 
@@ -33,7 +33,7 @@ const DENO_LIBS =
  **/
 export async function getExtendedLibs(ts: typeof tsa, libLocation: string)
 {	const extendedLibs: Record<string, string> = {};
-	if ('libMap' in ts && ts.libMap instanceof Map && 'libs' in ts && Array.isArray(ts.libs) && ts.libMap.size==ts.libs.length && ts.libMap.has('esnext'))
+	if ('libMap' in ts && ts.libMap instanceof Map && 'libs' in ts && Array.isArray(ts.libs) && ts.libMap.has('esnext') && ts.libs.includes('esnext'))
 	{	for (const [libName, filename] of DENO_LIBS)
 		{	const fileUrl = new URL('dist/'+filename, import.meta.url);
 			const localFilename = fileUrl.protocol=='file:' ? path.fromFileUrl(fileUrl) : (await cache(fileUrl)).path;

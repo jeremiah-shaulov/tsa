@@ -3,7 +3,7 @@ import {NodeExportType, NodeWithInfo} from './emit_bundle.ts';
 import {KnownSymbols} from './known_symbols.ts';
 import {isNamespaceButNotFromLib, resolveSymbol, symbolIsType} from './util.ts';
 
-type ExportSymbolsAlias = tsa.Identifier|string|undefined;
+type ExportSymbolsAlias = tsa.Identifier|tsa.StringLiteral|string|undefined;
 
 export class ExportSymbols
 {	#exports = new Map<tsa.Symbol, ExportSymbolsAlias>; // symbols that the first entry point exports
