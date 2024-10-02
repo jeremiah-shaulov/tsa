@@ -40,7 +40,7 @@ tsa bundle https://deno.land/x/dir@1.5.1/mod.ts
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example1.ts~)' > /tmp/example1.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example1>~)' > /tmp/example1.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example1.ts
 
 import {tsa, printDiagnostics, LoadOptions, EmitDocOptions} from 'https://deno.land/x/tsa@v0.0.19/mod.ts';
@@ -178,7 +178,7 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example2.ts~)' > /tmp/example2.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example2>~)' > /tmp/example2.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example2.ts
 
 import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.19/mod.ts';
@@ -350,7 +350,7 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example3.ts~)' > /tmp/example3.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example3>~)' > /tmp/example3.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example3.ts
 
 import {tsa} from 'https://deno.land/x/tsa@v0.0.19/mod.ts';
@@ -361,7 +361,7 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts\b)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~^// deno .*?/example4.ts~)' > /tmp/example4.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.19/README.md' | perl -ne '$y=$1 if /^```(ts)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example4>~)' > /tmp/example4.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example4.ts
 
 import {tsa} from 'https://deno.land/x/tsa@v0.0.19/mod.ts';
