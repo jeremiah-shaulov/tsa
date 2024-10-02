@@ -162,11 +162,20 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 9. Do recursive
+		// 9. If dataDenoDoc has entry for "this", and dataDoc doesn't, delete it
+		if (parentKey == 'tags')
+		{	for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
+			{	// when dataDenoDoc has typeParams, add it also to dataDenoDoc
+				if (dataDenoDoc[i].kind=='this' && dataDoc[i].kind!='this' && dataDenoDoc.length>dataDoc.length && dataDoc[i].kind==dataDenoDoc[i+1].kind)
+				{	dataDenoDoc.splice(i, 1);
+				}
+			}
+		}
+		// 10. Do recursive
 		for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		{	makeCompatible(dataDoc[i], dataDenoDoc[i], subjHref, '');
 		}
-		// 10. If dataDenoDoc has list of types, and dataDoc has ['...'] (nesting level is too deep), cut dataDenoDoc
+		// 11. If dataDenoDoc has list of types, and dataDoc has ['...'] (nesting level is too deep), cut dataDenoDoc
 		if (dataDoc.length==1 && dataDoc[0].IS_DOC_UNSUPPORTED===true && dataDenoDoc.length>1)
 		{	dataDenoDoc.length = 1;
 		}
