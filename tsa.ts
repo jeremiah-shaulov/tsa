@@ -60,21 +60,63 @@ program
 program
 	.command('bundle <file1.ts> [fileN.ts...]')
 	.description
-	(	'Bundle Typescript source files to single Javascript module.'
+	(	'Alias of bundle-js. Bundle Typescript source files to single Javascript module.'
 	)
 	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
 	.option('--target <ESNext>', 'Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).')
-	.option('--ts', 'Bundle to `.ts`. If some of the sources is plain Javascript, the resulting bundle can be valid by the means of Typescript.')
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
 			const entryPoints = [file1, ...files];
 			const outFile = String(options.outFile || '/dev/stdout');
 			const target = targetToNum(options.target);
-			const isTs = !!options.ts;
 
 			// Bundle
-			await bundle(entryPoints, outFile, target, isTs);
+			await bundle(entryPoints, outFile, target, false);
+
+			// Done
+			Deno.exit();
+		}
+	);
+
+program
+	.command('bundle-js <file1.ts> [fileN.ts...]')
+	.description
+	(	'Bundle Typescript source files to single Javascript module.'
+	)
+	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
+	.option('--target <ESNext>', 'Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const entryPoints = [file1, ...files];
+			const outFile = String(options.outFile || '/dev/stdout');
+			const target = targetToNum(options.target);
+
+			// Bundle
+			await bundle(entryPoints, outFile, target, false);
+
+			// Done
+			Deno.exit();
+		}
+	);
+
+program
+	.command('bundle-ts <file1.ts> [fileN.ts...]')
+	.description
+	(	'Bundle Typescript source files to single `.ts` module.'
+	)
+	.option('--outFile <out.js>', 'Where to save the result (default: stdout).')
+	.option('--target <ESNext>', 'Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const entryPoints = [file1, ...files];
+			const outFile = String(options.outFile || '/dev/stdout');
+			const target = targetToNum(options.target);
+
+			// Bundle
+			await bundle(entryPoints, outFile, target, true);
 
 			// Done
 			Deno.exit();
