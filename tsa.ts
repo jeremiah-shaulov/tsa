@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
-import {tsa, printDiagnostics} from './mod.ts';
-import {Command} from './private/deps.ts';
+import {tsa, printDiagnostics, MdGen} from './mod.ts';
+import {Command, path} from './private/deps.ts';
 
 const program = new Command('tsa');
 
@@ -18,6 +18,28 @@ program
 program
 	.command('doc <file1.ts> [fileN.ts...]')
 	.description
+	(	'Alias of doc-json. Generate JSON AST suitable for further documentation generation.'
+	)
+	.option('--outFile <out.json>', 'Where to save the result (default: stdout).')
+	.option('--pretty', 'Produce human-readable JSON.')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const entryPoints = [file1, ...files];
+			const outFile = String(options.outFile || '/dev/stdout');
+			const pretty = !!options.pretty;
+
+			// Gen doc
+			await doc(entryPoints, outFile, pretty, false);
+
+			// Done
+			Deno.exit();
+		}
+	);
+
+program
+	.command('doc-json <file1.ts> [fileN.ts...]')
+	.description
 	(	'Generate JSON AST suitable for further documentation generation.'
 	)
 	.option('--outFile <out.json>', 'Where to save the result (default: stdout).')
@@ -30,7 +52,27 @@ program
 			const pretty = !!options.pretty;
 
 			// Gen doc
-			await doc(entryPoints, outFile, pretty);
+			await doc(entryPoints, outFile, pretty, false);
+
+			// Done
+			Deno.exit();
+		}
+	);
+
+program
+	.command('doc-md <file1.ts> [fileN.ts...]')
+	.description
+	(	'Generate JSON AST suitable for further documentation generation.'
+	)
+	.option('--outDir <generated-doc>', 'To what directory to save the resulting files (default: "generated-doc"). The directory will be created or emptied if necessary.')
+	.action
+	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+		{	// Input options
+			const entryPoints = [file1, ...files];
+			const outDir = String(options.outDir || 'generated-doc');
+
+			// Gen doc
+			await doc(entryPoints, outDir, false, true);
 
 			// Done
 			Deno.exit();
@@ -125,16 +167,35 @@ program
 
 program.parse(Deno.args);
 
-async function doc(entryPoints: string[], outFile: string, pretty: boolean)
+async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean)
 {	// Create program
 	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Generate doc
-	const result = program.emitDoc();
+	const result = program.emitDoc({includeReferenced: true, noImportNodes: true});
 
-	// Save the result to file (or print to stdout), and exit
-	await writeTextFile(outFile, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+	if (!isMd)
+	{	// Save the result to file (or print to stdout), and exit
+		await writeTextFile(outFileOrDir, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+	}
+	else
+	{	const gen = new MdGen(result);
+		for (const {dir, code} of gen.genFiles())
+		{	const filename = path.join(outFileOrDir, dir, 'README.md');
+			for (let i=0; i<2; i++)
+			{	try
+				{	await Deno.writeTextFile(filename, code);
+				}
+				catch (e)
+				{	if (i!=0 || e.code!='ENOENT')
+					{	throw e;
+					}
+					await Deno.mkdir(path.join(outFileOrDir, dir), {recursive: true});
+				}
+			}
+		}
+	}
 }
 
 async function types(entryPoints: string[], outFile: string)
