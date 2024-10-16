@@ -25,19 +25,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
+			const entryPoints = [file1, ...files];
 			const outFile = String(options.outFile || '/dev/stdout');
 			const pretty = !!options.pretty;
-			const entryPoints = [file1, ...files];
 
-			// Create program
-			const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
-			printDiagnostics(tsa.getPreEmitDiagnostics(program));
+			// Gen doc
+			await doc(entryPoints, outFile, pretty);
 
-			// Generate doc
-			const result = program.emitDoc();
-
-			// Save the result to file (or print to stdout), and exit
-			await writeTextFile(outFile, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+			// Done
 			Deno.exit();
 		}
 	);
@@ -51,25 +46,11 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const outFile = String(options.outFile || '/dev/stdout');
 			const entryPoints = [file1, ...files];
+			const outFile = String(options.outFile || '/dev/stdout');
 
-			// Create program
-			const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true, outFile});
-			printDiagnostics(tsa.getPreEmitDiagnostics(program));
-
-			// Generate the DTS
-			let contents = '';
-			const result = program.emit
-			(	undefined,
-				(_fileName: string, text: string) =>
-				{	contents = text;
-				}
-			);
-			printDiagnostics(result.diagnostics);
-
-			// Save the result to file (or print to stdout)
-			await writeTextFile(outFile, contents);
+			// Gen types
+			await types(entryPoints, outFile);
 
 			// Done
 			Deno.exit();
@@ -87,58 +68,13 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const outFile = String(options.outFile || '/dev/stdout');
 			const entryPoints = [file1, ...files];
-			let target = tsa.ScriptTarget.ESNext;
-			if (options.target)
-			{	switch (options.target)
-				{	case 'ES2015': target = tsa.ScriptTarget.ES2015; break;
-					case 'ES2016': target = tsa.ScriptTarget.ES2016; break;
-					case 'ES2017': target = tsa.ScriptTarget.ES2017; break;
-					case 'ES2018': target = tsa.ScriptTarget.ES2018; break;
-					case 'ES2019': target = tsa.ScriptTarget.ES2019; break;
-					case 'ES2020': target = tsa.ScriptTarget.ES2020; break;
-					case 'ES2021': target = tsa.ScriptTarget.ES2021; break;
-					case 'ES2022': target = tsa.ScriptTarget.ES2022; break;
-					case 'ESNext': target = tsa.ScriptTarget.ESNext; break;
-					default:
-						console.error(`Target not supported: ${options.target}`);
-						Deno.exit();
-				}
-			}
-
-			// Create program to bundle source files to single `.ts`
-			const program = await tsa.createTsaProgram(entryPoints);
-			printDiagnostics(tsa.getPreEmitDiagnostics(program));
+			const outFile = String(options.outFile || '/dev/stdout');
+			const target = targetToNum(options.target);
+			const isTs = !!options.ts;
 
 			// Bundle
-			const bundle = program.emitTsaBundle();
-
-			if (options.ts)
-			{	// Save the result to file (or print to stdout)
-				await writeTextFile(outFile, bundle.toTs(), !bundle.hasExports);
-			}
-			else
-			{	// Create second program to transpile the bundle to Javascript
-				const program2 = await bundle.toProgram({outFile, target});
-				printDiagnostics(tsa.getPreEmitDiagnostics(program2));
-
-				// Transpile
-				let contents = '';
-				const result2 = program2.emit
-				(	undefined,
-					(_fileName: string, text: string) =>
-					{	contents = text;
-					}
-				);
-				printDiagnostics(result2.diagnostics);
-				if (result2.emitSkipped)
-				{	Deno.exit(1);
-				}
-
-				// Save the result to file (or print to stdout)
-				await writeTextFile(outFile, contents, !bundle.hasExports);
-			}
+			await bundle(entryPoints, outFile, target, isTs);
 
 			// Done
 			Deno.exit();
@@ -146,6 +82,90 @@ program
 	);
 
 program.parse(Deno.args);
+
+async function doc(entryPoints: string[], outFile: string, pretty: boolean)
+{	// Create program
+	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+	// Generate doc
+	const result = program.emitDoc();
+
+	// Save the result to file (or print to stdout), and exit
+	await writeTextFile(outFile, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+}
+
+async function types(entryPoints: string[], outFile: string)
+{	// Create program
+	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true, outFile});
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+	// Generate the DTS
+	let contents = '';
+	const result = program.emit
+	(	undefined,
+		(_fileName: string, text: string) =>
+		{	contents = text;
+		}
+	);
+	printDiagnostics(result.diagnostics);
+
+	// Save the result to file (or print to stdout)
+	await writeTextFile(outFile, contents);
+}
+
+async function bundle(entryPoints: string[], outFile: string, target: tsa.ScriptTarget, isTs: boolean)
+{	// Create program to bundle source files to single `.ts`
+	const program = await tsa.createTsaProgram(entryPoints);
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+	// Bundle
+	const bundle = program.emitTsaBundle();
+
+	if (isTs)
+	{	// Save the result to file (or print to stdout)
+		await writeTextFile(outFile, bundle.toTs(), !bundle.hasExports);
+	}
+	else
+	{	// Create second program to transpile the bundle to Javascript
+		const program2 = await bundle.toProgram({outFile, target});
+		printDiagnostics(tsa.getPreEmitDiagnostics(program2));
+
+		// Transpile
+		let contents = '';
+		const result2 = program2.emit
+		(	undefined,
+			(_fileName: string, text: string) =>
+			{	contents = text;
+			}
+		);
+		printDiagnostics(result2.diagnostics);
+		if (result2.emitSkipped)
+		{	Deno.exit(1);
+		}
+
+		// Save the result to file (or print to stdout)
+		await writeTextFile(outFile, contents, !bundle.hasExports);
+	}
+}
+
+function targetToNum(target?: string|boolean): tsa.ScriptTarget
+{	switch (target)
+	{	case undefined: return tsa.ScriptTarget.ESNext;
+		case 'ESNext': return tsa.ScriptTarget.ESNext;
+		case 'ES2015': return tsa.ScriptTarget.ES2015;
+		case 'ES2016': return tsa.ScriptTarget.ES2016;
+		case 'ES2017': return tsa.ScriptTarget.ES2017;
+		case 'ES2018': return tsa.ScriptTarget.ES2018;
+		case 'ES2019': return tsa.ScriptTarget.ES2019;
+		case 'ES2020': return tsa.ScriptTarget.ES2020;
+		case 'ES2021': return tsa.ScriptTarget.ES2021;
+		case 'ES2022': return tsa.ScriptTarget.ES2022;
+		default:
+			console.error(`Target not supported: ${target}`);
+			Deno.exit();
+	}
+}
 
 async function writeTextFile(filename: string, contents: string, wrapInAsyncScope=false)
 {	if (wrapInAsyncScope)
