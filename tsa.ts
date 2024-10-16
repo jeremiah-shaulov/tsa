@@ -9,7 +9,7 @@ program
 	.version('0.0.1')
 	.description
 	(	'Typescript compiler adapter for Deno.\n' +
-		'It can perform 2 operations: `tsa doc ...`, and `tsa bundle ...`.\n' +
+		'It can perform 3 operations: `tsa doc ...`, `tsa bundle ...`, and `tsa types ...`.\n' +
 		'Use `tsa help [command]` to see description.\n' +
 		'This tool can work on files or URLs. Example: `tsa doc https://deno.land/x/crc32hash@v1.0.0/mod.ts`.\n' +
 		'There\'s also unstable support for "npm:" protocol. Example: \`tsa doc npm:chalk\`.'
