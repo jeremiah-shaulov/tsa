@@ -123,3 +123,18 @@ export function getPropertySpecialName(ts: typeof tsa, name?: tsa.PropertyName, 
 		return noBrackets || ts.isStringLiteral(name.expression) ? text : '['+text+']';
 	}
 }
+
+export function getTypeNodeOfDeclaration(ts: typeof tsa, declaration: tsa.Declaration)
+{	if (ts.isParameter(declaration))
+	{	return declaration.type;
+	}
+	else if (ts.isJSDocParameterTag(declaration))
+	{	return declaration.typeExpression?.type;
+	}
+	else if (ts.isPropertyDeclaration(declaration))
+	{	return declaration.type;
+	}
+	else if (ts.isPropertySignature(declaration))
+	{	return declaration.type;
+	}
+}

@@ -8,12 +8,12 @@ import {Converter} from './converter.ts';
 
 export const TYPE_NOT_DETECTED: TsTypeDef = {repr: 'unknown', kind: 'keyword', keyword: 'unknown'};
 
-export function convertType(ts: typeof tsa, converter: Converter, typeOrNode?: tsa.Type | tsa.TypeNode): TsTypeDef
+export function convertType(ts: typeof tsa, converter: Converter, typeNodeOrType?: tsa.TypeNode|tsa.Type): TsTypeDef
 {	let tsType: TsTypeDef|undefined;
-	if (typeOrNode)
-	{	const node = 'kind' in typeOrNode ? typeOrNode : converter.checker.typeToTypeNode(typeOrNode, undefined, ts.NodeBuilderFlags.IgnoreErrors);
+	if (typeNodeOrType)
+	{	const node = 'kind' in typeNodeOrType ? typeNodeOrType : converter.checker.typeToTypeNode(typeNodeOrType, undefined, ts.NodeBuilderFlags.IgnoreErrors);
 		if (node)
-		{	const origType = 'kind' in typeOrNode ?  undefined : typeOrNode;
+		{	const origType = 'kind' in typeNodeOrType ?  undefined : typeNodeOrType;
 			tsType = doConvertType(ts, converter, origType, node);
 		}
 	}

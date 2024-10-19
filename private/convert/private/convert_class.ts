@@ -8,7 +8,7 @@ import {convertTypeParameter} from './convert_type_parameter.ts';
 import {convertDefaultValue} from './convert_expression.ts';
 import {convertAccessibility} from './convert_accessibility.ts';
 import {convertType} from './convert_type.ts';
-import {getHeritageTypes, getPropertySpecialName, removeUndefined, resolveSymbol} from './util.ts';
+import {getHeritageTypes, getPropertySpecialName, getTypeNodeOfDeclaration, removeUndefined, resolveSymbol} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {Converter} from './converter.ts';
 
@@ -140,7 +140,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 				const accessibility = modifiers & ts.ModifierFlags.Private ? 'private' : modifiers & ts.ModifierFlags.Protected ? 'protected' : modifiers & ts.ModifierFlags.Public ? 'public' : undefined;
 				const readonly = !!(modifiers & ts.ModifierFlags.Readonly);
 				const optional = !!(symbol.flags & ts.SymbolFlags.Optional);
-				const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)), optional);
+				const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && (getTypeNodeOfDeclaration(ts, symbol.valueDeclaration) ?? converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration))), optional);
 				const isOverride = !!(modifiers & ts.ModifierFlags.Override);
 				const isAbstract = !!(modifiers & ts.ModifierFlags.Abstract);
 				if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method

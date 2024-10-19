@@ -4,7 +4,7 @@ import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertTypeParameter} from './convert_type_parameter.ts';
 import {convertDefaultValue} from './convert_expression.ts';
-import {getHeritageTypes, getPropertySpecialName, removeUndefined} from './util.ts';
+import {getHeritageTypes, getPropertySpecialName, getTypeNodeOfDeclaration, removeUndefined} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {convertType} from './convert_type.ts';
 import {convertParameter} from './convert_parameter.ts';
@@ -107,7 +107,7 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 			const modifiers = ts.getCombinedModifierFlags(declaration);
 			const readonly = !!(modifiers & ts.ModifierFlags.Readonly);
 			const optional = !!(symbol.flags & ts.SymbolFlags.Optional);
-			const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)), optional);
+			const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && (getTypeNodeOfDeclaration(ts, symbol.valueDeclaration) ?? converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration))), optional);
 			if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method
 			{	outMethods.push
 				(	{	name: getPropertySpecialName(ts, propertyName, true) ?? symbol.name,

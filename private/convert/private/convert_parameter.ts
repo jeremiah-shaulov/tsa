@@ -4,7 +4,7 @@ import {convertDecorators} from './convert_decorators.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertDefaultValue} from './convert_expression.ts';
 import {convertAccessibility} from './convert_accessibility.ts';
-import {removeUndefined} from './util.ts';
+import {getTypeNodeOfDeclaration, removeUndefined} from './util.ts';
 import {Converter} from './converter.ts';
 
 export function convertParameter(ts: typeof tsa, converter: Converter, symbol?: tsa.Symbol, init?: tsa.Declaration, isConstructorParam=false): ClassConstructorParamDef
@@ -30,7 +30,7 @@ export function convertParameter(ts: typeof tsa, converter: Converter, symbol?: 
 export function convertParameterNode(ts: typeof tsa, converter: Converter, declaration: tsa.ParameterDeclaration|tsa.JSDocParameterTag, init?: tsa.Declaration, symbol?: tsa.Symbol)
 {	const rest = !!(ts.isParameter(declaration) ? declaration.dotDotDotToken : declaration.typeExpression && ts.isJSDocVariadicType(declaration.typeExpression.type));
 	const optional = ts.isParameter(declaration) ? !!(declaration.questionToken || symbol && ts.getJSDocParameterTags(declaration).some(tag => tag.isBracketed)) : declaration.isBracketed;
-	const tsType = removeUndefined(convertType(ts, converter, symbol ? converter.checker.getTypeOfSymbolAtLocation(symbol, declaration) : ts.isParameter(declaration) ? declaration.type : declaration.typeExpression?.type), optional);
+	const tsType = removeUndefined(convertType(ts, converter, getTypeNodeOfDeclaration(ts, declaration) ?? (symbol && converter.checker.getTypeOfSymbolAtLocation(symbol, declaration))), optional);
 	const defaultValue = convertDefaultValue(ts, init);
 	let result = convertParamName(ts, declaration.name, optional, rest ? undefined : tsType);
 	if (defaultValue)
