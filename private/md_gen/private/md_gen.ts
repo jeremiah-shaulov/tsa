@@ -17,7 +17,14 @@ const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
 
-type Accessor = {getter: ClassMethodDef|undefined, setter: ClassMethodDef|undefined, isStatic: boolean, accessibility?: Accessibility, location: Location};
+type Accessor =
+{	getter: ClassMethodDef|undefined;
+	setter: ClassMethodDef|undefined;
+	isStatic: boolean;
+	accessibility?: Accessibility;
+	location: Location;
+	jsDoc?: JsDoc;
+};
 
 export class MdGen
 {	#nodes: DocNode[];
@@ -200,42 +207,40 @@ L:		while (pos < linkHref.length)
 			// end h1 header
 			code += '\n\n';
 			// constructors
-			const {constructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers(classDef);
-			let codeStat = '';
-			let codePub = '';
-			let codeProt = '';
+			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers(classDef);
+			const sections = ['', '', '', '', '', '', '', ''];
 			for (const c of constructors)
-			{	let codeCur = `<span class="lit-keyword">constructor</span>(${c.params.map(a => this.#convertArg(a, filename)).join(', ')})`;
+			{	let codeCur = '#### ';
+				if (c.accessibility === 'protected')
+				{	codeCur += '<span class="lit-keyword">protected</span> ';
+				}
+				codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => this.#convertArg(a, filename)).join(', ')})`;
 				codeCur += '\n\n';
 				codeCur += this.#convertJsDoc(c.jsDoc, true);
-				if (c.accessibility === 'protected')
-				{	codeProt += '#### <span class="lit-keyword">protected</span> ' + codeCur;
-				}
-				else
-				{	codePub += '#### ' + codeCur;
-				}
+				sections[sectionIndex(c)] += codeCur;
+			}
+			// destructors
+			for (const m of destructors)
+			{	let codeCur = '#### ';
+				codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
+				codeCur += '\n\n';
+				codeCur += this.#convertJsDoc(m.jsDoc, true);
+				sections[sectionIndex(m)] += codeCur;
 			}
 			// index signatures
 			for (const c of indexSignatures)
-			{	codePub += '#### ';
+			{	let codeCur = '#### ';
 				if (c.readonly)
-				{	codePub += '<span class="lit-keyword">readonly</span> ';
+				{	codeCur += '<span class="lit-keyword">readonly</span> ';
 				}
-				codePub += '[' + c.params.map(a => this.#convertArg(a, filename)).join(', ') + ']' + this.#convertTsTypeColon(c.tsType, filename);
-				codePub += '\n\n';
+				codeCur += '[' + c.params.map(a => this.#convertArg(a, filename)).join(', ') + ']' + this.#convertTsTypeColon(c.tsType, filename);
+				codeCur += '\n\n';
+				sections[4] += codeCur;
 			}
 			// properties
 			for (const p of propertiesAndAccessors)
 			{	const codeCur = '#### ' + this.#convertPropertyOrAccessor(p, filename, true);
-				if (p.isStatic)
-				{	codeStat += codeCur;
-				}
-				else if (p.accessibility === 'protected')
-				{	codeProt += codeCur;
-				}
-				else
-				{	codePub += codeCur;
-				}
+				sections[sectionIndex(p)] += codeCur;
 			}
 			// methods
 			for (const m of methods)
@@ -243,26 +248,28 @@ L:		while (pos < linkHref.length)
 				codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
 				codeCur += '\n\n';
 				codeCur += this.#convertJsDoc(m.jsDoc, true);
-				if (m.isStatic)
-				{	codeStat += codeCur;
-				}
-				else if (m.accessibility === 'protected')
-				{	codeProt += codeCur;
-				}
-				else
-				{	codePub += codeCur;
-				}
+				sections[sectionIndex(m)] += codeCur;
 			}
 			// join
-			codePub += codeProt;
-			if (!codeStat)
-			{	code += codePub;
-			}
-			else
+			const codeStat = sections[0] + sections[1];
+			const codeStatDepr = sections[2] + sections[3];
+			const codeInst = sections[4] + sections[5];
+			const codeInstDepr = sections[6] + sections[7];
+			if (codeStat.length+codeStatDepr.length != 0)
 			{	code += '## Static members\n\n';
 				code += codeStat;
+				if (codeStatDepr)
+				{	code += '<div style="opacity:0.6">\n\n';
+					code += codeStatDepr;
+					code += '</div>';
+				}
 				code += '## Instance members\n\n';
-				code += codePub;
+			}
+			code += codeInst;
+			if (codeInstDepr)
+			{	code += '<div style="opacity:0.6">\n\n';
+				code += codeInstDepr;
+				code += '</div>';
 			}
 		}
 		else if (node.kind == 'typeAlias')
@@ -354,6 +361,7 @@ L:		while (pos < linkHref.length)
 
 	#getClassMembers(classDef: ClassDef)
 	{	const methods = new Array<ClassMethodDef>;
+		const destructors = new Array<ClassMethodDef>;
 		const accessors = new Array<Accessor>;
 		const settersOnly = new Array<ClassMethodDef>;
 		// Resort `classDef.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
@@ -362,11 +370,16 @@ L:		while (pos < linkHref.length)
 			if (this.#isPublicOrProtected(m))
 			{	switch (m.kind)
 				{	case 'method':
-					{	methods.push(m);
+					{	if (!m.isStatic && m.accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
+						{	destructors.push(m);
+						}
+						else
+						{	methods.push(m);
+						}
 						break;
 					}
 					case 'getter':
-					{	const accessor: Accessor = {getter: m, setter: undefined, isStatic: m.isStatic, accessibility: m.accessibility, location: m.location};
+					{	const accessor: Accessor = {getter: m, setter: undefined, isStatic: m.isStatic, accessibility: m.accessibility, location: m.location, jsDoc: m.jsDoc};
 						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name);
 						if (j != -1)
 						{	const setter = methodsAndAccessors[j];
@@ -391,7 +404,7 @@ L:		while (pos < linkHref.length)
 		// Create `propertiesAndAccessors` var that has all of `accessors`, `settersOnly` and `classDef.properties`
 		const propertiesAndAccessors: Array<ClassPropertyDef | Accessor> = accessors;
 		for (const s of settersOnly)
-		{	propertiesAndAccessors.push({getter: undefined, setter: s, isStatic: s.isStatic, accessibility: s.accessibility, location: s.location});
+		{	propertiesAndAccessors.push({getter: undefined, setter: s, isStatic: s.isStatic, accessibility: s.accessibility, location: s.location, jsDoc: s.jsDoc});
 		}
 		for (const p of classDef.properties)
 		{	if (this.#isPublicOrProtected(p))
@@ -437,7 +450,7 @@ L:		while (pos < linkHref.length)
 		// Create `indexSignatures` var
 		const {indexSignatures} = classDef;
 		// Done
-		return {constructors, indexSignatures, propertiesAndAccessors, methods};
+		return {constructors, destructors, indexSignatures, propertiesAndAccessors, methods};
 	}
 
 	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor, filename: string, isAnchor=false)
@@ -797,6 +810,24 @@ L:		while (pos < linkHref.length)
 			break;
 		}
 	}
+}
+
+function isDeprecated(node: {jsDoc?: JsDoc})
+{	return node.jsDoc?.tags?.find(t => t.kind == 'deprecated') != undefined;
+}
+
+function sectionIndex(node: {jsDoc?: JsDoc, isStatic?: boolean, accessibility?: Accessibility})
+{	let i = 0;
+	if (!node.isStatic)
+	{	i |= 4;
+	}
+	if (isDeprecated(node))
+	{	i |= 2;
+	}
+	if (node.accessibility === 'protected')
+	{	i |= 1;
+	}
+	return i;
 }
 
 function memberToSectionId(member?: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef, isStatic=false)
