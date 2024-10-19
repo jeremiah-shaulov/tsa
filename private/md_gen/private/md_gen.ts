@@ -5,6 +5,7 @@ const INDEX_N_COLUMNS = 4;
 
 const STYLE =
 `<style>
+	.sect-deprecated {opacity: 0.6}
 	.lit-keyword, .lit-boolean {color: blue}
 	.lit-string, .lit-template {color: firebrick}
 	.lit-number, .lit-bigint {color: darkgreen}
@@ -251,15 +252,15 @@ L:		while (pos < linkHref.length)
 				sections[sectionIndex(m)] += codeCur;
 			}
 			// join
-			const codeStat = sections[0] + sections[1];
-			const codeStatDepr = sections[2] + sections[3];
-			const codeInst = sections[4] + sections[5];
-			const codeInstDepr = sections[6] + sections[7];
+			const codeStat = sections[0] + sections[1]; // public static + protected static
+			const codeStatDepr = sections[2] + sections[3]; // deprecated public static + deprecated protected static
+			const codeInst = sections[4] + sections[5]; // public + protected
+			const codeInstDepr = sections[6] + sections[7]; // deprecated public + deprecated protected
 			if (codeStat.length+codeStatDepr.length != 0)
 			{	code += '## Static members\n\n';
 				code += codeStat;
 				if (codeStatDepr)
-				{	code += '<div style="opacity:0.6">\n\n';
+				{	code += '<div class="sect-deprecated">\n\n';
 					code += codeStatDepr;
 					code += '</div>';
 				}
@@ -267,7 +268,7 @@ L:		while (pos < linkHref.length)
 			}
 			code += codeInst;
 			if (codeInstDepr)
-			{	code += '<div style="opacity:0.6">\n\n';
+			{	code += '<div class="sect-deprecated">\n\n';
 				code += codeInstDepr;
 				code += '</div>';
 			}
