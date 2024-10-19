@@ -1,5 +1,5 @@
 import {indentAndWrap} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -14,7 +14,8 @@ const STYLE =
 
 const RE_NL = /[\r\n]/;
 const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
-const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"]*"/yu;
+const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
+const RE_BACKSLASH_ESCAPE = /\\./g;
 
 type Accessor = {getter: ClassMethodDef|undefined, setter: ClassMethodDef|undefined, isStatic: boolean, accessibility?: Accessibility, location: Location};
 
@@ -28,7 +29,7 @@ export class MdGen
 		// Reserve paths for all toplevel nodes
 		for (const node of nodes)
 		{	if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
-			{	this.#getDir(node);
+			{	this.#getLinkDir(node);
 			}
 		}
 	}
@@ -55,27 +56,119 @@ export class MdGen
 		}
 	}
 
-	#getDir(node?: DocNode, nodeSubIndex?: number)
-	{	if (!node)
-		{	return '';
-		}
-		const found = this.#paths.get(node);
-		if (found != undefined)
-		{	return found;
-		}
-		const {name, kind} = node;
-		for (let i=1; true; i++)
-		{	const curName = i==1 ? `${name}.${kind}` : `${name}.${i}.${kind}`;
-			if (!this.#pathNames.has(curName))
-			{	this.#pathNames.add(curName);
-				this.#paths.set(node, curName);
-				return curName;
+	#getLinkDir(node?: DocNode)
+	{	if (node)
+		{	const dir = this.#paths.get(node);
+			if (dir != undefined)
+			{	return dir;
+			}
+			const {name, kind} = node;
+			for (let i=1; true; i++)
+			{	const curName = i==1 ? `${name}.${kind}` : `${name}.${i}.${kind}`;
+				if (!this.#pathNames.has(curName))
+				{	this.#pathNames.add(curName);
+					this.#paths.set(node, curName);
+					return curName;
+				}
 			}
 		}
 	}
 
-	#getDirByIndex(nodeIndex?: number, nodeSubIndex?: number)
-	{	return nodeIndex==undefined || nodeIndex<0 ? '' : this.#getDir(this.#nodes[nodeIndex], nodeSubIndex);
+	#getLink(node?: DocNode, nodeSubIndex?: number)
+	{	const dir = this.#getLinkDir(node);
+		if (!dir)
+		{	return '';
+		}
+		let sectionId = '';
+		if (nodeSubIndex!=undefined && node?.kind==='enum')
+		{	sectionId = memberToSectionId(node.enumDef.members[nodeSubIndex]);
+		}
+		return `${dir}/README.md${sectionId}`;
+	}
+
+	#getDirByNamepath(linkHref: string)
+	{	let pos = 0;
+		let isStatic = false;
+		let node: DocNode|undefined;
+		let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef|undefined;
+L:		while (pos < linkHref.length)
+		{	if (pos != 0)
+			{	const c = linkHref.charAt(pos++);
+				isStatic = c == '.';
+				if (!isStatic && c!='#')
+				{	return;
+				}
+			}
+			RE_LINK_PATH.lastIndex = pos;
+			if (!RE_LINK_PATH.test(linkHref))
+			{	return;
+			}
+			pos = RE_LINK_PATH.lastIndex;
+			const name = linkHref.charAt(0)=='"' ? linkHref.slice(1, pos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : linkHref.slice(0, pos);
+			if (!node)
+			{	// Find public symbol
+				node = this.#nodes.find(n => n.name==name && n.declarationKind=='export');
+				if (!node)
+				{	return;
+				}
+			}
+			else
+			{	if (member)
+				{	// Convert `member` to `node`
+					node = undefined;
+					if ('tsType' in member && member.tsType)
+					{	node = this.#tsTypeToNode(member.tsType);
+					}
+					if (!node)
+					{	return;
+					}
+					member = undefined;
+				}
+				// Get member of node
+				while (true)
+				{	switch (node.kind)
+					{	case 'class':
+							member =
+							(	node.classDef.properties.find(p => p.name==name && p.isStatic==isStatic) ??
+								node.classDef.methods.find(p => p.name==name && p.isStatic==isStatic)
+							);
+							break;
+						case 'interface':
+							member =
+							(	node.interfaceDef.properties.find(p => p.name==name) ??
+								node.interfaceDef.methods.find(p => p.name==name)
+							);
+							break;
+						case 'enum':
+							member = node.enumDef.members.find(p => p.name == name);
+							break;
+						case 'typeAlias':
+							node = this.#tsTypeToNode(node.typeAliasDef.tsType);
+							if (!node)
+							{	return;
+							}
+							continue;
+						case 'namespace':
+							node = node.namespaceDef.elements.find(p => p.name == name);
+							if (!node)
+							{	return;
+							}
+							member = undefined;
+							continue L;
+					}
+					break;
+				}
+				if (!member)
+				{	return;
+				}
+			}
+		}
+		const dir = this.#getLinkDir(node);
+		if (!dir)
+		{	return;
+		}
+		const sectionId = memberToSectionId(member, isStatic);
+		return {dir, sectionId};
 	}
 
 	#isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
@@ -91,8 +184,8 @@ export class MdGen
 			// decorators
 			if (classDef.decorators)
 			{	for (const d of classDef.decorators)
-				{	const dir = this.#getDirByIndex(d.nodeIndex);
-					const name = dir ? mdLink(d.name, `../${dir}/README.md`) : d.name;
+				{	const link = this.#getLink(this.#nodes[d.nodeIndex ?? -1]);
+					const name = link ? mdLink(d.name, `../${link}`) : d.name;
 					code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
 				}
 			}
@@ -209,7 +302,8 @@ export class MdGen
 			code += this.#convertNamespace(node.namespaceDef.elements);
 		}
 		// page
-		return {dir: this.#getDir(node), code};
+		const dir = this.#getLinkDir(node) ?? '';
+		return {dir, code};
 	}
 
 	#convertNamespace(nodes: DocNode[])
@@ -250,11 +344,11 @@ export class MdGen
 		}
 		const dirPrefix = nodes==this.#nodes ? '' : '../';
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#getDir(n)+'/README.md')), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#getDir(n)+'/README.md')), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#getDir(n)+'/README.md')), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#getDir(n)+'/README.md')), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#getDir(n)+'/README.md')), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -532,9 +626,9 @@ export class MdGen
 	}
 
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
-	{	const dir = this.#getDirByIndex(nodeIndex, nodeSubIndex);
-		if (dir)
-		{	typeName = mdLink(typeName, `../${dir}/README.md`);
+	{	const link = this.#getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
+		if (link)
+		{	typeName = mdLink(typeName, `../${link}`);
 		}
 		return typeName;
 	}
@@ -604,7 +698,7 @@ export class MdGen
 		if (docTokens)
 		{	doc = '';
 			let curLinkIsMonospace = false;
-			let curLinkHref = '';
+			let curNamepath = '';
 			for (const {kind, text} of docTokens)
 			{	switch (kind)
 				{	case 'text':
@@ -617,12 +711,12 @@ export class MdGen
 						break;
 					case 'linkText':
 						// Link text
-						curLinkHref += text;
+						curNamepath += text;
 						break;
 					case 'link':
 						if (text != '}')
 						{	// Link open
-							curLinkHref = '';
+							curNamepath = '';
 							curLinkIsMonospace = text.startsWith('{@linkcode');
 						}
 						else
@@ -641,21 +735,21 @@ export class MdGen
 								}
 							}
 							if (!linkText)
-							{	const pos = curLinkHref.lastIndexOf('|');
+							{	const pos = curNamepath.lastIndexOf('|');
 								if (pos != -1)
-								{	linkText = curLinkHref.slice(pos+1);
-									curLinkHref = curLinkHref.slice(0, pos);
+								{	linkText = curNamepath.slice(pos+1);
+									curNamepath = curNamepath.slice(0, pos);
 								}
 							}
 							if (!linkText)
-							{	linkText = curLinkHref;
+							{	linkText = curNamepath;
 							}
 							// TODO: parse `curLinkHref`
 							if (curLinkIsMonospace)
 							{	linkText = '`' + linkText.replaceAll('`', '\\`') + '`';
 							}
-							const dir = this.#parseLinkHref(curLinkHref);
-							doc += dir ? mdLink(linkText, `../${dir}/README.md`) : linkText;
+							const link = this.#getDirByNamepath(curNamepath);
+							doc += link ? mdLink(linkText, `../${link.dir}/README.md${link.sectionId}`) : linkText;
 						}
 				}
 			}
@@ -671,18 +765,42 @@ export class MdGen
 		return doc;
 	}
 
-	#parseLinkHref(linkHref: string)
-	{	RE_LINK_PATH.lastIndex = 0;
-		if (RE_LINK_PATH.test(linkHref))
-		{	const linkName = linkHref.charAt(0)=='"' ? linkHref.slice(1, RE_LINK_PATH.lastIndex-1) : linkHref.slice(0, RE_LINK_PATH.lastIndex);
-			for (const node of this.#nodes)
-			{	if (node.name == linkName)
-				{	return this.#getDir(node);
-				}
+	#tsTypeToNode(tsType: TsTypeDef)
+	{	while (true)
+		{	switch (tsType.kind)
+			{	case 'typeRef':
+					return this.#nodes[tsType.typeRef.nodeIndex ?? -1];
+				case 'parenthesized':
+					tsType = tsType.parenthesized;
+					continue;
+				/*case 'optional':
+				case 'intersection':
+				case 'typeLiteral':
+
+				case 'conditional':
+				case 'mapped':
+				case 'keyword':
+				case 'literal':
+				case 'union':
+				case 'array':
+				case 'tuple':
+				case 'typeOperator':
+				case 'rest':
+				case 'typeQuery':
+				case 'this':
+				case 'fnOrConstructor':
+				case 'importType':
+				case 'infer':
+				case 'indexedAccess':
+				case 'typePredicate':*/
 			}
+			break;
 		}
-		return '';
 	}
+}
+
+function memberToSectionId(member?: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef, isStatic=false)
+{	return !member ? '' : !isStatic ? '#'+member.name : '#static-'+member.name;
 }
 
 function mdEscape(code: string)
