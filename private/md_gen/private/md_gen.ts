@@ -5,6 +5,7 @@ const INDEX_N_COLUMNS = 4;
 
 const STYLE =
 `<style>
+	h4 {margin-top: 2em}
 	.sect-deprecated {opacity: 0.6}
 	.lit-keyword, .lit-boolean {color: blue}
 	.lit-string, .lit-template {color: firebrick}
@@ -189,98 +190,16 @@ L:		while (pos < linkHref.length)
 		// class def
 		if (node.kind == 'class')
 		{	const {classDef} = node;
-			// decorators
-			if (classDef.decorators)
-			{	for (const d of classDef.decorators)
-				{	const link = this.#getLink(this.#nodes[d.nodeIndex ?? -1]);
-					const name = link ? mdLink(d.name, `../${link}`) : d.name;
-					code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
-				}
-			}
-			// class (h1 header)
-			code += `# ${classDef.isAbstract ? '<span class="lit-keyword">abstract</span> ' : ''}<span class="lit-keyword">class</span> ${node.name}`;
-			// type params
-			code += this.#convertTypeParams(classDef.typeParams, filename);
-			// extends
-			code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams, filename);
-			// implements
-			code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements, filename);
-			// end h1 header
-			code += '\n\n';
-			// constructors
-			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers(classDef);
-			const sections = ['', '', '', '', '', '', '', ''];
-			for (const c of constructors)
-			{	let codeCur = '#### ';
-				if (c.accessibility === 'protected')
-				{	codeCur += '<span class="lit-keyword">protected</span> ';
-				}
-				codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => this.#convertArg(a, filename)).join(', ')})`;
-				codeCur += '\n\n';
-				codeCur += this.#convertJsDoc(c.jsDoc, true);
-				sections[sectionIndex(c)] += codeCur;
-			}
-			// destructors
-			for (const m of destructors)
-			{	let codeCur = '#### ';
-				codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-				codeCur += '\n\n';
-				codeCur += this.#convertJsDoc(m.jsDoc, true);
-				sections[sectionIndex(m)] += codeCur;
-			}
-			// index signatures
-			for (const c of indexSignatures)
-			{	let codeCur = '#### ';
-				if (c.readonly)
-				{	codeCur += '<span class="lit-keyword">readonly</span> ';
-				}
-				codeCur += '[' + c.params.map(a => this.#convertArg(a, filename)).join(', ') + ']' + this.#convertTsTypeColon(c.tsType, filename);
-				codeCur += '\n\n';
-				sections[4] += codeCur;
-			}
-			// properties
-			for (const p of propertiesAndAccessors)
-			{	const codeCur = '#### ' + this.#convertPropertyOrAccessor(p, filename, true);
-				sections[sectionIndex(p)] += codeCur;
-			}
-			// methods
-			for (const m of methods)
-			{	let codeCur = '#### ';
-				codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-				codeCur += '\n\n';
-				codeCur += this.#convertJsDoc(m.jsDoc, true);
-				sections[sectionIndex(m)] += codeCur;
-			}
-			// join
-			const codeStat = sections[0] + sections[1]; // public static + protected static
-			const codeStatDepr = sections[2] + sections[3]; // deprecated public static + deprecated protected static
-			const codeInst = sections[4] + sections[5]; // public + protected
-			const codeInstDepr = sections[6] + sections[7]; // deprecated public + deprecated protected
-			if (codeStat.length+codeStatDepr.length != 0)
-			{	code += '## Static members\n\n';
-				code += codeStat;
-				if (codeStatDepr)
-				{	code += '<div class="sect-deprecated">\n\n';
-					code += codeStatDepr;
-					code += '</div>';
-				}
-				code += '## Instance members\n\n';
-			}
-			code += codeInst;
-			if (codeInstDepr)
-			{	code += '<div class="sect-deprecated">\n\n';
-				code += codeInstDepr;
-				code += '</div>';
-			}
+			code += this.#convertClassDef(node.name, classDef, filename);
 		}
 		else if (node.kind == 'typeAlias')
 		{	const {typeAliasDef} = node;
-			code = `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams, filename)} = ${this.#convertTsType(typeAliasDef.tsType, filename)}`;
+			code += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams, filename)} = ${this.#convertTsType(typeAliasDef.tsType, filename)}`;
 		}
 		else if (node.kind == 'interface')
 		{	const {interfaceDef} = node;
 			// interface
-			code = `# <span class="lit-keyword">interface</span> ${node.name}`;
+			code += `# <span class="lit-keyword">interface</span> ${node.name}`;
 			// type params
 			code += this.#convertTypeParams(interfaceDef.typeParams, filename);
 			// extends
@@ -291,10 +210,10 @@ L:		while (pos < linkHref.length)
 		}
 		else if (node.kind == 'function')
 		{	const {functionDef} = node;
-			code = this.#convertFunction('', node.name, undefined, false, false, false, functionDef, node.location.filename);
+			code += this.#convertFunction('', node.name, undefined, false, false, false, functionDef, node.location.filename);
 		}
 		else if (node.kind == 'enum')
-		{	code = `# <span class="lit-keyword">enum</span> ${node.name}\n\n`;
+		{	code += `# <span class="lit-keyword">enum</span> ${node.name}\n\n`;
 			const {enumDef} = node;
 			for (const m of enumDef.members)
 			{	code += `${m.name}${m.init ? ' = '+this.#convertTsType(m.init, filename) : ''},`;
@@ -303,10 +222,14 @@ L:		while (pos < linkHref.length)
 			}
 		}
 		else if (node.kind == 'variable')
-		{	code = '```ts\n' + (node.variableDef.kind == 'const' ? 'const ' : 'let ') + node.name + this.#convertTsTypeColon(node.variableDef.tsType, filename) + '\n```';
+		{	const introducer = node.variableDef.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
+			code += `# ${introducer} ${node.name}\n\n`;
+			if (node.variableDef.tsType)
+			{	code += introducer + node.name + this.#convertTsTypeColon(node.variableDef.tsType, filename);
+			}
 		}
 		else if (node.kind == 'namespace')
-		{	code = `# <span class="lit-keyword">namespace</span> ${node.name}\n\n`;
+		{	code += `# <span class="lit-keyword">namespace</span> ${node.name}\n\n`;
 			code += this.#convertNamespace(node.namespaceDef.elements);
 		}
 		// page
@@ -358,100 +281,6 @@ L:		while (pos < linkHref.length)
 		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
 		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
 		return code;
-	}
-
-	#getClassMembers(classDef: ClassDef)
-	{	const methods = new Array<ClassMethodDef>;
-		const destructors = new Array<ClassMethodDef>;
-		const accessors = new Array<Accessor>;
-		const settersOnly = new Array<ClassMethodDef>;
-		// Resort `classDef.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
-		for (let methodsAndAccessors=classDef.methods, i=0; i<methodsAndAccessors.length; i++)
-		{	const m = methodsAndAccessors[i];
-			if (this.#isPublicOrProtected(m))
-			{	switch (m.kind)
-				{	case 'method':
-					{	if (!m.isStatic && m.accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
-						{	destructors.push(m);
-						}
-						else
-						{	methods.push(m);
-						}
-						break;
-					}
-					case 'getter':
-					{	const accessor: Accessor = {getter: m, setter: undefined, isStatic: m.isStatic, accessibility: m.accessibility, location: m.location, jsDoc: m.jsDoc};
-						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name);
-						if (j != -1)
-						{	const setter = methodsAndAccessors[j];
-							accessor.setter = setter;
-							accessors.push(accessor);
-							if (j < i)
-							{	const k = settersOnly.indexOf(setter);
-								settersOnly.splice(k, 1);
-							}
-							else
-							{	methodsAndAccessors.splice(j, 1);
-							}
-						}
-						break;
-					}
-					case 'setter':
-					{	settersOnly.push(m);
-					}
-				}
-			}
-		}
-		// Create `propertiesAndAccessors` var that has all of `accessors`, `settersOnly` and `classDef.properties`
-		const propertiesAndAccessors: Array<ClassPropertyDef | Accessor> = accessors;
-		for (const s of settersOnly)
-		{	propertiesAndAccessors.push({getter: undefined, setter: s, isStatic: s.isStatic, accessibility: s.accessibility, location: s.location, jsDoc: s.jsDoc});
-		}
-		for (const p of classDef.properties)
-		{	if (this.#isPublicOrProtected(p))
-			{	propertiesAndAccessors.push(p);
-			}
-		}
-		// Sort `propertiesAndAccessors`
-		propertiesAndAccessors.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
-		// Create `constructors` var with `classDef.constructors`.
-		// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
-		const constructors = new Array<ClassConstructorDef>;
-		for (const c of classDef.constructors)
-		{	if (this.#isPublicOrProtected(c))
-			{	constructors.push(c);
-			}
-			for (const p of c.params)
-			{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
-				{	let param = p;
-					let init: string|undefined;
-					if (p.kind == 'assign')
-					{	param = p.left;
-						init = p.right;
-					}
-					if (param.kind == 'identifier')
-					{	propertiesAndAccessors.push
-						(	{	tsType: param.tsType,
-								readonly: param.readonly ?? false,
-								accessibility: param.accessibility,
-								optional: param.optional,
-								isAbstract: false,
-								isStatic: false,
-								isOverride: param.isOverride,
-								name: param.name,
-								decorators: param.decorators,
-								location: c.location,
-								init,
-							}
-						);
-					}
-				}
-			}
-		}
-		// Create `indexSignatures` var
-		const {indexSignatures} = classDef;
-		// Done
-		return {constructors, destructors, indexSignatures, propertiesAndAccessors, methods};
 	}
 
 	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor, filename: string, isAnchor=false)
@@ -662,31 +491,239 @@ L:		while (pos < linkHref.length)
 		}
 	}
 
+	#convertClassDef(name: string, classDef: ClassDef, filename: string)
+	{	let code = '';
+		// decorators
+		if (classDef.decorators)
+		{	for (const d of classDef.decorators)
+			{	const link = this.#getLink(this.#nodes[d.nodeIndex ?? -1]);
+				const name = link ? mdLink(d.name, `../${link}`) : d.name;
+				code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
+			}
+		}
+		// class (h1 header)
+		code += '# ';
+		if (classDef.isAbstract)
+		{	code += '<span class="lit-keyword">abstract</span> ';
+		}
+		code += `<span class="lit-keyword">class</span> ${name}`;
+		// type params
+		code += this.#convertTypeParams(classDef.typeParams, filename);
+		// extends
+		code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams, filename);
+		// implements
+		code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements, filename);
+		// end h1 header
+		code += '\n\n';
+		// constructors
+		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers(classDef);
+		const sections = ['', '', '', '', '', '', '', ''];
+		for (const c of constructors)
+		{	let codeCur = '#### ';
+			if (c.accessibility === 'protected')
+			{	codeCur += '<span class="lit-keyword">protected</span> ';
+			}
+			codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => this.#convertArg(a, filename)).join(', ')})`;
+			codeCur += '\n\n';
+			codeCur += this.#convertJsDoc(c.jsDoc, true);
+			sections[sectionIndex(c)] += codeCur;
+		}
+		// destructors
+		for (const m of destructors)
+		{	let codeCur = '#### ';
+			codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
+			codeCur += '\n\n';
+			codeCur += this.#convertJsDoc(m.jsDoc, true);
+			sections[sectionIndex(m)] += codeCur;
+		}
+		// index signatures
+		for (const c of indexSignatures)
+		{	let codeCur = '#### ';
+			if (c.readonly)
+			{	codeCur += '<span class="lit-keyword">readonly</span> ';
+			}
+			codeCur += '[' + c.params.map(a => this.#convertArg(a, filename)).join(', ') + ']' + this.#convertTsTypeColon(c.tsType, filename);
+			codeCur += '\n\n';
+			sections[4] += codeCur;
+		}
+		// properties
+		for (const p of propertiesAndAccessors)
+		{	const codeCur = '#### ' + this.#convertPropertyOrAccessor(p, filename, true);
+			sections[sectionIndex(p)] += codeCur;
+		}
+		// methods
+		for (const m of methods)
+		{	let codeCur = '#### ';
+			codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
+			codeCur += '\n\n';
+			codeCur += this.#convertJsDoc(m.jsDoc, true);
+			sections[sectionIndex(m)] += codeCur;
+		}
+		// join
+		const codeStat = sections[0] + sections[1]; // public static + protected static
+		const codeStatDepr = sections[2] + sections[3]; // deprecated public static + deprecated protected static
+		const codeInst = sections[4] + sections[5]; // public + protected
+		const codeInstDepr = sections[6] + sections[7]; // deprecated public + deprecated protected
+		if (codeStat.length+codeStatDepr.length != 0)
+		{	code += '## Static members\n\n';
+			code += codeStat;
+			if (codeStatDepr)
+			{	code += '<div class="sect-deprecated">\n\n';
+				code += codeStatDepr;
+				code += '</div>\n\n';
+			}
+			code += '## Instance members\n\n';
+		}
+		code += codeInst;
+		if (codeInstDepr)
+		{	code += '<div class="sect-deprecated">\n\n';
+			code += codeInstDepr;
+			code += '</div>\n\n';
+		}
+	}
+
+	#getClassMembers(classDef: ClassDef)
+	{	const methods = new Array<ClassMethodDef>;
+		const destructors = new Array<ClassMethodDef>;
+		const accessors = new Array<Accessor>;
+		const settersOnly = new Array<ClassMethodDef>;
+		// Resort `classDef.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
+		for (let methodsAndAccessors=classDef.methods, i=0; i<methodsAndAccessors.length; i++)
+		{	const m = methodsAndAccessors[i];
+			if (this.#isPublicOrProtected(m))
+			{	switch (m.kind)
+				{	case 'method':
+					{	if (!m.isStatic && m.accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
+						{	destructors.push(m);
+						}
+						else
+						{	methods.push(m);
+						}
+						break;
+					}
+					case 'getter':
+					{	const accessor: Accessor = {getter: m, setter: undefined, isStatic: m.isStatic, accessibility: m.accessibility, location: m.location, jsDoc: m.jsDoc};
+						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name);
+						if (j != -1)
+						{	const setter = methodsAndAccessors[j];
+							accessor.setter = setter;
+							accessors.push(accessor);
+							if (j < i)
+							{	const k = settersOnly.indexOf(setter);
+								settersOnly.splice(k, 1);
+							}
+							else
+							{	methodsAndAccessors.splice(j, 1);
+							}
+						}
+						break;
+					}
+					case 'setter':
+					{	settersOnly.push(m);
+					}
+				}
+			}
+		}
+		// Create `propertiesAndAccessors` var that has all of `accessors`, `settersOnly` and `classDef.properties`
+		const propertiesAndAccessors: Array<ClassPropertyDef | Accessor> = accessors;
+		for (const s of settersOnly)
+		{	propertiesAndAccessors.push({getter: undefined, setter: s, isStatic: s.isStatic, accessibility: s.accessibility, location: s.location, jsDoc: s.jsDoc});
+		}
+		for (const p of classDef.properties)
+		{	if (this.#isPublicOrProtected(p))
+			{	propertiesAndAccessors.push(p);
+			}
+		}
+		// Sort `propertiesAndAccessors`
+		propertiesAndAccessors.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
+		// Create `constructors` var with `classDef.constructors`.
+		// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
+		const constructors = new Array<ClassConstructorDef>;
+		for (const c of classDef.constructors)
+		{	if (this.#isPublicOrProtected(c))
+			{	constructors.push(c);
+			}
+			for (const p of c.params)
+			{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
+				{	let param = p;
+					let init: string|undefined;
+					if (p.kind == 'assign')
+					{	param = p.left;
+						init = p.right;
+					}
+					if (param.kind == 'identifier')
+					{	propertiesAndAccessors.push
+						(	{	tsType: param.tsType,
+								readonly: param.readonly ?? false,
+								accessibility: param.accessibility,
+								optional: param.optional,
+								isAbstract: false,
+								isStatic: false,
+								isOverride: param.isOverride,
+								name: param.name,
+								decorators: param.decorators,
+								location: c.location,
+								init,
+							}
+						);
+					}
+				}
+			}
+		}
+		// Create `indexSignatures` var
+		const {indexSignatures} = classDef;
+		// Done
+		return {constructors, destructors, indexSignatures, propertiesAndAccessors, methods};
+	}
+
 	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean, filename: string)
 	{	const {callSignatures, properties, indexSignatures, methods} = typeLiteral;
-		const term = isLiteral ? ',' : ';';
+		let separ = '';
 		let code = '';
 		for (const p of callSignatures)
-		{	code += this.#convertTypeParams(p.typeParams, filename) + '(' + p.params.map(pp => this.#convertArg(pp, filename)).join(', ') + ')' + this.#convertTsTypeColon(p.tsType, filename);
-			code += `${term}\n\n`;
-			code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
-		}
-		for (const p of properties)
-		{	if (!('jsDoc' in p) || this.#isPublicOrProtected(p))
-			{	code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType, filename);
-				code += `${term}\n\n`;
+		{	code += isLiteral ? separ : '#### ';
+			code += this.#convertTypeParams(p.typeParams, filename) + '(' + p.params.map(pp => this.#convertArg(pp, filename)).join(', ') + ')' + this.#convertTsTypeColon(p.tsType, filename);
+			if (!isLiteral)
+			{	code += ';\n\n';
 				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
+			}
+			else
+			{	separ = ', ';
 			}
 		}
 		for (const p of indexSignatures)
-		{	code += (p.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + '[' + p.params.map(pp => this.#convertArg(pp, filename)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType, filename);
-			code += `${term}\n\n`;
+		{	code += isLiteral ? separ : '#### ';
+			if (p.readonly)
+			{	code += '<span class="lit-keyword">readonly</span> ';
+			}
+			code += '[' + p.params.map(pp => this.#convertArg(pp, filename)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType, filename);
+			if (!isLiteral)
+			{	code += ';\n\n';
+			}
+			else
+			{	separ = ', ';
+			}
+		}
+		for (const p of properties)
+		{	code += isLiteral ? separ : '#### ';
+			code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType, filename, !isLiteral);
+			if (!isLiteral)
+			{	code += ';\n\n';
+				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
+			}
+			else
+			{	separ = ', ';
+			}
 		}
 		for (const p of methods)
-		{	if (!('jsDoc' in p) || this.#isPublicOrProtected(p))
-			{	code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p, filename);
-				code += `${term}\n\n`;
+		{	code += isLiteral ? separ : '#### ';
+			code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p, filename, !isLiteral);
+			if (!isLiteral)
+			{	code += ';\n\n';
 				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
+			}
+			else
+			{	separ = ', ';
 			}
 		}
 		return code;
