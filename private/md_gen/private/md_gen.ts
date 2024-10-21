@@ -1,5 +1,6 @@
 import {indentAndWrap} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, ClassIndexSignatureDef} from '../../doc_node/mod.ts';
+import {Accessor, mdClassGen, isPublicOrProtected, memberToSectionId} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -19,15 +20,6 @@ const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
 
-type Accessor =
-{	getter: ClassMethodDef|undefined;
-	setter: ClassMethodDef|undefined;
-	isStatic: boolean;
-	accessibility?: Accessibility;
-	location: Location;
-	jsDoc?: JsDoc;
-};
-
 export class MdGen
 {	#nodes: DocNode[];
 	#pathNames = new Set<string>;
@@ -37,7 +29,7 @@ export class MdGen
 	{	this.#nodes = nodes;
 		// Reserve paths for all toplevel nodes
 		for (const node of nodes)
-		{	if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+		{	if (node.declarationKind=='export' && isPublicOrProtected(node))
 			{	this.#getLinkDir(node);
 			}
 		}
@@ -90,7 +82,7 @@ export class MdGen
 		}
 		let sectionId = '';
 		if (nodeSubIndex!=undefined && node?.kind==='enum')
-		{	sectionId = memberToSectionId(node.enumDef.members[nodeSubIndex]);
+		{	sectionId = memberToSectionId(true, node.enumDef.members[nodeSubIndex]?.name);
 		}
 		return `${dir}/README.md${sectionId}`;
 	}
@@ -176,12 +168,8 @@ L:		while (pos < linkHref.length)
 		if (!dir)
 		{	return;
 		}
-		const sectionId = memberToSectionId(member, isStatic);
+		const sectionId = memberToSectionId(true, member?.name, isStatic);
 		return {dir, sectionId};
-	}
-
-	#isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
-	{	return node.accessibility !== 'private' && (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
 	}
 
 	#convertDocNode(node: DocNode)
@@ -246,29 +234,29 @@ L:		while (pos < linkHref.length)
 		for (const node of nodes)
 		{	switch (node.kind)
 			{	case 'namespace':
-					if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node))
 					{	namespaces.push(node);
 					}
 					break;
 				case 'variable':
-					if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node))
 					{	variables.push(node);
 					}
 					break;
 				case 'function':
-					if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node))
 					{	functions.push(node);
 					}
 					break;
 				case 'class':
-					if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node))
 					{	classes.push(node);
 					}
 					break;
 				case 'enum':
 				case 'typeAlias':
 				case 'interface':
-					if (node.declarationKind=='export' && this.#isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node))
 					{	types.push(node);
 					}
 			}
@@ -285,7 +273,7 @@ L:		while (pos < linkHref.length)
 
 	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor, filename: string, isAnchor=false)
 	{	let code = '';
-		if ('name' in p)
+		if (!('getter' in p))
 		{	code = this.#convertProperty(p.name, p.accessibility, p.isAbstract, p.isStatic, p.readonly, false, p.optional, p.tsType, filename, isAnchor);
 			code += '\n\n';
 			code += this.#convertJsDoc(p.jsDoc, true);
@@ -317,7 +305,7 @@ L:		while (pos < linkHref.length)
 	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined, filename: string, isAnchor=false)
 	{	let code = '';
 		if (isAnchor)
-		{	code += `<a name="${name}">`;
+		{	code += `<a name="${memberToSectionId(false, name, isStatic)}">`;
 		}
 		if (accessibility === 'protected')
 		{	code += '<span class="lit-keyword">protected</span> ';
@@ -348,7 +336,7 @@ L:		while (pos < linkHref.length)
 	#convertFunction(isMethod: ''|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef, filename: string, isAnchor=false)
 	{	let code = '';
 		if (isAnchor)
-		{	code += `<a name="${name}">`;
+		{	code += `<a name="${memberToSectionId(false, name, isStatic)}">`;
 		}
 		if (accessibility === 'protected')
 		{	code += '<span class="lit-keyword">protected</span> ';
@@ -493,7 +481,7 @@ L:		while (pos < linkHref.length)
 
 	#convertClassDef(name: string, classDef: ClassDef, filename: string)
 	{	let code = '';
-		// decorators
+		// Decorators
 		if (classDef.decorators)
 		{	for (const d of classDef.decorators)
 			{	const link = this.#getLink(this.#nodes[d.nodeIndex ?? -1]);
@@ -501,179 +489,63 @@ L:		while (pos < linkHref.length)
 				code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
 			}
 		}
-		// class (h1 header)
+		// Class (h1 header)
 		code += '# ';
 		if (classDef.isAbstract)
 		{	code += '<span class="lit-keyword">abstract</span> ';
 		}
 		code += `<span class="lit-keyword">class</span> ${name}`;
-		// type params
+		// Type params
 		code += this.#convertTypeParams(classDef.typeParams, filename);
-		// extends
+		// Extends
 		code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams, filename);
-		// implements
+		// Implements
 		code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements, filename);
-		// end h1 header
+		// End h1 header
 		code += '\n\n';
-		// constructors
-		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers(classDef);
-		const sections = ['', '', '', '', '', '', '', ''];
-		for (const c of constructors)
-		{	let codeCur = '#### ';
-			if (c.accessibility === 'protected')
-			{	codeCur += '<span class="lit-keyword">protected</span> ';
-			}
-			codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => this.#convertArg(a, filename)).join(', ')})`;
-			codeCur += '\n\n';
-			codeCur += this.#convertJsDoc(c.jsDoc, true);
-			sections[sectionIndex(c)] += codeCur;
-		}
-		// destructors
-		for (const m of destructors)
-		{	let codeCur = '#### ';
-			codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-			codeCur += '\n\n';
-			codeCur += this.#convertJsDoc(m.jsDoc, true);
-			sections[sectionIndex(m)] += codeCur;
-		}
-		// index signatures
-		for (const c of indexSignatures)
-		{	let codeCur = '#### ';
-			if (c.readonly)
-			{	codeCur += '<span class="lit-keyword">readonly</span> ';
-			}
-			codeCur += '[' + c.params.map(a => this.#convertArg(a, filename)).join(', ') + ']' + this.#convertTsTypeColon(c.tsType, filename);
-			codeCur += '\n\n';
-			sections[4] += codeCur;
-		}
-		// properties
-		for (const p of propertiesAndAccessors)
-		{	const codeCur = '#### ' + this.#convertPropertyOrAccessor(p, filename, true);
-			sections[sectionIndex(p)] += codeCur;
-		}
-		// methods
-		for (const m of methods)
-		{	let codeCur = '#### ';
-			codeCur += this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-			codeCur += '\n\n';
-			codeCur += this.#convertJsDoc(m.jsDoc, true);
-			sections[sectionIndex(m)] += codeCur;
-		}
-		// join
-		const codeStat = sections[0] + sections[1]; // public static + protected static
-		const codeStatDepr = sections[2] + sections[3]; // deprecated public static + deprecated protected static
-		const codeInst = sections[4] + sections[5]; // public + protected
-		const codeInstDepr = sections[6] + sections[7]; // deprecated public + deprecated protected
-		if (codeStat.length+codeStatDepr.length != 0)
-		{	code += '## Static members\n\n';
-			code += codeStat;
-			if (codeStatDepr)
-			{	code += '<div class="sect-deprecated">\n\n';
-				code += codeStatDepr;
-				code += '</div>\n\n';
-			}
-			code += '## Instance members\n\n';
-		}
-		code += codeInst;
-		if (codeInstDepr)
-		{	code += '<div class="sect-deprecated">\n\n';
-			code += codeInstDepr;
-			code += '</div>\n\n';
-		}
-	}
-
-	#getClassMembers(classDef: ClassDef)
-	{	const methods = new Array<ClassMethodDef>;
-		const destructors = new Array<ClassMethodDef>;
-		const accessors = new Array<Accessor>;
-		const settersOnly = new Array<ClassMethodDef>;
-		// Resort `classDef.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
-		for (let methodsAndAccessors=classDef.methods, i=0; i<methodsAndAccessors.length; i++)
-		{	const m = methodsAndAccessors[i];
-			if (this.#isPublicOrProtected(m))
-			{	switch (m.kind)
-				{	case 'method':
-					{	if (!m.isStatic && m.accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
-						{	destructors.push(m);
-						}
-						else
-						{	methods.push(m);
-						}
-						break;
+		// Outline
+		// deno-lint-ignore no-this-alias
+		const that = this;
+		const {outline, sectionsCode} = mdClassGen
+		(	classDef,
+			{	onConstructor(c)
+				{	let codeCur = '#### ';
+					if (c.accessibility === 'protected')
+					{	codeCur += '<span class="lit-keyword">protected</span> ';
 					}
-					case 'getter':
-					{	const accessor: Accessor = {getter: m, setter: undefined, isStatic: m.isStatic, accessibility: m.accessibility, location: m.location, jsDoc: m.jsDoc};
-						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name);
-						if (j != -1)
-						{	const setter = methodsAndAccessors[j];
-							accessor.setter = setter;
-							accessors.push(accessor);
-							if (j < i)
-							{	const k = settersOnly.indexOf(setter);
-								settersOnly.splice(k, 1);
-							}
-							else
-							{	methodsAndAccessors.splice(j, 1);
-							}
-						}
-						break;
+					codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
+					codeCur += '\n\n';
+					codeCur += that.#convertJsDoc(c.jsDoc, true);
+					return codeCur;
+				},
+				onMethod(m)
+				{	let codeCur = '#### ';
+					codeCur += that.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
+					codeCur += '\n\n';
+					codeCur += that.#convertJsDoc(m.jsDoc, true);
+					return codeCur;
+				},
+				onIndexSignature(c)
+				{	let codeCur = '#### ';
+					if (c.readonly)
+					{	codeCur += '<span class="lit-keyword">readonly</span> ';
 					}
-					case 'setter':
-					{	settersOnly.push(m);
-					}
+					codeCur += '[' + c.params.map(a => that.#convertArg(a, filename)).join(', ') + ']' + that.#convertTsTypeColon(c.tsType, filename);
+					codeCur += '\n\n';
+					return codeCur;
+				},
+				onProperty(p)
+				{	let codeCur = '#### ';
+					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
+					return codeCur;
 				}
 			}
-		}
-		// Create `propertiesAndAccessors` var that has all of `accessors`, `settersOnly` and `classDef.properties`
-		const propertiesAndAccessors: Array<ClassPropertyDef | Accessor> = accessors;
-		for (const s of settersOnly)
-		{	propertiesAndAccessors.push({getter: undefined, setter: s, isStatic: s.isStatic, accessibility: s.accessibility, location: s.location, jsDoc: s.jsDoc});
-		}
-		for (const p of classDef.properties)
-		{	if (this.#isPublicOrProtected(p))
-			{	propertiesAndAccessors.push(p);
-			}
-		}
-		// Sort `propertiesAndAccessors`
-		propertiesAndAccessors.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
-		// Create `constructors` var with `classDef.constructors`.
-		// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
-		const constructors = new Array<ClassConstructorDef>;
-		for (const c of classDef.constructors)
-		{	if (this.#isPublicOrProtected(c))
-			{	constructors.push(c);
-			}
-			for (const p of c.params)
-			{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
-				{	let param = p;
-					let init: string|undefined;
-					if (p.kind == 'assign')
-					{	param = p.left;
-						init = p.right;
-					}
-					if (param.kind == 'identifier')
-					{	propertiesAndAccessors.push
-						(	{	tsType: param.tsType,
-								readonly: param.readonly ?? false,
-								accessibility: param.accessibility,
-								optional: param.optional,
-								isAbstract: false,
-								isStatic: false,
-								isOverride: param.isOverride,
-								name: param.name,
-								decorators: param.decorators,
-								location: c.location,
-								init,
-							}
-						);
-					}
-				}
-			}
-		}
-		// Create `indexSignatures` var
-		const {indexSignatures} = classDef;
+		);
+		code += outline;
+		// Properties and methods
+		code += sectionsCode;
 		// Done
-		return {constructors, destructors, indexSignatures, propertiesAndAccessors, methods};
+		return code;
 	}
 
 	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean, filename: string)
@@ -848,28 +720,6 @@ L:		while (pos < linkHref.length)
 			break;
 		}
 	}
-}
-
-function isDeprecated(node: {jsDoc?: JsDoc})
-{	return node.jsDoc?.tags?.find(t => t.kind == 'deprecated') != undefined;
-}
-
-function sectionIndex(node: {jsDoc?: JsDoc, isStatic?: boolean, accessibility?: Accessibility})
-{	let i = 0;
-	if (!node.isStatic)
-	{	i |= 4;
-	}
-	if (isDeprecated(node))
-	{	i |= 2;
-	}
-	if (node.accessibility === 'protected')
-	{	i |= 1;
-	}
-	return i;
-}
-
-function memberToSectionId(member?: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef, isStatic=false)
-{	return !member ? '' : !isStatic ? '#'+member.name : '#static-'+member.name;
 }
 
 function mdEscape(code: string)
