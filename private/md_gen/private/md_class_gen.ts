@@ -265,7 +265,7 @@ class ClassSections
 		{	code += '## Static members\n\n';
 			code += codeStat;
 			if (codeStatDepr)
-			{	code += '<div class="sect-deprecated">\n\n';
+			{	code += '<div style="opacity:0.6">\n\n';
 				code += codeStatDepr;
 				code += '</div>\n\n';
 			}
@@ -273,7 +273,7 @@ class ClassSections
 		}
 		code += codeInst;
 		if (codeInstDepr)
-		{	code += '<div class="sect-deprecated">\n\n';
+		{	code += '<div style="opacity:0.6">\n\n';
 			code += codeInstDepr;
 			code += '</div>\n\n';
 		}

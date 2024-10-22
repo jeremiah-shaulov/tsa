@@ -6,8 +6,6 @@ const INDEX_N_COLUMNS = 4;
 
 const STYLE =
 `<style>
-	h4 {margin-top: 2em}
-	.sect-deprecated {opacity: 0.6}
 	.lit-keyword, .lit-boolean {color: blue}
 	.lit-string, .lit-template {color: firebrick}
 	.lit-number, .lit-bigint {color: darkgreen}
@@ -530,7 +528,7 @@ L:		while (pos < linkHref.length)
 					codeCur += `(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
 					codeCur += '\n\n';
 					codeCur += that.#convertJsDoc(c.jsDoc, true);
-					return codeCur;
+					return codeCur + '\n\n';
 				},
 				onIndexSignature(c)
 				{	let codeCur = '#### ';
@@ -548,19 +546,19 @@ L:		while (pos < linkHref.length)
 					}
 					codeCur += that.#convertTsTypeColon(c.tsType, filename);
 					codeCur += '\n\n';
-					return codeCur;
+					return codeCur + '\n\n';
 				},
 				onProperty(p)
 				{	let codeCur = '#### ';
 					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
-					return codeCur;
+					return codeCur + '\n\n';
 				},
 				onMethod(m)
 				{	let codeCur = '#### ';
 					codeCur += that.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
 					codeCur += '\n\n';
 					codeCur += that.#convertJsDoc(m.jsDoc, true);
-					return codeCur;
+					return codeCur + '\n\n';
 				},
 			}
 		);
