@@ -65,9 +65,9 @@ export class MdGen
 			}
 			const {name, kind} = node;
 			const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
-			const prefix = node.declarationKind=='export' ? kindName : 'private.'+kindName;
+			const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
 			for (let i=1; true; i++)
-			{	const curName = i==1 ? prefix+name : prefix+name+'.'+i;
+			{	const curName = i==1 ? fullName : fullName+'.'+i;
 				if (!this.#pathNames.has(curName))
 				{	this.#pathNames.add(curName);
 					this.#paths.set(node, curName);
