@@ -20,6 +20,8 @@ const RE_BACKSLASH_ESCAPE = /\\./g;
 const RE_LINK_SAN = /[^\p{Letter}\p{Number}_]+/gu;
 const RE_LINK_SAN_2 = /^-+|-+$/g;
 
+type OnFile = (dir: string, code: string) => Promise<void>|void;
+
 export class MdGen
 {	#nodes: DocNode[];
 	#pathNames = new Set<string>;
@@ -35,22 +37,23 @@ export class MdGen
 		}
 	}
 
-	*genFiles(moduleName='')
+	async genFiles(moduleName: string, onFile: OnFile)
 	{	let code = `# ${moduleName || 'Module'}\n\n`;
 		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
 		code += this.#convertNamespace(this.#nodes);
-		yield {dir: '', code};
-		yield *this.#genFilesForNodes(this.#nodes, new Set);
+		await onFile('', code);
+		await this.#genFilesForNodes(this.#nodes, new Set, onFile);
 	}
 
-	*#genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
+	async #genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>, onFile: OnFile)
 	{	for (const node of nodes)
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
-					yield this.#convertDocNode(node);
+					const {dir, code} = this.#convertDocNode(node);
+					await onFile(dir, code);
 					if (node.kind == 'namespace')
-					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, nodesDone);
+					{	await this.#genFilesForNodes(node.namespaceDef.elements, nodesDone, onFile);
 					}
 				}
 			}

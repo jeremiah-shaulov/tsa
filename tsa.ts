@@ -181,20 +181,23 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 	}
 	else
 	{	const gen = new MdGen(result);
-		for (const {dir, code} of gen.genFiles())
-		{	const filename = path.join(outFileOrDir, dir, 'README.md');
-			for (let i=0; i<2; i++)
-			{	try
-				{	await Deno.writeTextFile(filename, code);
-				}
-				catch (e)
-				{	if (i!=0 || e.code!='ENOENT')
-					{	throw e;
+		await gen.genFiles
+		(	'',
+			async (dir, code) =>
+			{	const filename = path.join(outFileOrDir, dir, 'README.md');
+				for (let i=0; i<2; i++)
+				{	try
+					{	await Deno.writeTextFile(filename, code);
 					}
-					await Deno.mkdir(path.join(outFileOrDir, dir), {recursive: true});
+					catch (e)
+					{	if (i!=0 || e.code!='ENOENT')
+						{	throw e;
+						}
+						await Deno.mkdir(path.join(outFileOrDir, dir), {recursive: true});
+					}
 				}
 			}
-		}
+		);
 	}
 }
 
