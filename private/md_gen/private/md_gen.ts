@@ -1,6 +1,6 @@
 import {indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, ClassIndexSignatureDef} from '../../doc_node/mod.ts';
-import {Accessor, mdClassGen, isPublicOrProtected, memberToSectionId} from './md_class_gen.ts';
+import {Accessor, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -19,6 +19,8 @@ const RE_NL = /[\r\n]/;
 const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
+const RE_LINK_SAN = /[^\p{Letter}\p{Number}_]+/gu;
+const RE_LINK_SAN_2 = /^-+|-+$/g;
 
 export class MdGen
 {	#nodes: DocNode[];
@@ -508,7 +510,7 @@ L:		while (pos < linkHref.length)
 		const that = this;
 		let isFirstConstructor = true;
 		let isFirstIndexSignature = true;
-		const {outline, sectionsCode} = mdClassGen
+		const {outline, sectionsCode} = MdClassGen
 		(	classDef,
 			{	onConstructor(c)
 				{	let codeCur = '#### ';
@@ -796,4 +798,17 @@ function mdGrid(oneLineHeader: string, cells: string[], nColumns: number)
 		}
 	}
 	return code;
+}
+
+function memberToSectionId(withHashSign: boolean, name?: string, isStatic=false)
+{	if (!name)
+	{	return !withHashSign ? 'index-signature' : '#index-signature';
+	}
+	name = name.replace(RE_LINK_SAN, '-').replace(RE_LINK_SAN_2, '');
+	if (isStatic)
+	{	return !withHashSign ? 'static.'+name : '#static.'+name;
+	}
+	else
+	{	return !withHashSign ? name : '#'+name;
+	}
 }

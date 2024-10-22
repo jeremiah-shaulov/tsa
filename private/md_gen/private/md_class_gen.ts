@@ -1,7 +1,7 @@
 import {Accessibility, JsDoc, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef} from '../../doc_node/mod.ts';
 
-const RE_LINK_SAN = /[^\p{Letter}\p{Number}_]+/gu;
-const RE_LINK_SAN_2 = /^-+|-+$/g;
+const RE_HEADER = /^#+[ \t]+([^\r\n]+)/;
+const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
 export type Accessor =
 {	getter: ClassMethodDef|undefined;
@@ -14,22 +14,10 @@ export type Accessor =
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | ClassIndexSignatureDef | ClassPropertyDef | Accessor;
+type MemberWithHeaderId = {member: Member, headerId: string};
 
 export function isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
 {	return node.accessibility !== 'private' && (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
-}
-
-export function memberToSectionId(withHashSign: boolean, name?: string, isStatic=false)
-{	if (!name)
-	{	return !withHashSign ? 'index-signature' : '#index-signature';
-	}
-	name = name.replace(RE_LINK_SAN, '-').replace(RE_LINK_SAN_2, '');
-	if (isStatic)
-	{	return !withHashSign ? 'static.'+name : '#static.'+name;
-	}
-	else
-	{	return !withHashSign ? name : '#'+name;
-	}
 }
 
 const enum What
@@ -40,7 +28,7 @@ const enum What
 	Method,
 }
 
-export function mdClassGen
+export function MdClassGen
 (	classDef: ClassDef,
 	converter:
 	{	onConstructor(m: ClassConstructorDef): string,
@@ -181,49 +169,52 @@ class ClassSections
 		'', // deprecated protected
 	];
 
-	#propertiesPublicStatic = new Array<Member>;
-	#methodsPublicStatic = new Array<Member>;
-	#propertiesProtectedStatic = new Array<Member>;
-	#methodsProtectedStatic = new Array<Member>;
-	#staticDeprecated = new Array<Member>;
-	#constructors = new Array<Member>;
-	#destructors = new Array<Member>;
-	#indexSignatures = new Array<Member>;
-	#protectedConstructors = new Array<Member>;
-	#propertiesPublic = new Array<Member>;
-	#methodsPublic = new Array<Member>;
-	#propertiesProtected = new Array<Member>;
-	#methodsProtected = new Array<Member>;
-	#deprecated = new Array<Member>;
+	#propertiesPublicStatic = new Array<MemberWithHeaderId>;
+	#methodsPublicStatic = new Array<MemberWithHeaderId>;
+	#propertiesProtectedStatic = new Array<MemberWithHeaderId>;
+	#methodsProtectedStatic = new Array<MemberWithHeaderId>;
+	#staticDeprecated = new Array<MemberWithHeaderId>;
+	#constructors = new Array<MemberWithHeaderId>;
+	#destructors = new Array<MemberWithHeaderId>;
+	#indexSignatures = new Array<MemberWithHeaderId>;
+	#protectedConstructors = new Array<MemberWithHeaderId>;
+	#propertiesPublic = new Array<MemberWithHeaderId>;
+	#methodsPublic = new Array<MemberWithHeaderId>;
+	#propertiesProtected = new Array<MemberWithHeaderId>;
+	#methodsProtected = new Array<MemberWithHeaderId>;
+	#deprecated = new Array<MemberWithHeaderId>;
 
-	add(what: What, node: Member, code: string)
-	{	const i = sectionIndex(node);
+	add(what: What, member: Member, code: string)
+	{	const i = sectionIndex(member);
 		// Section
 		this.#sections[i] += code;
+		// Header ID
+		const headerId = parseHeaderId(code);
 		// Outline
+		const memberWithHeaderId = {member, headerId};
 		if (i==2 || i==3)
-		{	this.#staticDeprecated.push(node);
+		{	this.#staticDeprecated.push(memberWithHeaderId);
 		}
 		else if (i >= 6)
-		{	this.#deprecated.push(node);
+		{	this.#deprecated.push(memberWithHeaderId);
 		}
 		else if (what==What.Constructor && i==5)
-		{	this.#protectedConstructors.push(node);
+		{	this.#protectedConstructors.push(memberWithHeaderId);
 		}
 		else if (what == What.Constructor)
-		{	this.#constructors.push(node);
+		{	this.#constructors.push(memberWithHeaderId);
 		}
 		else if (what == What.Destructor)
-		{	this.#destructors.push(node);
+		{	this.#destructors.push(memberWithHeaderId);
 		}
 		else if (what == What.IndexSignature)
-		{	this.#indexSignatures.push(node);
+		{	this.#indexSignatures.push(memberWithHeaderId);
 		}
 		else if (what == What.PropertyOrAccessor)
-		{	(i==0 ? this.#propertiesPublicStatic : i==1 ? this.#propertiesProtectedStatic : i==5 ? this.#propertiesProtected : this.#propertiesPublic).push(node);
+		{	(i==0 ? this.#propertiesPublicStatic : i==1 ? this.#propertiesProtectedStatic : i==5 ? this.#propertiesProtected : this.#propertiesPublic).push(memberWithHeaderId);
 		}
 		else if (what == What.Method)
-		{	(i==0 ? this.#methodsPublicStatic : i==1 ? this.#methodsProtectedStatic : i==5 ? this.#methodsProtected : this.#methodsPublic).push(node);
+		{	(i==0 ? this.#methodsPublicStatic : i==1 ? this.#methodsProtectedStatic : i==5 ? this.#methodsProtected : this.#methodsPublic).push(memberWithHeaderId);
 		}
 	}
 
@@ -256,59 +247,61 @@ class ClassSections
 	getOutline()
 	{	let code = '';
 		// static properties
-		code += this.#genMemberOutline(this.#propertiesPublicStatic, true, 'static property', 'static properties', false);
+		code += this.#genMemberOutline(this.#propertiesPublicStatic, 'static property', 'static properties', false);
 		// static methods
-		code += this.#genMemberOutline(this.#methodsPublicStatic, true, 'static method', 'static methods', false);
+		code += this.#genMemberOutline(this.#methodsPublicStatic, 'static method', 'static methods', false);
 		// protected static properties
-		code += this.#genMemberOutline(this.#propertiesProtectedStatic, true, 'protected static property', 'protected static properties', false);
+		code += this.#genMemberOutline(this.#propertiesProtectedStatic, 'protected static property', 'protected static properties', false);
 		// protected static methods
-		code += this.#genMemberOutline(this.#methodsProtectedStatic, true, 'protected static method', 'protected static methods', false);
+		code += this.#genMemberOutline(this.#methodsProtectedStatic, 'protected static method', 'protected static methods', false);
 		// static deprecated
-		code += this.#genMemberOutline(this.#staticDeprecated, true, 'static deprecated symbol', 'static deprecated symbols', true);
+		code += this.#genMemberOutline(this.#staticDeprecated, 'static deprecated symbol', 'static deprecated symbols', true);
 		// constructors
-		code += this.#genMemberOutline(this.#constructors, false, 'constructor', 'constructors', true);
+		code += this.#genMemberOutline(this.#constructors, 'constructor', 'constructors', true);
 		// destructors
-		code += this.#genMemberOutline(this.#destructors, false, 'destructor', 'destructors', true);
+		code += this.#genMemberOutline(this.#destructors, 'destructor', 'destructors', true);
 		// index signatures
-		code += this.#genMemberOutline(this.#indexSignatures, false, 'index signature', 'index signatures', true);
+		code += this.#genMemberOutline(this.#indexSignatures, 'index signature', 'index signatures', true);
 		// protected constructors
-		code += this.#genMemberOutline(this.#protectedConstructors, false, 'protected constructor', 'protected constructors', true);
+		code += this.#genMemberOutline(this.#protectedConstructors, 'protected constructor', 'protected constructors', true);
 		// properties
-		code += this.#genMemberOutline(this.#propertiesPublic, false, 'property', 'properties', false);
+		code += this.#genMemberOutline(this.#propertiesPublic, 'property', 'properties', false);
 		// methods
-		code += this.#genMemberOutline(this.#methodsPublic, false, 'method', 'methods', false);
+		code += this.#genMemberOutline(this.#methodsPublic, 'method', 'methods', false);
 		// protected properties
-		code += this.#genMemberOutline(this.#propertiesProtected, false, 'protected property', 'protected properties', false);
+		code += this.#genMemberOutline(this.#propertiesProtected, 'protected property', 'protected properties', false);
 		// protected methods
-		code += this.#genMemberOutline(this.#methodsProtected, false, 'protected method', 'protected methods', false);
+		code += this.#genMemberOutline(this.#methodsProtected, 'protected method', 'protected methods', false);
 		// deprecated
-		code += this.#genMemberOutline(this.#deprecated, false, 'deprecated symbol', 'deprecated symbols', true);
+		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
 		// done
 		return code ? `This class has:\n${code}\n\n` : '';
 	}
 
-	#genMemberOutline(members: Member[], isStatic: boolean, titleSingular: string, titlePlural: string, numberOnly: boolean)
+	#genMemberOutline(membersWithHeaderId: MemberWithHeaderId[], titleSingular: string, titlePlural: string, numberOnly: boolean)
 	{	let code = '';
-		if (members.length > 0)
+		if (membersWithHeaderId.length > 0)
 		{	if (!numberOnly)
-			{	if (members.length == 1)
+			{	if (membersWithHeaderId.length == 1)
 				{	code += `- ${titleSingular} `;
 				}
 				else
-				{	code += `- ${members.length} ${titlePlural}: `;
+				{	code += `- ${membersWithHeaderId.length} ${titlePlural}: `;
 				}
-				code += members.map(p => `[${'name' in p ? p.name : '?'}](${memberToSectionId(true, 'name' in p ? p.name : undefined, isStatic)})`).join(', ');
+				code += membersWithHeaderId.map(p => memberToLink(p)).join(', ');
 				code += '\n';
 			}
 			else
-			{	if (members.length == 1)
-				{	code += `- [${titleSingular}]`;
+			{	const title = membersWithHeaderId.length==1 ? titleSingular : membersWithHeaderId.length+' '+titlePlural;
+				const p = membersWithHeaderId[0];
+				code += '- ' + memberToLink(p, title) + '\n';
+			}
+			// deno-lint-ignore no-inner-declarations
+			function memberToLink(p: MemberWithHeaderId, name?: string)
+			{	if (!name)
+				{	name = 'name' in p.member ? p.member.name : '?';
 				}
-				else
-				{	code += `- [${members.length} ${titlePlural}]`;
-				}
-				const p = members[0];
-				code += `(${memberToSectionId(true, 'name' in p ? p.name : undefined, isStatic)})\n`;
+				return !p.headerId ? name : `[${name}](#${p.headerId})`;
 			}
 		}
 		return code;
@@ -331,4 +324,27 @@ function sectionIndex(node: Member)
 
 function isDeprecated(node: {jsDoc?: JsDoc})
 {	return node.jsDoc?.tags?.find(t => t.kind == 'deprecated') != undefined;
+}
+
+function parseHeaderId(code: string)
+{	return parseHeaderIdFromHeaderLine(code.match(RE_HEADER)?.[1].trimEnd());
+}
+
+function parseHeaderIdFromHeaderLine(headerLine?: string)
+{	let headerId = '';
+	if (headerLine)
+	{	RE_HEADER_SAN.lastIndex = 0;
+		let m;
+		while ((m = RE_HEADER_SAN.exec(headerLine)))
+		{	if (m[1])
+			{	headerId += m[1]==' ' ? '-' : m[1].toLocaleLowerCase();
+			}
+			else if (m[2])
+			{	const pos = RE_HEADER_SAN.lastIndex;
+				headerId += parseHeaderIdFromHeaderLine(m[2]);
+				RE_HEADER_SAN.lastIndex = pos;
+			}
+		}
+	}
+	return headerId;
 }
