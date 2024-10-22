@@ -28,39 +28,68 @@ const enum What
 	Method,
 }
 
-export function MdClassGen
-(	classDef: ClassDef,
-	converter:
-	{	onConstructor(m: ClassConstructorDef): string,
-		onMethod(m: ClassMethodDef): string,
-		onIndexSignature(m: ClassIndexSignatureDef): string,
-		onProperty(p: ClassPropertyDef|Accessor): string,
+export class MdClassGen
+{	#classMembers;
+	#converter;
+	#sections: ClassSections|undefined;
+
+	constructor
+	(	classDef: ClassDef,
+		converter:
+		{	onConstructor(m: ClassConstructorDef): string,
+			onMethod(m: ClassMethodDef): string,
+			onIndexSignature(m: ClassIndexSignatureDef): string,
+			onProperty(p: ClassPropertyDef|Accessor): string,
+		}
+	)
+	{	this.#classMembers = getClassMembers(classDef);
+		this.#converter = converter;
 	}
-)
-{	const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = getClassMembers(classDef);
-	const sections = new ClassSections;
-	for (const c of constructors)
-	{	sections.add(What.Constructor, c, converter.onConstructor(c));
+
+	#getSections()
+	{	if (this.#sections == undefined)
+		{	const {onConstructor, onMethod, onIndexSignature, onProperty} = this.#converter;
+			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
+			const sections = new ClassSections;
+			for (const c of constructors)
+			{	sections.add(What.Constructor, c, onConstructor(c));
+			}
+			// destructors
+			for (const m of destructors)
+			{	sections.add(What.Destructor, m, onMethod(m));
+			}
+			// index signatures
+			for (const c of indexSignatures)
+			{	sections.add(What.IndexSignature, c, onIndexSignature(c));
+			}
+			// properties
+			for (const p of propertiesAndAccessors)
+			{	sections.add(What.PropertyOrAccessor, p, onProperty(p));
+			}
+			// methods
+			for (const m of methods)
+			{	sections.add(What.Method, m, onMethod(m));
+			}
+			// done
+			this.#sections = sections;
+		}
+		return this.#sections;
 	}
-	// destructors
-	for (const m of destructors)
-	{	sections.add(What.Destructor, m, converter.onMethod(m));
+
+	getSectionsCode()
+	{	const sections = this.#getSections();
+		return sections+'';
 	}
-	// index signatures
-	for (const c of indexSignatures)
-	{	sections.add(What.IndexSignature, c, converter.onIndexSignature(c));
+
+	getOutline()
+	{	const sections = this.#getSections();
+		return sections.getOutline();
 	}
-	// properties
-	for (const p of propertiesAndAccessors)
-	{	sections.add(What.PropertyOrAccessor, p, converter.onProperty(p));
+
+	getHeaderIds()
+	{	const sections = this.#getSections();
+		return sections.getHeaderIds();
 	}
-	// methods
-	for (const m of methods)
-	{	sections.add(What.Method, m, converter.onMethod(m));
-	}
-	const outline = sections.getOutline();
-	const sectionsCode = sections+'';
-	return {outline, sectionsCode};
 }
 
 function getClassMembers(classDef: ClassDef)
@@ -184,12 +213,19 @@ class ClassSections
 	#methodsProtected = new Array<MemberWithHeaderId>;
 	#deprecated = new Array<MemberWithHeaderId>;
 
+	#headerIds = new Map<string, string>;
+
 	add(what: What, member: Member, code: string)
 	{	const i = sectionIndex(member);
 		// Section
 		this.#sections[i] += code;
 		// Header ID
 		const headerId = parseHeaderId(code);
+		if (headerId && 'name' in member)
+		{	const isStatic = i < 4;
+			const key = isStatic ? '.'+member.name : member.name;
+			this.#headerIds.set(key, headerId);
+		}
 		// Outline
 		const memberWithHeaderId = {member, headerId};
 		if (i==2 || i==3)
@@ -276,6 +312,10 @@ class ClassSections
 		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
 		// done
 		return code ? `This class has:\n${code}\n\n` : '';
+	}
+
+	getHeaderIds()
+	{	return this.#headerIds;
 	}
 
 	#genMemberOutline(membersWithHeaderId: MemberWithHeaderId[], titleSingular: string, titlePlural: string, numberOnly: boolean)

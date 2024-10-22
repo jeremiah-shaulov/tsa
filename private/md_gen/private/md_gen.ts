@@ -180,7 +180,8 @@ L:		while (pos < linkHref.length)
 		// class def
 		if (node.kind == 'class')
 		{	const {classDef} = node;
-			code += this.#convertClassDef(node.name, classDef, filename);
+			const {code: c, headerIds} = this.#convertClassDef(node.name, classDef, filename);
+			code += c;
 		}
 		else if (node.kind == 'typeAlias')
 		{	const {typeAliasDef} = node;
@@ -510,7 +511,7 @@ L:		while (pos < linkHref.length)
 		const that = this;
 		let isFirstConstructor = true;
 		let isFirstIndexSignature = true;
-		const {outline, sectionsCode} = MdClassGen
+		const gen = new MdClassGen
 		(	classDef,
 			{	onConstructor(c)
 				{	let codeCur = '#### ';
@@ -563,11 +564,12 @@ L:		while (pos < linkHref.length)
 				},
 			}
 		);
-		code += outline;
+		code += gen.getOutline();
 		// Properties and methods
-		code += sectionsCode;
+		code += gen.getSectionsCode();
 		// Done
-		return code;
+		const headerIds = gen.getHeaderIds();
+		return {code, headerIds};
 	}
 
 	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean, filename: string)
