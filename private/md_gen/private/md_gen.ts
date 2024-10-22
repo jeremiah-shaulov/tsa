@@ -506,16 +506,50 @@ L:		while (pos < linkHref.length)
 		// Outline
 		// deno-lint-ignore no-this-alias
 		const that = this;
+		let isFirstConstructor = true;
+		let isFirstIndexSignature = true;
 		const {outline, sectionsCode} = mdClassGen
 		(	classDef,
 			{	onConstructor(c)
 				{	let codeCur = '#### ';
+					const isAnchor = isFirstConstructor;
+					isFirstConstructor = false;
+					if (isAnchor)
+					{	codeCur += `<a name="${memberToSectionId(false, c.name)}">`;
+					}
 					if (c.accessibility === 'protected')
 					{	codeCur += '<span class="lit-keyword">protected</span> ';
 					}
-					codeCur += `<span class="lit-keyword">constructor</span>(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
+					codeCur += '<span class="lit-keyword">constructor</span>';
+					if (isAnchor)
+					{	codeCur += '</a>';
+					}
+					codeCur += `(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
 					codeCur += '\n\n';
 					codeCur += that.#convertJsDoc(c.jsDoc, true);
+					return codeCur;
+				},
+				onIndexSignature(c)
+				{	let codeCur = '#### ';
+					const isAnchor = isFirstIndexSignature;
+					isFirstIndexSignature = false;
+					if (isAnchor)
+					{	codeCur += `<a name="${memberToSectionId(false)}">`;
+					}
+					if (c.readonly)
+					{	codeCur += '<span class="lit-keyword">readonly</span> ';
+					}
+					codeCur += '[' + c.params.map(a => that.#convertArg(a, filename)).join(', ') + ']';
+					if (isAnchor)
+					{	codeCur += '</a>';
+					}
+					codeCur += that.#convertTsTypeColon(c.tsType, filename);
+					codeCur += '\n\n';
+					return codeCur;
+				},
+				onProperty(p)
+				{	let codeCur = '#### ';
+					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
 					return codeCur;
 				},
 				onMethod(m)
@@ -525,20 +559,6 @@ L:		while (pos < linkHref.length)
 					codeCur += that.#convertJsDoc(m.jsDoc, true);
 					return codeCur;
 				},
-				onIndexSignature(c)
-				{	let codeCur = '#### ';
-					if (c.readonly)
-					{	codeCur += '<span class="lit-keyword">readonly</span> ';
-					}
-					codeCur += '[' + c.params.map(a => that.#convertArg(a, filename)).join(', ') + ']' + that.#convertTsTypeColon(c.tsType, filename);
-					codeCur += '\n\n';
-					return codeCur;
-				},
-				onProperty(p)
-				{	let codeCur = '#### ';
-					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
-					return codeCur;
-				}
 			}
 		);
 		code += outline;

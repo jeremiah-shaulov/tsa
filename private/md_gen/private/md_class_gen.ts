@@ -15,15 +15,13 @@ export type Accessor =
 
 type Member = ClassConstructorDef | ClassMethodDef | ClassIndexSignatureDef | ClassPropertyDef | Accessor;
 
-type Named = {name?: string};
-
 export function isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
 {	return node.accessibility !== 'private' && (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
 }
 
 export function memberToSectionId(withHashSign: boolean, name?: string, isStatic=false)
 {	if (!name)
-	{	return '';
+	{	return !withHashSign ? 'index-signature' : '#index-signature';
 	}
 	name = name.replace(RE_LINK_SAN, '-').replace(RE_LINK_SAN_2, '');
 	if (isStatic)
@@ -183,20 +181,20 @@ class ClassSections
 		'', // deprecated protected
 	];
 
-	#nStaticDeprecated = 0;
-	#nConstructors = 0;
-	#destructors = new Array<Named>;
-	#nIndexSignatures = 0;
-	#nProtectedConstructors = 0;
-	#nDeprecated = 0;
-	#propertiesPublicStatic = new Array<Named>;
-	#propertiesProtectedStatic = new Array<Named>;
-	#propertiesPublic = new Array<Named>;
-	#propertiesProtected = new Array<Named>;
-	#methodsPublicStatic = new Array<Named>;
-	#methodsProtectedStatic = new Array<Named>;
-	#methodsPublic = new Array<Named>;
-	#methodsProtected = new Array<Named>;
+	#propertiesPublicStatic = new Array<Member>;
+	#methodsPublicStatic = new Array<Member>;
+	#propertiesProtectedStatic = new Array<Member>;
+	#methodsProtectedStatic = new Array<Member>;
+	#staticDeprecated = new Array<Member>;
+	#constructors = new Array<Member>;
+	#destructors = new Array<Member>;
+	#indexSignatures = new Array<Member>;
+	#protectedConstructors = new Array<Member>;
+	#propertiesPublic = new Array<Member>;
+	#methodsPublic = new Array<Member>;
+	#propertiesProtected = new Array<Member>;
+	#methodsProtected = new Array<Member>;
+	#deprecated = new Array<Member>;
 
 	add(what: What, node: Member, code: string)
 	{	const i = sectionIndex(node);
@@ -204,28 +202,28 @@ class ClassSections
 		this.#sections[i] += code;
 		// Outline
 		if (i==2 || i==3)
-		{	this.#nStaticDeprecated++;
+		{	this.#staticDeprecated.push(node);
 		}
 		else if (i >= 6)
-		{	this.#nDeprecated++;
+		{	this.#deprecated.push(node);
 		}
 		else if (what==What.Constructor && i==5)
-		{	this.#nProtectedConstructors++;
+		{	this.#protectedConstructors.push(node);
 		}
 		else if (what == What.Constructor)
-		{	this.#nConstructors++;
+		{	this.#constructors.push(node);
 		}
 		else if (what == What.Destructor)
-		{	this.#destructors.push(node as Named);
+		{	this.#destructors.push(node);
 		}
 		else if (what == What.IndexSignature)
-		{	this.#nIndexSignatures++;
+		{	this.#indexSignatures.push(node);
 		}
 		else if (what == What.PropertyOrAccessor)
-		{	(i==0 ? this.#propertiesPublicStatic : i==1 ? this.#propertiesProtectedStatic : i==5 ? this.#propertiesProtected : this.#propertiesPublic).push(node as Named);
+		{	(i==0 ? this.#propertiesPublicStatic : i==1 ? this.#propertiesProtectedStatic : i==5 ? this.#propertiesProtected : this.#propertiesPublic).push(node);
 		}
 		else if (what == What.Method)
-		{	(i==0 ? this.#methodsPublicStatic : i==1 ? this.#methodsProtectedStatic : i==5 ? this.#methodsProtected : this.#methodsPublic).push(node as Named);
+		{	(i==0 ? this.#methodsPublicStatic : i==1 ? this.#methodsProtectedStatic : i==5 ? this.#methodsProtected : this.#methodsPublic).push(node);
 		}
 	}
 
@@ -258,68 +256,60 @@ class ClassSections
 	getOutline()
 	{	let code = '';
 		// static properties
-		code += this.#genMemberOutline(this.#propertiesPublicStatic, true, 'static property', 'static properties');
+		code += this.#genMemberOutline(this.#propertiesPublicStatic, true, 'static property', 'static properties', false);
 		// static methods
-		code += this.#genMemberOutline(this.#methodsPublicStatic, true, 'static method', 'static methods');
+		code += this.#genMemberOutline(this.#methodsPublicStatic, true, 'static method', 'static methods', false);
 		// protected static properties
-		code += this.#genMemberOutline(this.#propertiesProtectedStatic, true, 'protected static property', 'protected static properties');
+		code += this.#genMemberOutline(this.#propertiesProtectedStatic, true, 'protected static property', 'protected static properties', false);
 		// protected static methods
-		code += this.#genMemberOutline(this.#methodsProtectedStatic, true, 'protected static method', 'protected static methods');
+		code += this.#genMemberOutline(this.#methodsProtectedStatic, true, 'protected static method', 'protected static methods', false);
 		// static deprecated
-		if (this.#nStaticDeprecated > 0)
-		{	code += `- ${this.#nStaticDeprecated} static deprecated ${this.#nStaticDeprecated==1 ? 'symbol' : 'symbols'}\n`;
-		}
+		code += this.#genMemberOutline(this.#staticDeprecated, true, 'static deprecated symbol', 'static deprecated symbols', true);
 		// constructors
-		if (this.#nConstructors == 1)
-		{	code += `- constructor\n`;
-		}
-		else if (this.#nConstructors > 1)
-		{	code += `- ${this.#nConstructors} constructors\n`;
-		}
+		code += this.#genMemberOutline(this.#constructors, false, 'constructor', 'constructors', true);
 		// destructors
-		if (this.#destructors.length > 0)
-		{	code += `- [${this.#destructors.length==1 ? 'destructor' : `${this.#destructors.length} destructors`}](${memberToSectionId(true, this.#destructors[0].name, false)})\n`;
-		}
+		code += this.#genMemberOutline(this.#destructors, false, 'destructor', 'destructors', true);
 		// index signatures
-		if (this.#nIndexSignatures == 1)
-		{	code += `- index signatures\n`;
-		}
-		else if (this.#nIndexSignatures > 1)
-		{	code += `- ${this.#nIndexSignatures} index signatures\n`;
-		}
+		code += this.#genMemberOutline(this.#indexSignatures, false, 'index signature', 'index signatures', true);
 		// protected constructors
-		if (this.#nProtectedConstructors == 1)
-		{	code += `- protected constructor\n`;
-		}
-		else if (this.#nProtectedConstructors > 1)
-		{	code += `- ${this.#nProtectedConstructors} protected constructors\n`;
-		}
+		code += this.#genMemberOutline(this.#protectedConstructors, false, 'protected constructor', 'protected constructors', true);
 		// properties
-		code += this.#genMemberOutline(this.#propertiesPublic, false, 'property', 'properties');
+		code += this.#genMemberOutline(this.#propertiesPublic, false, 'property', 'properties', false);
 		// methods
-		code += this.#genMemberOutline(this.#methodsPublic, false, 'method', 'methods');
+		code += this.#genMemberOutline(this.#methodsPublic, false, 'method', 'methods', false);
 		// protected properties
-		code += this.#genMemberOutline(this.#propertiesProtected, false, 'protected property', 'protected properties');
+		code += this.#genMemberOutline(this.#propertiesProtected, false, 'protected property', 'protected properties', false);
 		// protected methods
-		code += this.#genMemberOutline(this.#methodsProtected, false, 'protected method', 'protected methods');
+		code += this.#genMemberOutline(this.#methodsProtected, false, 'protected method', 'protected methods', false);
 		// deprecated
-		if (this.#nDeprecated > 0)
-		{	code += `- ${this.#nDeprecated} deprecated ${this.#nDeprecated==1 ? 'symbol' : 'symbols'}\n`;
-		}
+		code += this.#genMemberOutline(this.#deprecated, false, 'deprecated symbol', 'deprecated symbols', true);
+		// done
 		return code ? `This class has:\n${code}\n\n` : '';
 	}
 
-	#genMemberOutline(members: Named[], isStatic: boolean, titleSingular: string, titlePlural: string)
+	#genMemberOutline(members: Member[], isStatic: boolean, titleSingular: string, titlePlural: string, numberOnly: boolean)
 	{	let code = '';
 		if (members.length > 0)
-		{	if (members.length == 1)
-			{	code += `- ${titleSingular} `;
+		{	if (!numberOnly)
+			{	if (members.length == 1)
+				{	code += `- ${titleSingular} `;
+				}
+				else
+				{	code += `- ${members.length} ${titlePlural}: `;
+				}
+				code += members.map(p => `[${'name' in p ? p.name : '?'}](${memberToSectionId(true, 'name' in p ? p.name : undefined, isStatic)})`).join(', ');
+				code += '\n';
 			}
 			else
-			{	code += `- ${members.length} ${titlePlural}: `;
+			{	if (members.length == 1)
+				{	code += `- [${titleSingular}]`;
+				}
+				else
+				{	code += `- [${members.length} ${titlePlural}]`;
+				}
+				const p = members[0];
+				code += `(${memberToSectionId(true, 'name' in p ? p.name : undefined, isStatic)})\n`;
 			}
-			code += members.map(p => `[${p.name}](${memberToSectionId(true, p.name, isStatic)})`).join(', ');
-			code += '\n';
 		}
 		return code;
 	}
