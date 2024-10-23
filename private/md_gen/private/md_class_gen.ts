@@ -24,7 +24,7 @@ type ClassConverter =
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | ClassIndexSignatureDef | ClassPropertyDef | Accessor;
-type MemberWithHeaderId = {member: Member, headerId: string};
+type MemberHeader = {name: string, headerLine: string, headerId: string};
 
 export function isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
 {	return node.accessibility !== 'private' && (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
@@ -39,106 +39,87 @@ const enum What
 }
 
 export class MdClassGen
-{	#classDef;
-	#classConverter;
-	#classMembers: ReturnType<typeof getClassMembers>|undefined;
-	#headers = new Map<Member, {headerId: string, headerLine: string}>;
-	#headerIds = new Map<string, string>;
+{	#classConverter;
+	#classMembers;
+	#memberHeaders = new Map<Member, MemberHeader>;
+	#memberHeadersByKey = new Map<string, MemberHeader>;
 
 	constructor(classDef: ClassDef, classConverter: ClassConverter)
-	{	this.#classDef = classDef;
-		this.#classConverter = classConverter;
+	{	this.#classConverter = classConverter;
+		this.#classMembers = getClassMembers(classDef);
+		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
+		const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#classConverter;
+		// constructors
+		for (const m of constructors)
+		{	this.#addHeader(m, m.name, false, onConstructorDecl(m));
+		}
+		// destructors
+		for (const m of destructors)
+		{	this.#addHeader(m, m.name, false, onMethodDecl(m));
+		}
+		// index signatures
+		for (const m of indexSignatures)
+		{	this.#addHeader(m, '', false, onIndexSignatureDecl(m));
+		}
+		// properties
+		for (const m of propertiesAndAccessors)
+		{	this.#addHeader(m, m.name, m.isStatic, onPropertyDecl(m));
+		}
+		// methods
+		for (const m of methods)
+		{	this.#addHeader(m, m.name, m.isStatic, onMethodDecl(m));
+		}
 	}
 
-	#getClassMembers()
-	{	if (this.#classMembers == undefined)
-		{	this.#classMembers = getClassMembers(this.#classDef);
-			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
-			const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#classConverter;
-			const headers = this.#headers;
-			// constructors
-			for (const m of constructors)
-			{	const headerLine = onConstructorDecl(m);
-				headers.set(m, this.#addHeaderId(headerLine, m));
-			}
-			// destructors
-			for (const m of destructors)
-			{	const headerLine = onMethodDecl(m);
-				headers.set(m, this.#addHeaderId(headerLine, m));
-			}
-			// index signatures
-			for (const m of indexSignatures)
-			{	const headerLine = onIndexSignatureDecl(m);
-				headers.set(m, this.#addHeaderId(headerLine, m));
-			}
-			// properties
-			for (const m of propertiesAndAccessors)
-			{	const headerLine = onPropertyDecl(m);
-				headers.set(m, this.#addHeaderId(headerLine, m));
-			}
-			// methods
-			for (const m of methods)
-			{	const headerLine = onMethodDecl(m);
-				headers.set(m, this.#addHeaderId(headerLine, m));
-			}
-		}
-		return this.#classMembers;
-	}
-
-	#addHeaderId(headerLine: string, member: Member)
-	{	const headerId = parseHeaderId(headerLine);
-		if (headerId && 'name' in member)
-		{	const isStatic = 'isStatic' in member && member.isStatic;
-			const key = isStatic ? '.'+member.name : member.name;
-			this.#headerIds.set(key, headerId);
-		}
-		return {headerId, headerLine};
+	#addHeader(m: Member, name: string, isStatic: boolean, headerLine: string)
+	{	const memberHeader = {name: name, headerLine, headerId: parseHeaderId(headerLine)};
+		this.#memberHeaders.set(m, memberHeader);
+		const key = getMemberKey(name, isStatic);
+		this.#memberHeadersByKey.set(key, memberHeader);
 	}
 
 	getHeaderId(name?: string, isStatic=false)
 	{	if (!name)
 		{	return '';
 		}
-		this.#getClassMembers();
-		const key = isStatic ? '.'+name : name;
-		return this.#headerIds.get(key) ?? '';
+		const key = getMemberKey(name, isStatic);
+		return this.#memberHeadersByKey.get(key)?.headerId ?? '';
 	}
 
 	getCode()
 	{	const {onConstructorDoc, onMethodDoc, onIndexSignatureDoc, onPropertyDoc} = this.#classConverter;
-		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers();
-		const headers = this.#headers;
+		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
+		const memberHeaders = this.#memberHeaders;
 		const sections = new ClassSections;
 		// constructors
 		for (const m of constructors)
-		{	const {headerId, headerLine} = headers.get(m)!;
-			sections.add(What.Constructor, m, headerId, `#### ${headerLine}\n\n${onConstructorDoc(m)}\n\n`);
+		{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onConstructorDoc(m));
 		}
 		// destructors
 		for (const m of destructors)
-		{	const {headerId, headerLine} = headers.get(m)!;
-			sections.add(What.Destructor, m, headerId, `#### ${headerLine}\n\n${onMethodDoc(m)}\n\n`);
+		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onMethodDoc(m));
 		}
 		// index signatures
 		for (const m of indexSignatures)
-		{	const {headerId, headerLine} = headers.get(m)!;
-			sections.add(What.IndexSignature, m, headerId, `#### ${headerLine}\n\n${onIndexSignatureDoc(m)}\n\n`);
+		{	sections.add(sectionIndex(m), What.IndexSignature, memberHeaders.get(m), onIndexSignatureDoc(m));
 		}
 		// properties
 		for (const m of propertiesAndAccessors)
-		{	const {headerId, headerLine} = headers.get(m)!;
-			sections.add(What.PropertyOrAccessor, m, headerId, `#### ${headerLine}\n\n${onPropertyDoc(m)}\n\n`);
+		{	sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), onPropertyDoc(m));
 		}
 		// methods
 		for (const m of methods)
-		{	const {headerId, headerLine} = headers.get(m)!;
-			sections.add(What.Method, m, headerId, `#### ${headerLine}\n\n${onMethodDoc(m)}\n\n`);
+		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onMethodDoc(m));
 		}
 		// done
 		const sectionsCode = sections+'';
 		const outline = sections.getOutline();
 		return {outline, sectionsCode};
 	}
+}
+
+function getMemberKey(name: string, isStatic=false)
+{	return isStatic ? '.'+name : name;
 }
 
 function getClassMembers(classDef: ClassDef)
@@ -250,50 +231,50 @@ class ClassSections
 		'', // deprecated protected
 	];
 
-	#propertiesPublicStatic = new Array<MemberWithHeaderId>;
-	#methodsPublicStatic = new Array<MemberWithHeaderId>;
-	#propertiesProtectedStatic = new Array<MemberWithHeaderId>;
-	#methodsProtectedStatic = new Array<MemberWithHeaderId>;
-	#staticDeprecated = new Array<MemberWithHeaderId>;
-	#constructors = new Array<MemberWithHeaderId>;
-	#destructors = new Array<MemberWithHeaderId>;
-	#indexSignatures = new Array<MemberWithHeaderId>;
-	#protectedConstructors = new Array<MemberWithHeaderId>;
-	#propertiesPublic = new Array<MemberWithHeaderId>;
-	#methodsPublic = new Array<MemberWithHeaderId>;
-	#propertiesProtected = new Array<MemberWithHeaderId>;
-	#methodsProtected = new Array<MemberWithHeaderId>;
-	#deprecated = new Array<MemberWithHeaderId>;
+	#propertiesPublicStatic = new Array<MemberHeader>;
+	#methodsPublicStatic = new Array<MemberHeader>;
+	#propertiesProtectedStatic = new Array<MemberHeader>;
+	#methodsProtectedStatic = new Array<MemberHeader>;
+	#staticDeprecated = new Array<MemberHeader>;
+	#constructors = new Array<MemberHeader>;
+	#destructors = new Array<MemberHeader>;
+	#indexSignatures = new Array<MemberHeader>;
+	#protectedConstructors = new Array<MemberHeader>;
+	#propertiesPublic = new Array<MemberHeader>;
+	#methodsPublic = new Array<MemberHeader>;
+	#propertiesProtected = new Array<MemberHeader>;
+	#methodsProtected = new Array<MemberHeader>;
+	#deprecated = new Array<MemberHeader>;
 
-	add(what: What, member: Member, headerId: string, code: string)
-	{	const i = sectionIndex(member);
-		// Section
-		this.#sections[i] += code;
+	add(sectionIndex: number, what: What, memberHeader: MemberHeader|undefined, code: string)
+	{	// Section
+		this.#sections[sectionIndex] += `#### ${memberHeader?.headerLine ?? ''}\n\n${code}\n\n`;
 		// Outline
-		const memberWithHeaderId = {member, headerId};
-		if (i==2 || i==3)
-		{	this.#staticDeprecated.push(memberWithHeaderId);
-		}
-		else if (i >= 6)
-		{	this.#deprecated.push(memberWithHeaderId);
-		}
-		else if (what==What.Constructor && i==5)
-		{	this.#protectedConstructors.push(memberWithHeaderId);
-		}
-		else if (what == What.Constructor)
-		{	this.#constructors.push(memberWithHeaderId);
-		}
-		else if (what == What.Destructor)
-		{	this.#destructors.push(memberWithHeaderId);
-		}
-		else if (what == What.IndexSignature)
-		{	this.#indexSignatures.push(memberWithHeaderId);
-		}
-		else if (what == What.PropertyOrAccessor)
-		{	(i==0 ? this.#propertiesPublicStatic : i==1 ? this.#propertiesProtectedStatic : i==5 ? this.#propertiesProtected : this.#propertiesPublic).push(memberWithHeaderId);
-		}
-		else if (what == What.Method)
-		{	(i==0 ? this.#methodsPublicStatic : i==1 ? this.#methodsProtectedStatic : i==5 ? this.#methodsProtected : this.#methodsPublic).push(memberWithHeaderId);
+		if (memberHeader)
+		{	if (sectionIndex==2 || sectionIndex==3)
+			{	this.#staticDeprecated.push(memberHeader);
+			}
+			else if (sectionIndex >= 6)
+			{	this.#deprecated.push(memberHeader);
+			}
+			else if (what==What.Constructor && sectionIndex==5)
+			{	this.#protectedConstructors.push(memberHeader);
+			}
+			else if (what == What.Constructor)
+			{	this.#constructors.push(memberHeader);
+			}
+			else if (what == What.Destructor)
+			{	this.#destructors.push(memberHeader);
+			}
+			else if (what == What.IndexSignature)
+			{	this.#indexSignatures.push(memberHeader);
+			}
+			else if (what == What.PropertyOrAccessor)
+			{	(sectionIndex==0 ? this.#propertiesPublicStatic : sectionIndex==1 ? this.#propertiesProtectedStatic : sectionIndex==5 ? this.#propertiesProtected : this.#propertiesPublic).push(memberHeader);
+			}
+			else if (what == What.Method)
+			{	(sectionIndex==0 ? this.#methodsPublicStatic : sectionIndex==1 ? this.#methodsProtectedStatic : sectionIndex==5 ? this.#methodsProtected : this.#methodsPublic).push(memberHeader);
+			}
 		}
 	}
 
@@ -357,30 +338,23 @@ class ClassSections
 		return code ? `This class has:\n${code}\n\n` : '';
 	}
 
-	#genMemberOutline(membersWithHeaderId: MemberWithHeaderId[], titleSingular: string, titlePlural: string, numberOnly: boolean)
+	#genMemberOutline(memberHeader: MemberHeader[], titleSingular: string, titlePlural: string, numberOnly: boolean)
 	{	let code = '';
-		if (membersWithHeaderId.length > 0)
+		if (memberHeader.length > 0)
 		{	if (!numberOnly)
-			{	if (membersWithHeaderId.length == 1)
+			{	if (memberHeader.length == 1)
 				{	code += `- ${titleSingular} `;
 				}
 				else
-				{	code += `- ${membersWithHeaderId.length} ${titlePlural}: `;
+				{	code += `- ${memberHeader.length} ${titlePlural}: `;
 				}
-				code += membersWithHeaderId.map(p => memberToLink(p)).join(', ');
+				code += memberHeader.map(p => !p.headerId ? p.name : `[${p.name}](#${p.headerId})`).join(', ');
 				code += '\n';
 			}
 			else
-			{	const title = membersWithHeaderId.length==1 ? titleSingular : membersWithHeaderId.length+' '+titlePlural;
-				const p = membersWithHeaderId[0];
-				code += '- ' + memberToLink(p, title) + '\n';
-			}
-			// deno-lint-ignore no-inner-declarations
-			function memberToLink(p: MemberWithHeaderId, name?: string)
-			{	if (!name)
-				{	name = 'name' in p.member ? p.member.name : '?';
-				}
-				return !p.headerId ? name : `[${name}](#${p.headerId})`;
+			{	const title = memberHeader.length==1 ? titleSingular : memberHeader.length+' '+titlePlural;
+				const p = memberHeader[0];
+				code += '- ' + (!p.headerId ? title : `[${title}](#${p.headerId})`) + '\n';
 			}
 		}
 		return code;
