@@ -29,7 +29,7 @@ const enum What
 }
 
 export class MdClassGen
-{	#classMembers;
+{	#classDef;
 	#converter;
 	#sections: ClassSections|undefined;
 
@@ -42,14 +42,14 @@ export class MdClassGen
 			onProperty(p: ClassPropertyDef|Accessor): string,
 		}
 	)
-	{	this.#classMembers = getClassMembers(classDef);
+	{	this.#classDef = classDef;
 		this.#converter = converter;
 	}
 
 	#getSections()
 	{	if (this.#sections == undefined)
 		{	const {onConstructor, onMethod, onIndexSignature, onProperty} = this.#converter;
-			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
+			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = getClassMembers(this.#classDef);
 			const sections = new ClassSections;
 			for (const c of constructors)
 			{	sections.add(What.Constructor, c, onConstructor(c));
@@ -117,6 +117,9 @@ function getClassMembers(classDef: ClassDef)
 					if (j != -1)
 					{	const setter = methodsAndAccessors[j];
 						accessor.setter = setter;
+						if (!accessor.jsDoc)
+						{	accessor.jsDoc = setter.jsDoc;
+						}
 						accessors.push(accessor);
 						if (j < i)
 						{	const k = settersOnly.indexOf(setter);

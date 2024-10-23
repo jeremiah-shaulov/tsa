@@ -281,28 +281,14 @@ L:		while (pos < linkHref.length)
 	{	let code = '';
 		if (!('getter' in p))
 		{	code = this.#convertProperty(p.name, p.accessibility, p.isAbstract, p.isStatic, p.readonly, false, p.optional, p.tsType, filename, isAnchor);
-			code += '\n\n';
-			code += this.#convertJsDoc(p.jsDoc, true);
 		}
 		else if (p.getter && p.setter)
 		{	code = this.#convertProperty(p.getter.name, p.getter.accessibility, p.getter.isAbstract, p.getter.isStatic, false, true, p.getter.optional, p.getter.functionDef.returnType, filename, isAnchor);
-			code += '\n\n';
-			if (p.getter.jsDoc && p.setter.jsDoc)
-			{	code += 'get\n\n';
-				code += this.#convertJsDoc(p.getter.jsDoc, true);
-				code += 'set\n\n';
-				code += this.#convertJsDoc(p.setter.jsDoc, true);
-			}
-			else
-			{	code += this.#convertJsDoc(p.getter.jsDoc ?? p.setter.jsDoc, true);
-			}
 		}
 		else
 		{	const a = p.getter ?? p.setter;
 			if (a)
 			{	code = this.#convertFunction(a.kind, a.name, a.accessibility, a.isAbstract, a.isStatic, a.optional, a.functionDef, filename, isAnchor);
-				code += '\n\n';
-				code += this.#convertJsDoc(a.jsDoc, true);
 			}
 		}
 		return code;
@@ -556,6 +542,16 @@ L:		while (pos < linkHref.length)
 				onProperty(p)
 				{	let codeCur = '#### ';
 					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
+					codeCur += '\n\n';
+					if ('getter' in p && p.getter?.jsDoc && p.setter?.jsDoc)
+					{	code += 'get\n\n';
+						code += that.#convertJsDoc(p.getter.jsDoc, true);
+						code += 'set\n\n';
+						code += that.#convertJsDoc(p.setter.jsDoc, true);
+					}
+					else
+					{	code += that.#convertJsDoc(p.jsDoc, true);
+					}
 					return codeCur + '\n\n';
 				},
 				onMethod(m)
