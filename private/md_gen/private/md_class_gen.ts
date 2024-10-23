@@ -12,7 +12,7 @@ export type Accessor =
 	jsDoc?: JsDoc;
 };
 
-export type ClassConverter =
+type ClassConverter =
 {	onConstructorDecl(m: ClassConstructorDef): string,
 	onConstructorDoc(m: ClassConstructorDef): string,
 	onIndexSignatureDecl(m: ClassIndexSignatureDef): string,

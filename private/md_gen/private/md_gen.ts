@@ -1,6 +1,6 @@
 import {indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
-import {Accessor, ClassConverter, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
+import {Accessor, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -24,97 +24,23 @@ type Gen =
 	getCode(): {outline: string, sectionsCode: string};
 };
 
-export class MdGen
-{	#nodes: DocNode[];
+class Gens
+{	#nodes;
+	#nodeToGen;
 	#pathNames = new Set<string>;
 	#paths = new Map<DocNode, string>;
 	#gens = new Map<DocNode, Gen>;
 
-	#classConverter: ClassConverter =
-	{	onConstructorDecl: m =>
-		{	let codeCur = '';
-			if (m.accessibility === 'protected')
-			{	codeCur += '<span class="lit-keyword">protected</span> ';
-			}
-			codeCur += '<span class="lit-keyword">constructor</span>';
-			codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
-			return codeCur;
-		},
-		onConstructorDoc: m =>
-		{	return this.#convertJsDoc(m.jsDoc, true);
-		},
-		onIndexSignatureDecl: m =>
-		{	let codeCur = '';
-			if (m.readonly)
-			{	codeCur += '<span class="lit-keyword">readonly</span> ';
-			}
-			codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
-			codeCur += this.#convertTsTypeColon(m.tsType);
-			return codeCur;
-		},
-		onIndexSignatureDoc: () =>
-		{	return '';
-		},
-		onPropertyDecl: m =>
-		{	return this.#convertPropertyOrAccessor(m);
-		},
-		onPropertyDoc: m =>
-		{	let codeCur = '';
-			if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
-			{	codeCur += 'get\n\n';
-				codeCur += this.#convertJsDoc(m.getter.jsDoc, true);
-				codeCur += 'set\n\n';
-				codeCur += this.#convertJsDoc(m.setter.jsDoc, true);
-			}
-			else
-			{	codeCur += this.#convertJsDoc(m.jsDoc, true);
-			}
-			return codeCur;
-		},
-		onMethodDecl: m =>
-		{	return this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef);
-		},
-		onMethodDoc: m =>
-		{	return this.#convertJsDoc(m.jsDoc, true);
-		},
-	};
-
-	constructor(nodes: DocNode[])
+	constructor(nodes: DocNode[], nodeToGen: (node: DocNode) => Gen|undefined)
 	{	this.#nodes = nodes;
+		this.#nodeToGen = nodeToGen;
 	}
 
-	async genFiles(moduleName: string, onFile: OnFile)
-	{	let code = `# ${moduleName || 'Module'}\n\n`;
-		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
-		code += this.#convertNamespace(this.#nodes);
-		await onFile('', code);
-		await this.#genFilesForNodes(this.#nodes, new Set, onFile);
-	}
-
-	async #genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>, onFile: OnFile)
-	{	for (const node of nodes)
-		{	if (node.kind != 'moduleDoc')
-			{	if (!nodesDone.has(node))
-				{	nodesDone.add(node);
-					const {dir, code} = this.#convertDocNode(node);
-					await onFile(dir, code);
-					if (node.kind == 'namespace')
-					{	await this.#genFilesForNodes(node.namespaceDef.elements, nodesDone, onFile);
-					}
-				}
-			}
-		}
-	}
-
-	#getGen(node?: DocNode)
+	getGen(node?: DocNode)
 	{	if (node)
 		{	let gen = this.#gens.get(node);
 			if (!gen)
-			{	switch (node.kind)
-				{	case 'class':
-						gen = new MdClassGen(node.classDef, this.#classConverter);
-						break;
-				}
+			{	gen = this.#nodeToGen(node);
 				if (gen)
 				{	this.#gens.set(node, gen);
 				}
@@ -123,7 +49,7 @@ export class MdGen
 		}
 	}
 
-	#getLinkDir(node?: DocNode)
+	getDir(node?: DocNode)
 	{	if (node)
 		{	const dir = this.#paths.get(node);
 			if (dir != undefined)
@@ -143,8 +69,8 @@ export class MdGen
 		}
 	}
 
-	#getLink(node?: DocNode, nodeSubIndex?: number)
-	{	const dir = this.#getLinkDir(node);
+	getLink(node?: DocNode, nodeSubIndex?: number)
+	{	const dir = this.getDir(node);
 		if (!dir)
 		{	return '';
 		}
@@ -156,34 +82,34 @@ export class MdGen
 	}
 
 	#getHashHeaderId(node?: DocNode, name?: string, isStatic=false)
-	{	const headerId = this.#getGen(node)?.getHeaderId(name, isStatic);
+	{	const headerId = this.getGen(node)?.getHeaderId(name, isStatic);
 		return headerId ? '#'+headerId : '';
 	}
 
-	#getDirByNamepath(linkHref: string)
+	getLinkByNamepath(namepath: string)
 	{	let pos = 0;
 		let isStatic = false;
 		let node: DocNode|undefined;
 		let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef|undefined;
-L:		while (pos < linkHref.length)
+L:		while (pos < namepath.length)
 		{	if (pos != 0)
-			{	const c = linkHref.charAt(pos++);
+			{	const c = namepath.charAt(pos++);
 				isStatic = c == '.';
 				if (!isStatic && c!='#')
-				{	return;
+				{	return '';
 				}
 			}
 			RE_LINK_PATH.lastIndex = pos;
-			if (!RE_LINK_PATH.test(linkHref))
-			{	return;
+			if (!RE_LINK_PATH.test(namepath))
+			{	return '';
 			}
 			pos = RE_LINK_PATH.lastIndex;
-			const name = linkHref.charAt(0)=='"' ? linkHref.slice(1, pos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : linkHref.slice(0, pos);
+			const name = namepath.charAt(0)=='"' ? namepath.slice(1, pos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : namepath.slice(0, pos);
 			if (!node)
 			{	// Find public symbol
 				node = this.#nodes.find(n => n.name==name && n.declarationKind=='export');
 				if (!node)
-				{	return;
+				{	return '';
 				}
 			}
 			else
@@ -194,7 +120,7 @@ L:		while (pos < linkHref.length)
 					{	node = this.#tsTypeToNode(member.tsType);
 					}
 					if (!node)
-					{	return;
+					{	return '';
 					}
 					member = undefined;
 				}
@@ -219,13 +145,13 @@ L:		while (pos < linkHref.length)
 						case 'typeAlias':
 							node = this.#tsTypeToNode(node.typeAliasDef.tsType);
 							if (!node)
-							{	return;
+							{	return '';
 							}
 							continue;
 						case 'namespace':
 							node = node.namespaceDef.elements.find(p => p.name == name);
 							if (!node)
-							{	return;
+							{	return '';
 							}
 							member = undefined;
 							continue L;
@@ -233,16 +159,139 @@ L:		while (pos < linkHref.length)
 					break;
 				}
 				if (!member)
-				{	return;
+				{	return '';
 				}
 			}
 		}
-		const dir = this.#getLinkDir(node);
+		const dir = this.getDir(node);
 		if (!dir)
-		{	return;
+		{	return '';
 		}
 		const hashHeaderId = this.#getHashHeaderId(node, member?.name, isStatic);
-		return {dir, hashHeaderId};
+		return `../${dir}/README.md${hashHeaderId}`;
+	}
+
+	#tsTypeToNode(tsType: TsTypeDef)
+	{	while (true)
+		{	switch (tsType.kind)
+			{	case 'typeRef':
+					return this.#nodes[tsType.typeRef.nodeIndex ?? -1];
+				case 'parenthesized':
+					tsType = tsType.parenthesized;
+					continue;
+				/*case 'optional':
+				case 'intersection':
+				case 'typeLiteral':
+
+				case 'conditional':
+				case 'mapped':
+				case 'keyword':
+				case 'literal':
+				case 'union':
+				case 'array':
+				case 'tuple':
+				case 'typeOperator':
+				case 'rest':
+				case 'typeQuery':
+				case 'this':
+				case 'fnOrConstructor':
+				case 'importType':
+				case 'infer':
+				case 'indexedAccess':
+				case 'typePredicate':*/
+			}
+			break;
+		}
+	}
+}
+
+export class MdGen
+{	#nodes: DocNode[];
+	#gens: Gens;
+
+	constructor(nodes: DocNode[])
+	{	this.#nodes = nodes;
+		this.#gens = new Gens
+		(	nodes,
+			node =>
+			{	switch (node.kind)
+				{	case 'class':
+						return new MdClassGen
+						(	node.classDef,
+							{	onConstructorDecl: m =>
+								{	let codeCur = '';
+									if (m.accessibility === 'protected')
+									{	codeCur += '<span class="lit-keyword">protected</span> ';
+									}
+									codeCur += '<span class="lit-keyword">constructor</span>';
+									codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
+									return codeCur;
+								},
+								onConstructorDoc: m =>
+								{	return this.#convertJsDoc(m.jsDoc, true);
+								},
+								onIndexSignatureDecl: m =>
+								{	let codeCur = '';
+									if (m.readonly)
+									{	codeCur += '<span class="lit-keyword">readonly</span> ';
+									}
+									codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
+									codeCur += this.#convertTsTypeColon(m.tsType);
+									return codeCur;
+								},
+								onIndexSignatureDoc: () =>
+								{	return '';
+								},
+								onPropertyDecl: m =>
+								{	return this.#convertPropertyOrAccessor(m);
+								},
+								onPropertyDoc: m =>
+								{	let codeCur = '';
+									if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
+									{	codeCur += 'get\n\n';
+										codeCur += this.#convertJsDoc(m.getter.jsDoc, true);
+										codeCur += 'set\n\n';
+										codeCur += this.#convertJsDoc(m.setter.jsDoc, true);
+									}
+									else
+									{	codeCur += this.#convertJsDoc(m.jsDoc, true);
+									}
+									return codeCur;
+								},
+								onMethodDecl: m =>
+								{	return this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef);
+								},
+								onMethodDoc: m =>
+								{	return this.#convertJsDoc(m.jsDoc, true);
+								},
+							}
+						);
+				}
+			}
+		);
+	}
+
+	async genFiles(moduleName: string, onFile: OnFile)
+	{	let code = `# ${moduleName || 'Module'}\n\n`;
+		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
+		code += this.#convertNamespace(this.#nodes);
+		await onFile('', code);
+		await this.#genFilesForNodes(this.#nodes, new Set, onFile);
+	}
+
+	async #genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>, onFile: OnFile)
+	{	for (const node of nodes)
+		{	if (node.kind != 'moduleDoc')
+			{	if (!nodesDone.has(node))
+				{	nodesDone.add(node);
+					const {dir, code} = this.#convertDocNode(node);
+					await onFile(dir, code);
+					if (node.kind == 'namespace')
+					{	await this.#genFilesForNodes(node.namespaceDef.elements, nodesDone, onFile);
+					}
+				}
+			}
+		}
 	}
 
 	#convertDocNode(node: DocNode)
@@ -292,7 +341,7 @@ L:		while (pos < linkHref.length)
 			code += this.#convertNamespace(node.namespaceDef.elements);
 		}
 		// page
-		const dir = this.#getLinkDir(node) ?? '';
+		const dir = this.#gens.getDir(node) ?? '';
 		return {dir, code};
 	}
 
@@ -334,11 +383,11 @@ L:		while (pos < linkHref.length)
 		}
 		const dirPrefix = nodes==this.#nodes ? '' : '../';
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -502,7 +551,7 @@ L:		while (pos < linkHref.length)
 	}
 
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
-	{	const link = this.#getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
+	{	const link = this.#gens.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
 		if (link)
 		{	typeName = mdLink(typeName, `../${link}`);
 		}
@@ -530,7 +579,7 @@ L:		while (pos < linkHref.length)
 		// Decorators
 		if (classDef.decorators)
 		{	for (const d of classDef.decorators)
-			{	const link = this.#getLink(this.#nodes[d.nodeIndex ?? -1]);
+			{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
 				const name = link ? mdLink(d.name, `../${link}`) : d.name;
 				code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
 			}
@@ -550,7 +599,7 @@ L:		while (pos < linkHref.length)
 		// End h1 header
 		code += '\n\n';
 		// Gen
-		const gen = this.#getGen(node);
+		const gen = this.#gens.getGen(node);
 		if (gen)
 		{	const {outline, sectionsCode} = gen.getCode();
 			// Outline
@@ -685,8 +734,8 @@ L:		while (pos < linkHref.length)
 							if (curLinkIsMonospace)
 							{	linkText = '`' + linkText.replaceAll('`', '\\`') + '`';
 							}
-							const link = this.#getDirByNamepath(curNamepath);
-							doc += link ? mdLink(linkText, `../${link.dir}/README.md${link.hashHeaderId}`) : linkText;
+							const link = this.#gens.getLinkByNamepath(curNamepath);
+							doc += link ? mdLink(linkText, link) : linkText;
 						}
 				}
 			}
@@ -700,39 +749,6 @@ L:		while (pos < linkHref.length)
 		{	doc = '> ' + doc.replaceAll('\n', '\n> ') + '\n\n';
 		}
 		return doc;
-	}
-
-	#tsTypeToNode(tsType: TsTypeDef)
-	{	while (true)
-		{	switch (tsType.kind)
-			{	case 'typeRef':
-					return this.#nodes[tsType.typeRef.nodeIndex ?? -1];
-				case 'parenthesized':
-					tsType = tsType.parenthesized;
-					continue;
-				/*case 'optional':
-				case 'intersection':
-				case 'typeLiteral':
-
-				case 'conditional':
-				case 'mapped':
-				case 'keyword':
-				case 'literal':
-				case 'union':
-				case 'array':
-				case 'tuple':
-				case 'typeOperator':
-				case 'rest':
-				case 'typeQuery':
-				case 'this':
-				case 'fnOrConstructor':
-				case 'importType':
-				case 'infer':
-				case 'indexedAccess':
-				case 'typePredicate':*/
-			}
-			break;
-		}
 	}
 }
 
