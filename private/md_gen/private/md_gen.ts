@@ -502,8 +502,8 @@ L:		while (pos < linkHref.length)
 		let isFirstIndexSignature = true;
 		const gen = new MdClassGen
 		(	classDef,
-			{	onConstructor(c)
-				{	let codeCur = '#### ';
+			{	onConstructorDecl(c)
+				{	let codeCur = '';
 					const isAnchor = isFirstConstructor;
 					isFirstConstructor = false;
 					if (isAnchor)
@@ -517,12 +517,13 @@ L:		while (pos < linkHref.length)
 					{	codeCur += '</a>';
 					}
 					codeCur += `(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
-					codeCur += '\n\n';
-					codeCur += that.#convertJsDoc(c.jsDoc, true);
-					return codeCur + '\n\n';
+					return codeCur;
 				},
-				onIndexSignature(c)
-				{	let codeCur = '#### ';
+				onConstructorDoc(c)
+				{	return that.#convertJsDoc(c.jsDoc, true);
+				},
+				onIndexSignatureDecl(c)
+				{	let codeCur = '';
 					const isAnchor = isFirstIndexSignature;
 					isFirstIndexSignature = false;
 					if (isAnchor)
@@ -536,36 +537,39 @@ L:		while (pos < linkHref.length)
 					{	codeCur += '</a>';
 					}
 					codeCur += that.#convertTsTypeColon(c.tsType, filename);
-					codeCur += '\n\n';
-					return codeCur + '\n\n';
+					return codeCur;
 				},
-				onProperty(p)
-				{	let codeCur = '#### ';
-					codeCur += that.#convertPropertyOrAccessor(p, filename, true);
-					codeCur += '\n\n';
+				onIndexSignatureDoc(_c)
+				{	return '';
+				},
+				onPropertyDecl(p)
+				{	return that.#convertPropertyOrAccessor(p, filename, true);
+				},
+				onPropertyDoc(p)
+				{	let codeCur = '';
 					if ('getter' in p && p.getter?.jsDoc && p.setter?.jsDoc)
-					{	code += 'get\n\n';
-						code += that.#convertJsDoc(p.getter.jsDoc, true);
-						code += 'set\n\n';
-						code += that.#convertJsDoc(p.setter.jsDoc, true);
+					{	codeCur += 'get\n\n';
+						codeCur += that.#convertJsDoc(p.getter.jsDoc, true);
+						codeCur += 'set\n\n';
+						codeCur += that.#convertJsDoc(p.setter.jsDoc, true);
 					}
 					else
-					{	code += that.#convertJsDoc(p.jsDoc, true);
+					{	codeCur += that.#convertJsDoc(p.jsDoc, true);
 					}
-					return codeCur + '\n\n';
+					return codeCur;
 				},
-				onMethod(m)
-				{	let codeCur = '#### ';
-					codeCur += that.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-					codeCur += '\n\n';
-					codeCur += that.#convertJsDoc(m.jsDoc, true);
-					return codeCur + '\n\n';
+				onMethodDecl(m)
+				{	return that.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
+				},
+				onMethodDoc(m)
+				{	return that.#convertJsDoc(m.jsDoc, true);
 				},
 			}
 		);
-		code += gen.getOutline();
+		const {outline, sectionsCode} = gen.getCode();
+		code += outline;
 		// Properties and methods
-		code += gen.getSectionsCode();
+		code += sectionsCode;
 		// Done
 		const headerIds = gen.getHeaderIds();
 		return {code, headerIds};
