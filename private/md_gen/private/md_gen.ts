@@ -1,6 +1,6 @@
 import {indentAndWrap} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassDef, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, ClassIndexSignatureDef} from '../../doc_node/mod.ts';
-import {Accessor, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
+import {Accessor, ClassConverter, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -17,24 +17,70 @@ const RE_NL = /[\r\n]/;
 const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
-const RE_LINK_SAN = /[^\p{Letter}\p{Number}_]+/gu;
-const RE_LINK_SAN_2 = /^-+|-+$/g;
 
 type OnFile = (dir: string, code: string) => Promise<void>|void;
+type Gen =
+{	getHeaderId(name?: string, isStatic?: boolean): string;
+	getCode(): {outline: string, sectionsCode: string};
+};
 
 export class MdGen
 {	#nodes: DocNode[];
 	#pathNames = new Set<string>;
 	#paths = new Map<DocNode, string>;
+	#gens = new Map<DocNode, Gen>;
+
+	#classConverter: ClassConverter =
+	{	onConstructorDecl: m =>
+		{	let codeCur = '';
+			if (m.accessibility === 'protected')
+			{	codeCur += '<span class="lit-keyword">protected</span> ';
+			}
+			codeCur += '<span class="lit-keyword">constructor</span>';
+			codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
+			return codeCur;
+		},
+		onConstructorDoc: m =>
+		{	return this.#convertJsDoc(m.jsDoc, true);
+		},
+		onIndexSignatureDecl: m =>
+		{	let codeCur = '';
+			if (m.readonly)
+			{	codeCur += '<span class="lit-keyword">readonly</span> ';
+			}
+			codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
+			codeCur += this.#convertTsTypeColon(m.tsType);
+			return codeCur;
+		},
+		onIndexSignatureDoc: () =>
+		{	return '';
+		},
+		onPropertyDecl: m =>
+		{	return this.#convertPropertyOrAccessor(m);
+		},
+		onPropertyDoc: m =>
+		{	let codeCur = '';
+			if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
+			{	codeCur += 'get\n\n';
+				codeCur += this.#convertJsDoc(m.getter.jsDoc, true);
+				codeCur += 'set\n\n';
+				codeCur += this.#convertJsDoc(m.setter.jsDoc, true);
+			}
+			else
+			{	codeCur += this.#convertJsDoc(m.jsDoc, true);
+			}
+			return codeCur;
+		},
+		onMethodDecl: m =>
+		{	return this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef);
+		},
+		onMethodDoc: m =>
+		{	return this.#convertJsDoc(m.jsDoc, true);
+		},
+	};
 
 	constructor(nodes: DocNode[])
 	{	this.#nodes = nodes;
-		// Reserve paths for all toplevel nodes
-		for (const node of nodes)
-		{	if (node.declarationKind=='export' && isPublicOrProtected(node))
-			{	this.#getLinkDir(node);
-			}
-		}
 	}
 
 	async genFiles(moduleName: string, onFile: OnFile)
@@ -57,6 +103,23 @@ export class MdGen
 					}
 				}
 			}
+		}
+	}
+
+	#getGen(node?: DocNode)
+	{	if (node)
+		{	let gen = this.#gens.get(node);
+			if (!gen)
+			{	switch (node.kind)
+				{	case 'class':
+						gen = new MdClassGen(node.classDef, this.#classConverter);
+						break;
+				}
+				if (gen)
+				{	this.#gens.set(node, gen);
+				}
+			}
+			return gen;
 		}
 	}
 
@@ -85,11 +148,16 @@ export class MdGen
 		if (!dir)
 		{	return '';
 		}
-		let sectionId = '';
+		let hashHeaderId = '';
 		if (nodeSubIndex!=undefined && node?.kind==='enum')
-		{	sectionId = memberToSectionId(true, node.enumDef.members[nodeSubIndex]?.name);
+		{	hashHeaderId = this.#getHashHeaderId(node, node.enumDef.members[nodeSubIndex]?.name);
 		}
-		return `${dir}/README.md${sectionId}`;
+		return `${dir}/README.md${hashHeaderId}`;
+	}
+
+	#getHashHeaderId(node?: DocNode, name?: string, isStatic=false)
+	{	const headerId = this.#getGen(node)?.getHeaderId(name, isStatic);
+		return headerId ? '#'+headerId : '';
 	}
 
 	#getDirByNamepath(linkHref: string)
@@ -173,44 +241,41 @@ L:		while (pos < linkHref.length)
 		if (!dir)
 		{	return;
 		}
-		const sectionId = memberToSectionId(true, member?.name, isStatic);
-		return {dir, sectionId};
+		const hashHeaderId = this.#getHashHeaderId(node, member?.name, isStatic);
+		return {dir, hashHeaderId};
 	}
 
 	#convertDocNode(node: DocNode)
-	{	const {filename} = node.location;
-		let code = STYLE;
+	{	let code = STYLE;
 		// class def
 		if (node.kind == 'class')
-		{	const {classDef} = node;
-			const {code: c, headerIds} = this.#convertClassDef(node.name, classDef, filename);
-			code += c;
+		{	code += this.#convertClassDef(node.name, node);
 		}
 		else if (node.kind == 'typeAlias')
 		{	const {typeAliasDef} = node;
-			code += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams, filename)} = ${this.#convertTsType(typeAliasDef.tsType, filename)}`;
+			code += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)} = ${this.#convertTsType(typeAliasDef.tsType)}`;
 		}
 		else if (node.kind == 'interface')
 		{	const {interfaceDef} = node;
 			// interface
 			code += `# <span class="lit-keyword">interface</span> ${node.name}`;
 			// type params
-			code += this.#convertTypeParams(interfaceDef.typeParams, filename);
+			code += this.#convertTypeParams(interfaceDef.typeParams);
 			// extends
-			code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e, filename)).join(', ');
+			code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
 			code += '\n\n';
 			// interface
-			code += this.#convertTsTypeLiteralDef(interfaceDef, false, filename);
+			code += this.#convertTsTypeLiteralDef(interfaceDef, false);
 		}
 		else if (node.kind == 'function')
 		{	const {functionDef} = node;
-			code += this.#convertFunction('', node.name, undefined, false, false, false, functionDef, node.location.filename);
+			code += this.#convertFunction('', node.name, undefined, false, false, false, functionDef);
 		}
 		else if (node.kind == 'enum')
 		{	code += `# <span class="lit-keyword">enum</span> ${node.name}\n\n`;
 			const {enumDef} = node;
 			for (const m of enumDef.members)
-			{	code += `${m.name}${m.init ? ' = '+this.#convertTsType(m.init, filename) : ''},`;
+			{	code += `${m.name}${m.init ? ' = '+this.#convertTsType(m.init) : ''},`;
 				code += '\n\n';
 				code += this.#convertJsDoc(m.jsDoc, true);
 			}
@@ -219,7 +284,7 @@ L:		while (pos < linkHref.length)
 		{	const introducer = node.variableDef.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
 			code += `# ${introducer} ${node.name}\n\n`;
 			if (node.variableDef.tsType)
-			{	code += introducer + node.name + this.#convertTsTypeColon(node.variableDef.tsType, filename);
+			{	code += introducer + node.name + this.#convertTsTypeColon(node.variableDef.tsType);
 			}
 		}
 		else if (node.kind == 'namespace')
@@ -277,28 +342,25 @@ L:		while (pos < linkHref.length)
 		return code;
 	}
 
-	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor, filename: string, isAnchor=false)
+	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor)
 	{	let code = '';
 		if (!('getter' in p))
-		{	code = this.#convertProperty(p.name, p.accessibility, p.isAbstract, p.isStatic, p.readonly, false, p.optional, p.tsType, filename, isAnchor);
+		{	code = this.#convertProperty(p.name, p.accessibility, p.isAbstract, p.isStatic, p.readonly, false, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
-		{	code = this.#convertProperty(p.getter.name, p.getter.accessibility, p.getter.isAbstract, p.getter.isStatic, false, true, p.getter.optional, p.getter.functionDef.returnType, filename, isAnchor);
+		{	code = this.#convertProperty(p.getter.name, p.getter.accessibility, p.getter.isAbstract, p.getter.isStatic, false, true, p.getter.optional, p.getter.functionDef.returnType);
 		}
 		else
 		{	const a = p.getter ?? p.setter;
 			if (a)
-			{	code = this.#convertFunction(a.kind, a.name, a.accessibility, a.isAbstract, a.isStatic, a.optional, a.functionDef, filename, isAnchor);
+			{	code = this.#convertFunction(a.kind, a.name, a.accessibility, a.isAbstract, a.isStatic, a.optional, a.functionDef);
 			}
 		}
 		return code;
 	}
 
-	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined, filename: string, isAnchor=false)
+	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
 	{	let code = '';
-		if (isAnchor)
-		{	code += `<a name="${memberToSectionId(false, name, isStatic)}">`;
-		}
 		if (accessibility === 'protected')
 		{	code += '<span class="lit-keyword">protected</span> ';
 		}
@@ -315,21 +377,15 @@ L:		while (pos < linkHref.length)
 		{	code += '<span class="lit-keyword">accessor</span> ';
 		}
 		code += name;
-		if (isAnchor)
-		{	code += '</a>';
-		}
 		if (optional)
 		{	code += '?';
 		}
-		code += this.#convertTsTypeColon(tsType, filename);
+		code += this.#convertTsTypeColon(tsType);
 		return code;
 	}
 
-	#convertFunction(isMethod: ''|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef, filename: string, isAnchor=false)
+	#convertFunction(isMethod: ''|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
 	{	let code = '';
-		if (isAnchor)
-		{	code += `<a name="${memberToSectionId(false, name, isStatic)}">`;
-		}
 		if (accessibility === 'protected')
 		{	code += '<span class="lit-keyword">protected</span> ';
 		}
@@ -344,13 +400,10 @@ L:		while (pos < linkHref.length)
 		if (optional)
 		{	code += '?';
 		}
-		if (isAnchor)
-		{	code += `</a>`;
-		}
-		code += this.#convertTypeParams(functionDef.typeParams, filename);
-		code += '(' + functionDef.params.map(a => this.#convertArg(a, filename)).join(', ') + ')';
+		code += this.#convertTypeParams(functionDef.typeParams);
+		code += '(' + functionDef.params.map(a => this.#convertArg(a)).join(', ') + ')';
 		if (functionDef.returnType)
-		{	code += this.#convertTsTypeColon(functionDef.returnType, filename);
+		{	code += this.#convertTsTypeColon(functionDef.returnType);
 		}
 		else
 		{	const isAsync = 'isAsync' in functionDef && functionDef.isAsync;
@@ -368,84 +421,84 @@ L:		while (pos < linkHref.length)
 		return code;
 	}
 
-	#convertArg(arg: ClassConstructorParamDef, filename: string)
+	#convertArg(arg: ClassConstructorParamDef)
 	{	let code = '';
 		switch (arg.kind)
 		{	case 'array':
-				code += '\\[' + arg.elements.map(a => (!a ? '' : this.#convertArg(a, filename))).join(', ') + ']' + this.#convertTsTypeColon(arg.tsType, filename);
+				code += '\\[' + arg.elements.map(a => (!a ? '' : this.#convertArg(a))).join(', ') + ']' + this.#convertTsTypeColon(arg.tsType);
 				break;
 			case 'object':
-				code += '\\{' + arg.props.map(p => (p.kind=='rest' ? '...'+this.#convertArg(p.arg, filename) : p.key+(p.kind=='keyValue' ? '='+this.#convertArg(p.value, filename) : p.value!=undefined ? '='+p.value : ''))).join(', ') + '}' + this.#convertTsTypeColon(arg.tsType, filename);
+				code += '\\{' + arg.props.map(p => (p.kind=='rest' ? '...'+this.#convertArg(p.arg) : p.key+(p.kind=='keyValue' ? '='+this.#convertArg(p.value) : p.value!=undefined ? '='+p.value : ''))).join(', ') + '}' + this.#convertTsTypeColon(arg.tsType);
 				break;
 			case 'assign':
-				code += this.#convertArg(arg.left, filename) + this.#convertTsTypeColon(arg.tsType, filename) + '=' + arg.right;
+				code += this.#convertArg(arg.left) + this.#convertTsTypeColon(arg.tsType) + '=' + arg.right;
 				break;
 			case 'identifier':
 				code += arg.name;
 				if (arg.optional)
 				{	code += '?';
 				}
-				code += this.#convertTsTypeColon(arg.tsType, filename);
+				code += this.#convertTsTypeColon(arg.tsType);
 				break;
 			case 'rest':
-				code += '...' + this.#convertArg(arg.arg, filename) + this.#convertTsTypeColon(arg.tsType, filename);
+				code += '...' + this.#convertArg(arg.arg) + this.#convertTsTypeColon(arg.tsType);
 				break;
 		}
 		return code;
 	}
 
-	#convertTsType(typeDef: TsTypeDef, filename: string): string
+	#convertTsType(typeDef: TsTypeDef): string
 	{	switch (typeDef.kind)
 		{	case 'keyword':
 				return `<span class="lit-keyword">${typeDef.keyword}</span>`;
 			case 'literal':
 				return this.#convertTsLiteralType(typeDef.literal, typeDef.repr);
 			case 'typeRef':
-				return this.#getTypeName(typeDef.typeRef.typeName, typeDef.typeRef.nodeIndex, typeDef.typeRef.nodeSubIndex) + this.#convertActualTypeParams(typeDef.typeRef.typeParams, filename);
+				return this.#getTypeName(typeDef.typeRef.typeName, typeDef.typeRef.nodeIndex, typeDef.typeRef.nodeSubIndex) + this.#convertActualTypeParams(typeDef.typeRef.typeParams);
 			case 'union':
-				return typeDef.union.map(t => this.#convertTsType(t, filename)).join(' | ');
+				return typeDef.union.map(t => this.#convertTsType(t)).join(' | ');
 			case 'intersection':
-				return typeDef.intersection.map(t => this.#convertTsType(t, filename)).join(' \\& ');
+				return typeDef.intersection.map(t => this.#convertTsType(t)).join(' \\& ');
 			case 'array':
-				return this.#convertTsType(typeDef.array, filename)+'\\[]';
+				return this.#convertTsType(typeDef.array)+'\\[]';
 			case 'tuple':
-				return '\\[' + typeDef.tuple.map(t => this.#convertTsType(t, filename)).join(', ') + ']';
+				return '\\[' + typeDef.tuple.map(t => this.#convertTsType(t)).join(', ') + ']';
 			case 'typeOperator':
-				return typeDef.typeOperator.operator + ' ' + this.#convertTsType(typeDef.typeOperator.tsType, filename);
+				return typeDef.typeOperator.operator + ' ' + this.#convertTsType(typeDef.typeOperator.tsType);
 			case 'parenthesized':
-				return '(' + this.#convertTsType(typeDef.parenthesized, filename) + ')';
+				return '(' + this.#convertTsType(typeDef.parenthesized) + ')';
 			case 'rest':
-				return '...' + this.#convertTsType(typeDef.rest, filename);
+				return '...' + this.#convertTsType(typeDef.rest);
 			case 'optional':
-				return this.#convertTsType(typeDef.optional, filename) + '?';
+				return this.#convertTsType(typeDef.optional) + '?';
 			case 'typeQuery':
 				return `<span class="lit-keyword">typeof</span>(${this.#getTypeName(typeDef.typeQuery)})`;
 			case 'this':
 				return `<span class="lit-keyword">this</span>`;
 			case 'fnOrConstructor':
-				return (typeDef.fnOrConstructor.constructor ? '<span class="lit-keyword">new</span>' : '') + '(' + typeDef.fnOrConstructor.params.map(a => this.#convertArg(a, filename)).join(', ') + ') => ' + this.#convertTsType(typeDef.fnOrConstructor.tsType, filename);
+				return (typeDef.fnOrConstructor.constructor ? '<span class="lit-keyword">new</span>' : '') + '(' + typeDef.fnOrConstructor.params.map(a => this.#convertArg(a)).join(', ') + ') => ' + this.#convertTsType(typeDef.fnOrConstructor.tsType);
 			case 'conditional':
-				return this.#convertTsType(typeDef.conditionalType.checkType, filename) + ' <span class="lit-keyword">extends</span> ' + this.#convertTsType(typeDef.conditionalType.extendsType, filename) + ' ? ' + this.#convertTsType(typeDef.conditionalType.trueType, filename) + ' : ' + this.#convertTsType(typeDef.conditionalType.falseType, filename);
+				return this.#convertTsType(typeDef.conditionalType.checkType) + ' <span class="lit-keyword">extends</span> ' + this.#convertTsType(typeDef.conditionalType.extendsType) + ' ? ' + this.#convertTsType(typeDef.conditionalType.trueType) + ' : ' + this.#convertTsType(typeDef.conditionalType.falseType);
 			case 'infer':
 				return '<span class="lit-keyword">infer</span> '+typeDef.infer.typeParam.name;
 			case 'mapped':
-				return '\\{' + (typeDef.mappedType.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + '\\[' + this.#convertTypeParam(typeDef.mappedType.typeParam, 'in', filename) + this.#convertTsTypeColon(typeDef.mappedType.nameType, filename) + ']' + (typeDef.mappedType.optional ? '?' : '') + this.#convertTsTypeColon(typeDef.mappedType.tsType, filename) + '}';
+				return '\\{' + (typeDef.mappedType.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + '\\[' + this.#convertTypeParam(typeDef.mappedType.typeParam, 'in') + this.#convertTsTypeColon(typeDef.mappedType.nameType) + ']' + (typeDef.mappedType.optional ? '?' : '') + this.#convertTsTypeColon(typeDef.mappedType.tsType) + '}';
 			case 'importType':
-				return `<span class="lit-keyword">import</span>(${JSON.stringify(typeDef.importType.specifier)})${!typeDef.importType.qualifier ? '' : '.'+typeDef.importType.qualifier}` + this.#convertActualTypeParams(typeDef.importType.typeParams, filename);
+				return `<span class="lit-keyword">import</span>(${JSON.stringify(typeDef.importType.specifier)})${!typeDef.importType.qualifier ? '' : '.'+typeDef.importType.qualifier}` + this.#convertActualTypeParams(typeDef.importType.typeParams);
 			case 'indexedAccess':
-				return (typeDef.indexedAccess.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + this.#convertTsType(typeDef.indexedAccess.objType, filename) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType, filename) + ']';
+				return (typeDef.indexedAccess.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + this.#convertTsType(typeDef.indexedAccess.objType) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType) + ']';
 			case 'typeLiteral':
-				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral, true, filename) + '}';
+				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral, true) + '}';
 			case 'typePredicate':
-				return (typeDef.typePredicate.asserts ? '<span class="lit-keyword">asserts</span> ' : '') + (typeDef.typePredicate.param.name ?? '<span class="lit-keyword">this</span>') + (!typeDef.typePredicate.type ? '' : ' <span class="lit-keyword">is</span> ' + this.#convertTsType(typeDef.typePredicate.type, filename));
+				return (typeDef.typePredicate.asserts ? '<span class="lit-keyword">asserts</span> ' : '') + (typeDef.typePredicate.param.name ?? '<span class="lit-keyword">this</span>') + (!typeDef.typePredicate.type ? '' : ' <span class="lit-keyword">is</span> ' + this.#convertTsType(typeDef.typePredicate.type));
 		}
 	}
 
-	#convertTsTypeColon(typeDef: TsTypeDef|undefined, filename: string)
+	#convertTsTypeColon(typeDef: TsTypeDef|undefined)
 	{	if (!typeDef)
 		{	return '';
 		}
-		return ': '+this.#convertTsType(typeDef, filename);
+		return ': '+this.#convertTsType(typeDef);
 	}
 
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
@@ -471,8 +524,9 @@ L:		while (pos < linkHref.length)
 		}
 	}
 
-	#convertClassDef(name: string, classDef: ClassDef, filename: string)
+	#convertClassDef(name: string, node: DocNodeClass)
 	{	let code = '';
+		const {classDef} = node;
 		// Decorators
 		if (classDef.decorators)
 		{	for (const d of classDef.decorators)
@@ -488,100 +542,33 @@ L:		while (pos < linkHref.length)
 		}
 		code += `<span class="lit-keyword">class</span> ${name}`;
 		// Type params
-		code += this.#convertTypeParams(classDef.typeParams, filename);
+		code += this.#convertTypeParams(classDef.typeParams);
 		// Extends
-		code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams, filename);
+		code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
 		// Implements
-		code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements, filename);
+		code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
 		// End h1 header
 		code += '\n\n';
-		// Outline
-		// deno-lint-ignore no-this-alias
-		const that = this;
-		let isFirstConstructor = true;
-		let isFirstIndexSignature = true;
-		const gen = new MdClassGen
-		(	classDef,
-			{	onConstructorDecl(c)
-				{	let codeCur = '';
-					const isAnchor = isFirstConstructor;
-					isFirstConstructor = false;
-					if (isAnchor)
-					{	codeCur += `<a name="${memberToSectionId(false, c.name)}">`;
-					}
-					if (c.accessibility === 'protected')
-					{	codeCur += '<span class="lit-keyword">protected</span> ';
-					}
-					codeCur += '<span class="lit-keyword">constructor</span>';
-					if (isAnchor)
-					{	codeCur += '</a>';
-					}
-					codeCur += `(${c.params.map(a => that.#convertArg(a, filename)).join(', ')})`;
-					return codeCur;
-				},
-				onConstructorDoc(c)
-				{	return that.#convertJsDoc(c.jsDoc, true);
-				},
-				onIndexSignatureDecl(c)
-				{	let codeCur = '';
-					const isAnchor = isFirstIndexSignature;
-					isFirstIndexSignature = false;
-					if (isAnchor)
-					{	codeCur += `<a name="${memberToSectionId(false)}">`;
-					}
-					if (c.readonly)
-					{	codeCur += '<span class="lit-keyword">readonly</span> ';
-					}
-					codeCur += '[' + c.params.map(a => that.#convertArg(a, filename)).join(', ') + ']';
-					if (isAnchor)
-					{	codeCur += '</a>';
-					}
-					codeCur += that.#convertTsTypeColon(c.tsType, filename);
-					return codeCur;
-				},
-				onIndexSignatureDoc(_c)
-				{	return '';
-				},
-				onPropertyDecl(p)
-				{	return that.#convertPropertyOrAccessor(p, filename, true);
-				},
-				onPropertyDoc(p)
-				{	let codeCur = '';
-					if ('getter' in p && p.getter?.jsDoc && p.setter?.jsDoc)
-					{	codeCur += 'get\n\n';
-						codeCur += that.#convertJsDoc(p.getter.jsDoc, true);
-						codeCur += 'set\n\n';
-						codeCur += that.#convertJsDoc(p.setter.jsDoc, true);
-					}
-					else
-					{	codeCur += that.#convertJsDoc(p.jsDoc, true);
-					}
-					return codeCur;
-				},
-				onMethodDecl(m)
-				{	return that.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef, filename, true);
-				},
-				onMethodDoc(m)
-				{	return that.#convertJsDoc(m.jsDoc, true);
-				},
-			}
-		);
-		const {outline, sectionsCode} = gen.getCode();
-		code += outline;
-		// Properties and methods
-		code += sectionsCode;
+		// Gen
+		const gen = this.#getGen(node);
+		if (gen)
+		{	const {outline, sectionsCode} = gen.getCode();
+			// Outline
+			code += outline;
+			// Properties and methods
+			code += sectionsCode;
+		}
 		// Done
-		const headerIds = gen.getHeaderIds();
-		return {code, headerIds};
+		return code;
 	}
 
-	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean, filename: string)
+	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean)
 	{	const {callSignatures, properties, indexSignatures, methods} = typeLiteral;
 		let separ = '';
 		let code = '';
 		for (const p of callSignatures)
 		{	code += isLiteral ? separ : '#### ';
-			code += this.#convertTypeParams(p.typeParams, filename) + '(' + p.params.map(pp => this.#convertArg(pp, filename)).join(', ') + ')' + this.#convertTsTypeColon(p.tsType, filename);
+			code += this.#convertTypeParams(p.typeParams) + '(' + p.params.map(pp => this.#convertArg(pp)).join(', ') + ')' + this.#convertTsTypeColon(p.tsType);
 			if (!isLiteral)
 			{	code += ';\n\n';
 				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
@@ -595,7 +582,7 @@ L:		while (pos < linkHref.length)
 			if (p.readonly)
 			{	code += '<span class="lit-keyword">readonly</span> ';
 			}
-			code += '[' + p.params.map(pp => this.#convertArg(pp, filename)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType, filename);
+			code += '[' + p.params.map(pp => this.#convertArg(pp)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType);
 			if (!isLiteral)
 			{	code += ';\n\n';
 			}
@@ -605,7 +592,7 @@ L:		while (pos < linkHref.length)
 		}
 		for (const p of properties)
 		{	code += isLiteral ? separ : '#### ';
-			code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType, filename, !isLiteral);
+			code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType);
 			if (!isLiteral)
 			{	code += ';\n\n';
 				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
@@ -616,7 +603,7 @@ L:		while (pos < linkHref.length)
 		}
 		for (const p of methods)
 		{	code += isLiteral ? separ : '#### ';
-			code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p, filename, !isLiteral);
+			code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p);
 			if (!isLiteral)
 			{	code += ';\n\n';
 				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
@@ -628,17 +615,17 @@ L:		while (pos < linkHref.length)
 		return code;
 	}
 
-	#convertTypeParams(typeParams: TsTypeParamDef[], filename: string)
-	{	const code = typeParams.map(p => this.#convertTypeParam(p, 'extends', filename)).join(', ');
+	#convertTypeParams(typeParams: TsTypeParamDef[])
+	{	const code = typeParams.map(p => this.#convertTypeParam(p, 'extends')).join(', ');
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertTypeParam(typeParam: TsTypeParamDef, constraint: string, filename: string)
-	{	return `${typeParam.name}${!typeParam.constraint ? '' : ` <span class="lit-keyword">${constraint}</span> `+this.#convertTsType(typeParam.constraint, filename)}${!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default, filename)}`;
+	#convertTypeParam(typeParam: TsTypeParamDef, constraint: string)
+	{	return `${typeParam.name}${!typeParam.constraint ? '' : ` <span class="lit-keyword">${constraint}</span> `+this.#convertTsType(typeParam.constraint)}${!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default)}`;
 	}
 
-	#convertActualTypeParams(typeParams: TsTypeDef[]|undefined, filename: string)
-	{	const code = typeParams?.map(t => this.#convertTsType(t, filename)).join(', ');
+	#convertActualTypeParams(typeParams: TsTypeDef[]|undefined)
+	{	const code = typeParams?.map(t => this.#convertTsType(t)).join(', ');
 		return !code ? '' : `\\<${code}>`;
 	}
 
@@ -699,7 +686,7 @@ L:		while (pos < linkHref.length)
 							{	linkText = '`' + linkText.replaceAll('`', '\\`') + '`';
 							}
 							const link = this.#getDirByNamepath(curNamepath);
-							doc += link ? mdLink(linkText, `../${link.dir}/README.md${link.sectionId}`) : linkText;
+							doc += link ? mdLink(linkText, `../${link.dir}/README.md${link.hashHeaderId}`) : linkText;
 						}
 				}
 			}
@@ -803,17 +790,4 @@ function mdGrid(oneLineHeader: string, cells: string[], nColumns: number)
 		}
 	}
 	return code;
-}
-
-function memberToSectionId(withHashSign: boolean, name?: string, isStatic=false)
-{	if (!name)
-	{	return !withHashSign ? 'index-signature' : '#index-signature';
-	}
-	name = name.replace(RE_LINK_SAN, '-').replace(RE_LINK_SAN_2, '');
-	if (isStatic)
-	{	return !withHashSign ? 'static.'+name : '#static.'+name;
-	}
-	else
-	{	return !withHashSign ? name : '#'+name;
-	}
 }

@@ -12,6 +12,17 @@ export type Accessor =
 	jsDoc?: JsDoc;
 };
 
+export type ClassConverter =
+{	onConstructorDecl(m: ClassConstructorDef): string,
+	onConstructorDoc(m: ClassConstructorDef): string,
+	onIndexSignatureDecl(m: ClassIndexSignatureDef): string,
+	onIndexSignatureDoc(m: ClassIndexSignatureDef): string,
+	onPropertyDecl(m: ClassPropertyDef|Accessor): string,
+	onPropertyDoc(m: ClassPropertyDef|Accessor): string,
+	onMethodDecl(m: ClassMethodDef): string,
+	onMethodDoc(m: ClassMethodDef): string,
+};
+
 type Member = ClassConstructorDef | ClassMethodDef | ClassIndexSignatureDef | ClassPropertyDef | Accessor;
 type MemberWithHeaderId = {member: Member, headerId: string};
 
@@ -29,38 +40,26 @@ const enum What
 
 export class MdClassGen
 {	#classDef;
-	#converter;
+	#classConverter;
 	#classMembers: ReturnType<typeof getClassMembers>|undefined;
 	#headers = new Map<Member, {headerId: string, headerLine: string}>;
 	#headerIds = new Map<string, string>;
 
-	constructor
-	(	classDef: ClassDef,
-		converter:
-		{	onConstructorDecl(m: ClassConstructorDef): string,
-			onConstructorDoc(m: ClassConstructorDef): string,
-			onMethodDecl(m: ClassMethodDef): string,
-			onMethodDoc(m: ClassMethodDef): string,
-			onIndexSignatureDecl(m: ClassIndexSignatureDef): string,
-			onIndexSignatureDoc(m: ClassIndexSignatureDef): string,
-			onPropertyDecl(p: ClassPropertyDef|Accessor): string,
-			onPropertyDoc(p: ClassPropertyDef|Accessor): string,
-		}
-	)
+	constructor(classDef: ClassDef, classConverter: ClassConverter)
 	{	this.#classDef = classDef;
-		this.#converter = converter;
+		this.#classConverter = classConverter;
 	}
 
 	#getClassMembers()
 	{	if (this.#classMembers == undefined)
 		{	this.#classMembers = getClassMembers(this.#classDef);
 			const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
-			const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#converter;
+			const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#classConverter;
 			const headers = this.#headers;
 			// constructors
-			for (const c of constructors)
-			{	const headerLine = onConstructorDecl(c);
-				headers.set(c, this.#addHeaderId(headerLine, c));
+			for (const m of constructors)
+			{	const headerLine = onConstructorDecl(m);
+				headers.set(m, this.#addHeaderId(headerLine, m));
 			}
 			// destructors
 			for (const m of destructors)
@@ -68,14 +67,14 @@ export class MdClassGen
 				headers.set(m, this.#addHeaderId(headerLine, m));
 			}
 			// index signatures
-			for (const s of indexSignatures)
-			{	const headerLine = onIndexSignatureDecl(s);
-				headers.set(s, this.#addHeaderId(headerLine, s));
+			for (const m of indexSignatures)
+			{	const headerLine = onIndexSignatureDecl(m);
+				headers.set(m, this.#addHeaderId(headerLine, m));
 			}
 			// properties
-			for (const p of propertiesAndAccessors)
-			{	const headerLine = onPropertyDecl(p);
-				headers.set(p, this.#addHeaderId(headerLine, p));
+			for (const m of propertiesAndAccessors)
+			{	const headerLine = onPropertyDecl(m);
+				headers.set(m, this.#addHeaderId(headerLine, m));
 			}
 			// methods
 			for (const m of methods)
@@ -96,20 +95,24 @@ export class MdClassGen
 		return {headerId, headerLine};
 	}
 
-	getHeaderIds()
-	{	this.#getClassMembers();
-		return this.#headerIds;
+	getHeaderId(name?: string, isStatic=false)
+	{	if (!name)
+		{	return '';
+		}
+		this.#getClassMembers();
+		const key = isStatic ? '.'+name : name;
+		return this.#headerIds.get(key) ?? '';
 	}
 
 	getCode()
-	{	const {onConstructorDoc, onMethodDoc, onIndexSignatureDoc, onPropertyDoc} = this.#converter;
+	{	const {onConstructorDoc, onMethodDoc, onIndexSignatureDoc, onPropertyDoc} = this.#classConverter;
 		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#getClassMembers();
 		const headers = this.#headers;
 		const sections = new ClassSections;
 		// constructors
-		for (const c of constructors)
-		{	const {headerId, headerLine} = headers.get(c)!;
-			sections.add(What.Constructor, c, headerId, `#### ${headerLine}\n\n${onConstructorDoc(c)}\n\n`);
+		for (const m of constructors)
+		{	const {headerId, headerLine} = headers.get(m)!;
+			sections.add(What.Constructor, m, headerId, `#### ${headerLine}\n\n${onConstructorDoc(m)}\n\n`);
 		}
 		// destructors
 		for (const m of destructors)
@@ -117,14 +120,14 @@ export class MdClassGen
 			sections.add(What.Destructor, m, headerId, `#### ${headerLine}\n\n${onMethodDoc(m)}\n\n`);
 		}
 		// index signatures
-		for (const s of indexSignatures)
-		{	const {headerId, headerLine} = headers.get(s)!;
-			sections.add(What.IndexSignature, s, headerId, `#### ${headerLine}\n\n${onIndexSignatureDoc(s)}\n\n`);
+		for (const m of indexSignatures)
+		{	const {headerId, headerLine} = headers.get(m)!;
+			sections.add(What.IndexSignature, m, headerId, `#### ${headerLine}\n\n${onIndexSignatureDoc(m)}\n\n`);
 		}
 		// properties
-		for (const p of propertiesAndAccessors)
-		{	const {headerId, headerLine} = headers.get(p)!;
-			sections.add(What.PropertyOrAccessor, p, headerId, `#### ${headerLine}\n\n${onPropertyDoc(p)}\n\n`);
+		for (const m of propertiesAndAccessors)
+		{	const {headerId, headerLine} = headers.get(m)!;
+			sections.add(What.PropertyOrAccessor, m, headerId, `#### ${headerLine}\n\n${onPropertyDoc(m)}\n\n`);
 		}
 		// methods
 		for (const m of methods)
