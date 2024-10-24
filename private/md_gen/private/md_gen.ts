@@ -1,24 +1,14 @@
 import {indentAndWrap} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef, TsTypeTypeLiteralDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, MdClassGen, isDeprecated, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
-
-const STYLE =
-`<style>
-	.lit-keyword, .lit-boolean {color: blue}
-	.lit-string, .lit-template {color: firebrick}
-	.lit-number, .lit-bigint {color: darkgreen}
-</style>
-
-`;
 
 const RE_NL = /[\r\n]/;
 const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
 
-type OnFile = (dir: string, code: string) => Promise<void>|void;
 type Gen =
 {	getHeaderId(name?: string, isStatic?: boolean): string;
 	getCode(): string;
@@ -230,65 +220,70 @@ export class MdGen
 										}
 									}
 									// Class (h1 header)
-									code += '# ';
+									code += '# `';
 									if (classDef.isAbstract)
-									{	code += '<span class="lit-keyword">abstract</span> ';
+									{	code += 'abstract ';
 									}
-									code += `<span class="lit-keyword">class</span> ${node.name}`;
+									code += 'class` ';
+									code += node.name;
 									// Type params
 									code += this.#convertTypeParams(classDef.typeParams);
 									// Extends
-									code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
+									code += !classDef.extends ? '' : ' `extends` ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
 									// Implements
-									code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
+									code += classDef.implements.length==0 ? '' : ' `implements` ' + this.#convertActualTypeParams(classDef.implements);
 								}
 								else if (node.kind == 'interface')
 								{	const {interfaceDef} = node;
 									// Interface (h1 header)
-									code += `# <span class="lit-keyword">interface</span> ${node.name}`;
+									code += '# `interface` ';
+									code += node.name;
 									// Type params
 									code += this.#convertTypeParams(interfaceDef.typeParams);
 									// Extends
-									code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
+									code += !interfaceDef.extends.length ? '' : ' `extends` ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
 								}
 								else if (node.kind == 'typeAlias')
 								{	const {typeAliasDef} = node;
-									code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
+									code += '# `type` ';
+									code += node.name + this.#convertTypeParams(typeAliasDef.typeParams);
 								}
 								else if (node.kind == 'enum')
 								{	const {enumDef} = node;
-									const introducer = enumDef.isConst ? 'const enum' : 'enum';
-									code += `# <span class="lit-keyword">${introducer}</span> ${node.name}\n\n`;
+									code += enumDef.isConst ? '# `const enum` ' : '# `enum` ';
+									code += node.name;
 								}
 								else if (node.kind == 'function')
-								{	code += `# <span class="lit-keyword">function</span> ${node.name}`;
+								{	code += '# `function` ';
+									code += node.name;
 								}
 								else if (node.kind == 'variable')
 								{	const {variableDef} = node;
-									const introducer = variableDef.kind == 'const' ? 'const' : 'var';
-									code += `# <span class="lit-keyword">${introducer}</span> ${node.name}`;
+									code += variableDef.kind=='const' ? '# `const` ' : '# `var` ';
+									code += node.name;
 								}
 								else if (node.kind == 'namespace')
-								{	code += `# <span class="lit-keyword">namespace</span> ${node.name}`;
+								{	code += '# `namespace` ';
+									code += node.name;
 								}
 								return code;
 							},
 							onConstructorDecl: m =>
-							{	let codeCur = '';
+							{	let codeCur = '`';
 								if (isDeprecated(m))
-								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								{	codeCur += 'deprecated ';
 								}
 								if (m.accessibility === 'protected')
-								{	codeCur += '<span class="lit-keyword">protected</span> ';
+								{	codeCur += 'protected ';
 								}
-								codeCur += '<span class="lit-keyword">constructor</span>';
+								codeCur += 'constructor`';
 								codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
 								return codeCur;
 							},
 							onIndexSignatureDecl: m =>
 							{	let codeCur = '';
 								if (m.readonly)
-								{	codeCur += '<span class="lit-keyword">readonly</span> ';
+								{	codeCur += '`readonly` ';
 								}
 								codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
 								codeCur += this.#convertTsTypeColon(m.tsType);
@@ -297,7 +292,7 @@ export class MdGen
 							onPropertyDecl: m =>
 							{	let codeCur = '';
 								if (isDeprecated(m))
-								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								{	codeCur += '`deprecated` ';
 								}
 								codeCur += this.#convertPropertyOrAccessor(m);
 								return codeCur;
@@ -308,18 +303,18 @@ export class MdGen
 								const isStatic = 'isStatic' in m && m.isStatic;
 								let codeCur = '';
 								if (isDeprecated(m))
-								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								{	codeCur += '`deprecated` ';
 								}
 								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
 								return codeCur;
 							},
 							onTypeAlias: m =>
-							{	let codeCur = '';
-								codeCur += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(m.typeParams)} = ` + this.#convertTsType(m.tsType);
+							{	let codeCur = '`type` ';
+								codeCur += node.name + this.#convertTypeParams(m.typeParams) + ' = ' + this.#convertTsType(m.tsType);
 								return codeCur;
 							},
 							onVariable: m =>
-							{	const introducer = m.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
+							{	const introducer = m.kind == 'const' ? '`const` ' : '`var` ';
 								return introducer + node.name + this.#convertTsTypeColon(m.tsType);
 							},
 							onEnumMember: m =>
@@ -356,7 +351,7 @@ export class MdGen
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
 					const gen = this.#gens.getGen(node);
-					const code = STYLE + (gen?.getCode() ?? '');
+					const code = gen?.getCode() ?? '';
 					const dir = this.#gens.getDir(node) ?? '';
 					yield {dir, code};
 					if (node.kind == 'namespace')
@@ -441,23 +436,23 @@ export class MdGen
 	}
 
 	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
-	{	let code = '';
+	{	const qual = new Array<string>;
 		if (accessibility === 'protected')
-		{	code += '<span class="lit-keyword">protected</span> ';
+		{	qual.push('protected');
 		}
 		if (isAbstract)
-		{	code += '<span class="lit-keyword">abstract</span> ';
+		{	qual.push('abstract');
 		}
 		if (isStatic)
-		{	code += '<span class="lit-keyword">static</span> ';
+		{	qual.push('static');
 		}
 		if (readonly)
-		{	code += '<span class="lit-keyword">readonly</span> ';
+		{	qual.push('readonly');
 		}
 		else if (isAccessor)
-		{	code += '<span class="lit-keyword">accessor</span> ';
+		{	qual.push('accessor');
 		}
-		code += name;
+		let code = !qual.length ? name : '`'+qual.join(' ')+'` '+name;
 		if (optional)
 		{	code += '?';
 		}
@@ -466,18 +461,23 @@ export class MdGen
 	}
 
 	#convertFunction(isMethod: 'function'|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
-	{	let code = '';
+	{	const qual = new Array<string>;
 		if (accessibility === 'protected')
-		{	code += '<span class="lit-keyword">protected</span> ';
+		{	qual.push('protected');
 		}
 		if (isAbstract)
-		{	code += '<span class="lit-keyword">abstract</span> ';
+		{	qual.push('abstract');
 		}
 		if (isStatic)
-		{	code += '<span class="lit-keyword">static</span> ';
+		{	qual.push('static');
 		}
-		code += !isMethod ? '<span class="lit-keyword">function</span> ' : isMethod=='getter' ? '<span class="lit-keyword">get</span> ' : isMethod=='setter' ? '<span class="lit-keyword">set</span> ' : '';
-		code += name;
+		if (isStatic)
+		{	qual.push('static');
+		}
+		if (isMethod != 'method')
+		{	qual.push(isMethod=='getter' ? 'get' : isMethod=='setter' ? 'set' : 'function');
+		}
+		let code = !qual.length ? name : '`'+qual.join(' ')+'` '+name;
 		if (optional)
 		{	code += '?';
 		}
@@ -531,7 +531,7 @@ export class MdGen
 	#convertTsType(typeDef: TsTypeDef): string
 	{	switch (typeDef.kind)
 		{	case 'keyword':
-				return `<span class="lit-keyword">${typeDef.keyword}</span>`;
+				return '`' + typeDef.keyword + '`';
 			case 'literal':
 				return this.#convertTsLiteralType(typeDef.literal, typeDef.repr);
 			case 'typeRef':
@@ -553,25 +553,25 @@ export class MdGen
 			case 'optional':
 				return this.#convertTsType(typeDef.optional) + '?';
 			case 'typeQuery':
-				return `<span class="lit-keyword">typeof</span>(${this.#getTypeName(typeDef.typeQuery)})`;
+				return '`typeof`(' + this.#getTypeName(typeDef.typeQuery) + ')';
 			case 'this':
-				return `<span class="lit-keyword">this</span>`;
+				return '`this`';
 			case 'fnOrConstructor':
-				return (typeDef.fnOrConstructor.constructor ? '<span class="lit-keyword">new</span>' : '') + '(' + typeDef.fnOrConstructor.params.map(a => this.#convertArg(a)).join(', ') + ') => ' + this.#convertTsType(typeDef.fnOrConstructor.tsType);
+				return (typeDef.fnOrConstructor.constructor ? '`new`' : '') + '(' + typeDef.fnOrConstructor.params.map(a => this.#convertArg(a)).join(', ') + ') => ' + this.#convertTsType(typeDef.fnOrConstructor.tsType);
 			case 'conditional':
-				return this.#convertTsType(typeDef.conditionalType.checkType) + ' <span class="lit-keyword">extends</span> ' + this.#convertTsType(typeDef.conditionalType.extendsType) + ' ? ' + this.#convertTsType(typeDef.conditionalType.trueType) + ' : ' + this.#convertTsType(typeDef.conditionalType.falseType);
+				return this.#convertTsType(typeDef.conditionalType.checkType) + ' `extends` ' + this.#convertTsType(typeDef.conditionalType.extendsType) + ' ? ' + this.#convertTsType(typeDef.conditionalType.trueType) + ' : ' + this.#convertTsType(typeDef.conditionalType.falseType);
 			case 'infer':
-				return '<span class="lit-keyword">infer</span> '+typeDef.infer.typeParam.name;
+				return '`infer` '+typeDef.infer.typeParam.name;
 			case 'mapped':
-				return '\\{' + (typeDef.mappedType.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + '\\[' + this.#convertTypeParam(typeDef.mappedType.typeParam, 'in') + this.#convertTsTypeColon(typeDef.mappedType.nameType) + ']' + (typeDef.mappedType.optional ? '?' : '') + this.#convertTsTypeColon(typeDef.mappedType.tsType) + '}';
+				return '\\{' + (typeDef.mappedType.readonly ? '`readonly` ' : '') + '\\[' + this.#convertTypeParam(typeDef.mappedType.typeParam, 'in') + this.#convertTsTypeColon(typeDef.mappedType.nameType) + ']' + (typeDef.mappedType.optional ? '?' : '') + this.#convertTsTypeColon(typeDef.mappedType.tsType) + '}';
 			case 'importType':
-				return `<span class="lit-keyword">import</span>(${JSON.stringify(typeDef.importType.specifier)})${!typeDef.importType.qualifier ? '' : '.'+typeDef.importType.qualifier}` + this.#convertActualTypeParams(typeDef.importType.typeParams);
+				return '`import`('+JSON.stringify(typeDef.importType.specifier)+')'+(!typeDef.importType.qualifier ? '' : '.'+typeDef.importType.qualifier) + this.#convertActualTypeParams(typeDef.importType.typeParams);
 			case 'indexedAccess':
-				return (typeDef.indexedAccess.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + this.#convertTsType(typeDef.indexedAccess.objType) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType) + ']';
+				return (typeDef.indexedAccess.readonly ? '`readonly` ' : '') + this.#convertTsType(typeDef.indexedAccess.objType) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType) + ']';
 			case 'typeLiteral':
 				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral) + '}';
 			case 'typePredicate':
-				return (typeDef.typePredicate.asserts ? '<span class="lit-keyword">asserts</span> ' : '') + (typeDef.typePredicate.param.name ?? '<span class="lit-keyword">this</span>') + (!typeDef.typePredicate.type ? '' : ' <span class="lit-keyword">is</span> ' + this.#convertTsType(typeDef.typePredicate.type));
+				return (typeDef.typePredicate.asserts ? '`asserts` ' : '') + (typeDef.typePredicate.param.name ?? '`this`') + (!typeDef.typePredicate.type ? '' : ' `is` ' + this.#convertTsType(typeDef.typePredicate.type));
 		}
 	}
 
@@ -593,15 +593,15 @@ export class MdGen
 	#convertTsLiteralType(litDef: LiteralDef, repr: string)
 	{	switch (litDef.kind)
 		{	case 'string':
-				return `<span class="lit-string">${mdEscape(JSON.stringify(litDef.string))}</span>`;
+				return `<mark>${mdEscape(JSON.stringify(litDef.string))}</mark>`;
 			case 'number':
-				return `<span class="lit-number">${repr}</span>`;
+				return `<mark>${repr}</mark>`;
 			case 'bigInt':
-				return `<span class="lit-bigint">${repr}</span>`;
+				return `<mark>${repr}</mark>`;
 			case 'boolean':
-				return `<span class="lit-boolean">${repr}</span>`;
+				return '`' + repr + '`';
 			case 'template':
-				return `<span class="lit-template">${mdEscape('`'+repr+'`')}</span>`;
+				return `<mark>${mdEscape('`'+repr+'`')}</mark>`;
 		}
 	}
 
@@ -617,7 +617,7 @@ export class MdGen
 		for (const p of indexSignatures)
 		{	code += separ;
 			if (p.readonly)
-			{	code += '<span class="lit-keyword">readonly</span> ';
+			{	code += '`readonly` ';
 			}
 			code += '[' + p.params.map(pp => this.#convertArg(pp)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType);
 			separ = ', ';
@@ -641,7 +641,7 @@ export class MdGen
 	}
 
 	#convertTypeParam(typeParam: TsTypeParamDef, constraint: string)
-	{	return `${typeParam.name}${!typeParam.constraint ? '' : ` <span class="lit-keyword">${constraint}</span> `+this.#convertTsType(typeParam.constraint)}${!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default)}`;
+	{	return `${typeParam.name}${!typeParam.constraint ? '' : ' `'+constraint+'` '+this.#convertTsType(typeParam.constraint)}${!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default)}`;
 	}
 
 	#convertActualTypeParams(typeParams: TsTypeDef[]|undefined)
