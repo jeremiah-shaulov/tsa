@@ -342,15 +342,15 @@ export class MdGen
 		);
 	}
 
-	async genFiles(moduleName: string, onFile: OnFile)
+	*genFiles(moduleName='')
 	{	let code = `# ${moduleName || 'Module'}\n\n`;
 		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
 		code += this.#convertNamespace(this.#nodes);
-		await onFile('', code);
-		await this.#genFilesForNodes(this.#nodes, new Set, onFile);
+		yield {dir: '', code};
+		yield *this.#genFilesForNodes(this.#nodes, new Set);
 	}
 
-	async #genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>, onFile: OnFile)
+	*#genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
 	{	for (const node of nodes)
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
@@ -358,9 +358,9 @@ export class MdGen
 					const gen = this.#gens.getGen(node);
 					const code = STYLE + (gen?.getCode() ?? '');
 					const dir = this.#gens.getDir(node) ?? '';
-					await onFile(dir, code);
+					yield {dir, code};
 					if (node.kind == 'namespace')
-					{	await this.#genFilesForNodes(node.namespaceDef.elements, nodesDone, onFile);
+					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, nodesDone);
 					}
 				}
 			}
