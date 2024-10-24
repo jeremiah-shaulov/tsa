@@ -1,6 +1,6 @@
 import {indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
-import {Accessor, MdClassGen, isPublicOrProtected} from './md_class_gen.ts';
+import {Accessor, MdClassGen, isDeprecated, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
 
@@ -216,10 +216,14 @@ export class MdGen
 			node =>
 			{	switch (node.kind)
 				{	case 'class':
+					case 'interface':
 						return new MdClassGen
-						(	node.classDef,
+						(	node,
 							{	onConstructorDecl: m =>
 								{	let codeCur = '';
+									if (isDeprecated(m))
+									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+									}
 									if (m.accessibility === 'protected')
 									{	codeCur += '<span class="lit-keyword">protected</span> ';
 									}
@@ -237,10 +241,23 @@ export class MdGen
 									return codeCur;
 								},
 								onPropertyDecl: m =>
-								{	return this.#convertPropertyOrAccessor(m);
+								{	let codeCur = '';
+									if (isDeprecated(m))
+									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+									}
+									codeCur += this.#convertPropertyOrAccessor(m);
+									return codeCur;
 								},
 								onMethodDecl: m =>
-								{	return this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef);
+								{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+									const isAbstract = 'isAbstract' in m && m.isAbstract;
+									const isStatic = 'isStatic' in m && m.isStatic;
+									let codeCur = '';
+									if (isDeprecated(m))
+									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+									}
+									codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+									return codeCur;
 								},
 								onJsDoc: jsDoc =>
 								{	return this.#convertJsDoc(jsDoc, true);
@@ -278,24 +295,54 @@ export class MdGen
 	#convertDocNode(node: DocNode)
 	{	let code = STYLE;
 		// class def
-		if (node.kind == 'class')
-		{	code += this.#convertClassDef(node.name, node);
+		if (node.kind=='class' || node.kind=='interface')
+		{	if ('classDef' in node)
+			{	const {classDef} = node;
+				// Decorators
+				if (classDef.decorators)
+				{	for (const d of classDef.decorators)
+					{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
+						const name = link ? mdLink(d.name, `../${link}`) : d.name;
+						code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
+					}
+				}
+				// Class (h1 header)
+				code += '# ';
+				if (classDef.isAbstract)
+				{	code += '<span class="lit-keyword">abstract</span> ';
+				}
+				code += `<span class="lit-keyword">class</span> ${node.name}`;
+				// Type params
+				code += this.#convertTypeParams(classDef.typeParams);
+				// Extends
+				code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
+				// Implements
+				code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
+			}
+			else
+			{	const {interfaceDef} = node;
+				// Interface (h1 header)
+				code += `# <span class="lit-keyword">interface</span> ${node.name}`;
+				// Type params
+				code += this.#convertTypeParams(interfaceDef.typeParams);
+				// Extends
+				code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
+			}
+			// End h1 header
+			code += '\n\n';
+			// Members
+			const gen = this.#gens.getGen(node);
+			if (gen)
+			{	const {outline, sectionsCode} = gen.getCode();
+				// Outline
+				code += outline;
+				// Properties and methods
+				code += sectionsCode;
+			}
 		}
 		else if (node.kind == 'typeAlias')
 		{	const {typeAliasDef} = node;
 			code += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)} = ${this.#convertTsType(typeAliasDef.tsType)}`;
-		}
-		else if (node.kind == 'interface')
-		{	const {interfaceDef} = node;
-			// interface
-			code += `# <span class="lit-keyword">interface</span> ${node.name}`;
-			// type params
-			code += this.#convertTypeParams(interfaceDef.typeParams);
-			// extends
-			code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
-			code += '\n\n';
-			// interface
-			code += this.#convertTsTypeLiteralDef(interfaceDef, false);
 		}
 		else if (node.kind == 'function')
 		{	const {functionDef} = node;
@@ -372,18 +419,28 @@ export class MdGen
 		return code;
 	}
 
-	#convertPropertyOrAccessor(p: ClassPropertyDef|Accessor)
+	#convertPropertyOrAccessor(p: ClassPropertyDef|InterfacePropertyDef|Accessor)
 	{	let code = '';
 		if (!('getter' in p))
-		{	code = this.#convertProperty(p.name, p.accessibility, p.isAbstract, p.isStatic, p.readonly, false, p.optional, p.tsType);
+		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
+			const isAbstract = 'isAbstract' in p && p.isAbstract;
+			const isStatic = 'isStatic' in p && p.isStatic;
+			code = this.#convertProperty(p.name, accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
-		{	code = this.#convertProperty(p.getter.name, p.getter.accessibility, p.getter.isAbstract, p.getter.isStatic, false, true, p.getter.optional, p.getter.functionDef.returnType);
+		{	const m = p.getter;
+			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+			const isAbstract = 'isAbstract' in m && m.isAbstract;
+			const isStatic = 'isStatic' in m && m.isStatic;
+			code = this.#convertProperty(m.name, accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
 		}
 		else
-		{	const a = p.getter ?? p.setter;
-			if (a)
-			{	code = this.#convertFunction(a.kind, a.name, a.accessibility, a.isAbstract, a.isStatic, a.optional, a.functionDef);
+		{	const m = p.getter ?? p.setter;
+			if (m)
+			{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+				const isAbstract = 'isAbstract' in m && m.isAbstract;
+				const isStatic = 'isStatic' in m && m.isStatic;
+				code = this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
 			}
 		}
 		return code;
@@ -518,7 +575,7 @@ export class MdGen
 			case 'indexedAccess':
 				return (typeDef.indexedAccess.readonly ? '<span class="lit-keyword">readonly</span> ' : '') + this.#convertTsType(typeDef.indexedAccess.objType) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType) + ']';
 			case 'typeLiteral':
-				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral, true) + '}';
+				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral) + '}';
 			case 'typePredicate':
 				return (typeDef.typePredicate.asserts ? '<span class="lit-keyword">asserts</span> ' : '') + (typeDef.typePredicate.param.name ?? '<span class="lit-keyword">this</span>') + (!typeDef.typePredicate.type ? '' : ' <span class="lit-keyword">is</span> ' + this.#convertTsType(typeDef.typePredicate.type));
 		}
@@ -554,93 +611,32 @@ export class MdGen
 		}
 	}
 
-	#convertClassDef(name: string, node: DocNodeClass)
-	{	let code = '';
-		const {classDef} = node;
-		// Decorators
-		if (classDef.decorators)
-		{	for (const d of classDef.decorators)
-			{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
-				const name = link ? mdLink(d.name, `../${link}`) : d.name;
-				code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
-			}
-		}
-		// Class (h1 header)
-		code += '# ';
-		if (classDef.isAbstract)
-		{	code += '<span class="lit-keyword">abstract</span> ';
-		}
-		code += `<span class="lit-keyword">class</span> ${name}`;
-		// Type params
-		code += this.#convertTypeParams(classDef.typeParams);
-		// Extends
-		code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
-		// Implements
-		code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
-		// End h1 header
-		code += '\n\n';
-		// Gen
-		const gen = this.#gens.getGen(node);
-		if (gen)
-		{	const {outline, sectionsCode} = gen.getCode();
-			// Outline
-			code += outline;
-			// Properties and methods
-			code += sectionsCode;
-		}
-		// Done
-		return code;
-	}
-
-	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef|InterfaceDef, isLiteral: boolean)
+	#convertTsTypeLiteralDef(typeLiteral: TsTypeLiteralDef)
 	{	const {callSignatures, properties, indexSignatures, methods} = typeLiteral;
 		let separ = '';
 		let code = '';
 		for (const p of callSignatures)
-		{	code += isLiteral ? separ : '#### ';
+		{	code += separ;
 			code += this.#convertTypeParams(p.typeParams) + '(' + p.params.map(pp => this.#convertArg(pp)).join(', ') + ')' + this.#convertTsTypeColon(p.tsType);
-			if (!isLiteral)
-			{	code += ';\n\n';
-				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
-			}
-			else
-			{	separ = ', ';
-			}
+			separ = ', ';
 		}
 		for (const p of indexSignatures)
-		{	code += isLiteral ? separ : '#### ';
+		{	code += separ;
 			if (p.readonly)
 			{	code += '<span class="lit-keyword">readonly</span> ';
 			}
 			code += '[' + p.params.map(pp => this.#convertArg(pp)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType);
-			if (!isLiteral)
-			{	code += ';\n\n';
-			}
-			else
-			{	separ = ', ';
-			}
+			separ = ', ';
 		}
 		for (const p of properties)
-		{	code += isLiteral ? separ : '#### ';
+		{	code += separ;
 			code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType);
-			if (!isLiteral)
-			{	code += ';\n\n';
-				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
-			}
-			else
-			{	separ = ', ';
-			}
+			separ = ', ';
 		}
 		for (const p of methods)
-		{	code += isLiteral ? separ : '#### ';
+		{	code += separ;
 			code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p);
-			if (!isLiteral)
-			{	code += ';\n\n';
-				code += this.#convertJsDoc('jsDoc' in p ? p.jsDoc : undefined, true);
-			}
-			else
-			{	separ = ', ';
-			}
+			separ = ', ';
 		}
 		return code;
 	}
