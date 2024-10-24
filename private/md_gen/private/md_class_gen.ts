@@ -13,14 +13,11 @@ export type Accessor =
 };
 
 type ClassConverter =
-{	onConstructorDecl(m: ClassConstructorDef): string,
-	onConstructorDoc(m: ClassConstructorDef): string,
-	onIndexSignatureDecl(m: ClassIndexSignatureDef): string,
-	onIndexSignatureDoc(m: ClassIndexSignatureDef): string,
-	onPropertyDecl(m: ClassPropertyDef|Accessor): string,
-	onPropertyDoc(m: ClassPropertyDef|Accessor): string,
-	onMethodDecl(m: ClassMethodDef): string,
-	onMethodDoc(m: ClassMethodDef): string,
+{	onConstructorDecl(m: ClassConstructorDef): string;
+	onIndexSignatureDecl(m: ClassIndexSignatureDef): string;
+	onPropertyDecl(m: ClassPropertyDef|Accessor): string;
+	onMethodDecl(m: ClassMethodDef): string;
+	onJsDoc(m: JsDoc|undefined): string;
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | ClassIndexSignatureDef | ClassPropertyDef | Accessor;
@@ -87,29 +84,39 @@ export class MdClassGen
 	}
 
 	getCode()
-	{	const {onConstructorDoc, onMethodDoc, onIndexSignatureDoc, onPropertyDoc} = this.#classConverter;
+	{	const {onJsDoc} = this.#classConverter;
 		const {constructors, destructors, indexSignatures, propertiesAndAccessors, methods} = this.#classMembers;
 		const memberHeaders = this.#memberHeaders;
 		const sections = new ClassSections;
 		// constructors
 		for (const m of constructors)
-		{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onConstructorDoc(m));
+		{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
 		}
 		// destructors
 		for (const m of destructors)
-		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onMethodDoc(m));
+		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
 		}
 		// index signatures
 		for (const m of indexSignatures)
-		{	sections.add(sectionIndex(m), What.IndexSignature, memberHeaders.get(m), onIndexSignatureDoc(m));
+		{	sections.add(sectionIndex(m), What.IndexSignature, memberHeaders.get(m), '');
 		}
 		// properties
 		for (const m of propertiesAndAccessors)
-		{	sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), onPropertyDoc(m));
+		{	let code = '';
+			if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
+			{	code += 'get\n\n';
+				code += onJsDoc(m.getter.jsDoc);
+				code += 'set\n\n';
+				code += onJsDoc(m.setter.jsDoc);
+			}
+			else
+			{	code += onJsDoc(m.jsDoc);
+			}
+			sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), code);
 		}
 		// methods
 		for (const m of methods)
-		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onMethodDoc(m));
+		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc(m.jsDoc));
 		}
 		// done
 		const sectionsCode = sections+'';

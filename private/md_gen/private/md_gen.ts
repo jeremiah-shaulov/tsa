@@ -227,9 +227,6 @@ export class MdGen
 									codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
 									return codeCur;
 								},
-								onConstructorDoc: m =>
-								{	return this.#convertJsDoc(m.jsDoc, true);
-								},
 								onIndexSignatureDecl: m =>
 								{	let codeCur = '';
 									if (m.readonly)
@@ -239,30 +236,14 @@ export class MdGen
 									codeCur += this.#convertTsTypeColon(m.tsType);
 									return codeCur;
 								},
-								onIndexSignatureDoc: () =>
-								{	return '';
-								},
 								onPropertyDecl: m =>
 								{	return this.#convertPropertyOrAccessor(m);
-								},
-								onPropertyDoc: m =>
-								{	let codeCur = '';
-									if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
-									{	codeCur += 'get\n\n';
-										codeCur += this.#convertJsDoc(m.getter.jsDoc, true);
-										codeCur += 'set\n\n';
-										codeCur += this.#convertJsDoc(m.setter.jsDoc, true);
-									}
-									else
-									{	codeCur += this.#convertJsDoc(m.jsDoc, true);
-									}
-									return codeCur;
 								},
 								onMethodDecl: m =>
 								{	return this.#convertFunction(m.kind, m.name, m.accessibility, m.isAbstract, m.isStatic, m.optional, m.functionDef);
 								},
-								onMethodDoc: m =>
-								{	return this.#convertJsDoc(m.jsDoc, true);
+								onJsDoc: jsDoc =>
+								{	return this.#convertJsDoc(jsDoc, true);
 								},
 							}
 						);
