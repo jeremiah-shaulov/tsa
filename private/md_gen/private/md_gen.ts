@@ -214,8 +214,7 @@ export class MdGen
 		this.#gens = new Gens
 		(	nodes,
 			node =>
-			{	let nodeForGen: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef|undefined;
-				if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
+			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='function')
 				{	return new MdClassGen
 					(	node,
 						{	onConstructorDecl: m =>
@@ -255,13 +254,17 @@ export class MdGen
 								if (isDeprecated(m))
 								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
 								}
-								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
 								return codeCur;
 							},
 							onTypeAlias: m =>
 							{	let codeCur = '';
 								codeCur += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(m.typeParams)} = ` + this.#convertTsType(m.tsType);
 								return codeCur;
+							},
+							onVariable: m =>
+							{	const introducer = m.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
+								return introducer + node.name + this.#convertTsTypeColon(m.tsType);
 							},
 							onJsDoc: jsDoc =>
 							{	return this.#convertJsDoc(jsDoc, true);
@@ -299,8 +302,8 @@ export class MdGen
 	#convertDocNode(node: DocNode)
 	{	let code = STYLE;
 		// class def
-		if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
-		{	if ('classDef' in node)
+		if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='function' || node.kind=='variable')
+		{	if (node.kind == 'class')
 			{	const {classDef} = node;
 				// Decorators
 				if (classDef.decorators)
@@ -323,7 +326,7 @@ export class MdGen
 				// Implements
 				code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
 			}
-			else if ('interfaceDef' in node)
+			else if (node.kind == 'interface')
 			{	const {interfaceDef} = node;
 				// Interface (h1 header)
 				code += `# <span class="lit-keyword">interface</span> ${node.name}`;
@@ -332,9 +335,16 @@ export class MdGen
 				// Extends
 				code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
 			}
-			else
+			else if (node.kind == 'typeAlias')
 			{	const {typeAliasDef} = node;
 				code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
+			}
+			else if (node.kind == 'function')
+			{	code += `# <span class="lit-keyword">function</span> ${node.name}`;
+			}
+			else if (node.kind == 'variable')
+			{	const introducer = node.variableDef.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
+				code += `# ${introducer} ${node.name}`;
 			}
 			// End h1 header
 			code += '\n\n';
@@ -348,10 +358,6 @@ export class MdGen
 				code += sectionsCode;
 			}
 		}
-		else if (node.kind == 'function')
-		{	const {functionDef} = node;
-			code += this.#convertFunction('', node.name, undefined, false, false, false, functionDef);
-		}
 		else if (node.kind == 'enum')
 		{	code += `# <span class="lit-keyword">enum</span> ${node.name}\n\n`;
 			const {enumDef} = node;
@@ -359,13 +365,6 @@ export class MdGen
 			{	code += `${m.name}${m.init ? ' = '+this.#convertTsType(m.init) : ''},`;
 				code += '\n\n';
 				code += this.#convertJsDoc(m.jsDoc, true);
-			}
-		}
-		else if (node.kind == 'variable')
-		{	const introducer = node.variableDef.kind == 'const' ? '<span class="lit-keyword">const</span> ' : '<span class="lit-keyword">var</span> ';
-			code += `# ${introducer} ${node.name}\n\n`;
-			if (node.variableDef.tsType)
-			{	code += introducer + node.name + this.#convertTsTypeColon(node.variableDef.tsType);
 			}
 		}
 		else if (node.kind == 'namespace')
@@ -475,7 +474,7 @@ export class MdGen
 		return code;
 	}
 
-	#convertFunction(isMethod: ''|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
+	#convertFunction(isMethod: 'function'|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
 	{	let code = '';
 		if (accessibility === 'protected')
 		{	code += '<span class="lit-keyword">protected</span> ';
