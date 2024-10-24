@@ -21,7 +21,7 @@ const RE_BACKSLASH_ESCAPE = /\\./g;
 type OnFile = (dir: string, code: string) => Promise<void>|void;
 type Gen =
 {	getHeaderId(name?: string, isStatic?: boolean): string;
-	getCode(): {outline: string, sectionsCode: string};
+	getCode(): string;
 };
 
 class Gens
@@ -217,7 +217,63 @@ export class MdGen
 			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='enum' || node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
 				{	return new MdClassGen
 					(	node,
-						{	onConstructorDecl: m =>
+						{	onTopHeader: node =>
+							{	let code = '';
+								if (node.kind == 'class')
+								{	const {classDef} = node;
+									// Decorators
+									if (classDef.decorators)
+									{	for (const d of classDef.decorators)
+										{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
+											const name = link ? mdLink(d.name, `../${link}`) : d.name;
+											code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
+										}
+									}
+									// Class (h1 header)
+									code += '# ';
+									if (classDef.isAbstract)
+									{	code += '<span class="lit-keyword">abstract</span> ';
+									}
+									code += `<span class="lit-keyword">class</span> ${node.name}`;
+									// Type params
+									code += this.#convertTypeParams(classDef.typeParams);
+									// Extends
+									code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
+									// Implements
+									code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
+								}
+								else if (node.kind == 'interface')
+								{	const {interfaceDef} = node;
+									// Interface (h1 header)
+									code += `# <span class="lit-keyword">interface</span> ${node.name}`;
+									// Type params
+									code += this.#convertTypeParams(interfaceDef.typeParams);
+									// Extends
+									code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
+								}
+								else if (node.kind == 'typeAlias')
+								{	const {typeAliasDef} = node;
+									code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
+								}
+								else if (node.kind == 'enum')
+								{	const {enumDef} = node;
+									const introducer = enumDef.isConst ? 'const enum' : 'enum';
+									code += `# <span class="lit-keyword">${introducer}</span> ${node.name}\n\n`;
+								}
+								else if (node.kind == 'function')
+								{	code += `# <span class="lit-keyword">function</span> ${node.name}`;
+								}
+								else if (node.kind == 'variable')
+								{	const {variableDef} = node;
+									const introducer = variableDef.kind == 'const' ? 'const' : 'var';
+									code += `# <span class="lit-keyword">${introducer}</span> ${node.name}`;
+								}
+								else if (node.kind == 'namespace')
+								{	code += `# <span class="lit-keyword">namespace</span> ${node.name}`;
+								}
+								return code;
+							},
+							onConstructorDecl: m =>
 							{	let codeCur = '';
 								if (isDeprecated(m))
 								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
@@ -299,7 +355,9 @@ export class MdGen
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
-					const {dir, code} = this.#convertDocNode(node);
+					const gen = this.#gens.getGen(node);
+					const code = STYLE + (gen?.getCode() ?? '');
+					const dir = this.#gens.getDir(node) ?? '';
 					await onFile(dir, code);
 					if (node.kind == 'namespace')
 					{	await this.#genFilesForNodes(node.namespaceDef.elements, nodesDone, onFile);
@@ -307,77 +365,6 @@ export class MdGen
 				}
 			}
 		}
-	}
-
-	#convertDocNode(node: DocNode)
-	{	let code = STYLE;
-		// def
-		if (node.kind == 'class')
-		{	const {classDef} = node;
-			// Decorators
-			if (classDef.decorators)
-			{	for (const d of classDef.decorators)
-				{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
-					const name = link ? mdLink(d.name, `../${link}`) : d.name;
-					code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
-				}
-			}
-			// Class (h1 header)
-			code += '# ';
-			if (classDef.isAbstract)
-			{	code += '<span class="lit-keyword">abstract</span> ';
-			}
-			code += `<span class="lit-keyword">class</span> ${node.name}`;
-			// Type params
-			code += this.#convertTypeParams(classDef.typeParams);
-			// Extends
-			code += !classDef.extends ? '' : ' <span class="lit-keyword">extends</span> ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
-			// Implements
-			code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
-		}
-		else if (node.kind == 'interface')
-		{	const {interfaceDef} = node;
-			// Interface (h1 header)
-			code += `# <span class="lit-keyword">interface</span> ${node.name}`;
-			// Type params
-			code += this.#convertTypeParams(interfaceDef.typeParams);
-			// Extends
-			code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
-		}
-		else if (node.kind == 'typeAlias')
-		{	const {typeAliasDef} = node;
-			code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
-		}
-		else if (node.kind == 'enum')
-		{	const {enumDef} = node;
-			const introducer = enumDef.isConst ? 'const enum' : 'enum';
-			code += `# <span class="lit-keyword">${introducer}</span> ${node.name}\n\n`;
-		}
-		else if (node.kind == 'function')
-		{	code += `# <span class="lit-keyword">function</span> ${node.name}`;
-		}
-		else if (node.kind == 'variable')
-		{	const {variableDef} = node;
-			const introducer = variableDef.kind == 'const' ? 'const' : 'var';
-			code += `# <span class="lit-keyword">${introducer}</span> ${node.name}`;
-		}
-		else if (node.kind == 'namespace')
-		{	code += `# <span class="lit-keyword">namespace</span> ${node.name}`;
-		}
-		// End h1 header
-		code += '\n\n';
-		// Members
-		const gen = this.#gens.getGen(node);
-		if (gen)
-		{	const {outline, sectionsCode} = gen.getCode();
-			// Outline
-			code += outline;
-			// Properties and methods
-			code += sectionsCode;
-		}
-		// page
-		const dir = this.#gens.getDir(node) ?? '';
-		return {dir, code};
 	}
 
 	#convertNamespace(nodes: DocNode[])

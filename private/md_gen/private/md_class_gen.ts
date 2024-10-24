@@ -1,4 +1,4 @@
-import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef} from '../../doc_node/mod.ts';
+import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind} from '../../doc_node/mod.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
@@ -13,7 +13,8 @@ export type Accessor =
 };
 
 type ClassConverter =
-{	onConstructorDecl(m: ClassConstructorDef): string;
+{	onTopHeader(node: DocNode): string;
+	onConstructorDecl(m: ClassConstructorDef): string;
 	onIndexSignatureDecl(m: ClassIndexSignatureDef): string;
 	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
 	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction): string;
@@ -50,7 +51,7 @@ const enum What
 }
 
 export class MdClassGen
-{	#kind;
+{	#node;
 	#converter;
 	#constructors = new Array<ClassConstructorDef>;
 	#destructors = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
@@ -62,8 +63,8 @@ export class MdClassGen
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias|DocNodeEnum|DocNodeFunction|DocNodeVariable|DocNodeNamespace, converter: ClassConverter)
-	{	this.#kind = node.kind;
+	constructor(node: DocNode, converter: ClassConverter)
+	{	this.#node = node;
 		this.#converter = converter;
 		const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl, onEnumMember} = this.#converter;
 		if (node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
@@ -75,7 +76,7 @@ export class MdClassGen
 			{	this.#addHeader(m, m.name, false, onEnumMember(m));
 			}
 		}
-		else
+		else if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
 		{	getClassMembers
 			(	node,
 				this.#constructors,
@@ -124,11 +125,12 @@ export class MdClassGen
 	}
 
 	getCode()
-	{	const {onMethodDecl, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+	{	const {onTopHeader, onMethodDecl, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
+		let outline = '';
+		let sectionsCode = '';
 		if (this.#other.length)
 		{	const other = this.#other[0];
-			let sectionsCode = '';
 			switch (other.kind)
 			{	case 'enum':
 					for (const m of other.enumDef.members)
@@ -147,14 +149,12 @@ export class MdClassGen
 					sectionsCode = onNamespace(other.namespaceDef);
 					break;
 			}
-			return {outline: '', sectionsCode};
 		}
 		else if (this.#typeAlias.length)
-		{	const sectionsCode = onTypeAlias(this.#typeAlias[0]);
-			return {outline: '', sectionsCode};
+		{	sectionsCode = onTypeAlias(this.#typeAlias[0]);
 		}
 		else
-		{	const sections = new ClassSections(this.#kind);
+		{	const sections = new ClassSections(this.#node.kind);
 			// constructors
 			for (const m of this.#constructors)
 			{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
@@ -186,10 +186,12 @@ export class MdClassGen
 			{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
 			}
 			// done
-			const sectionsCode = sections+'';
-			const outline = sections.getOutline();
-			return {outline, sectionsCode};
+			sectionsCode = sections+'';
+			outline = sections.getOutline();
 		}
+		const topHeader = onTopHeader(this.#node);
+		const jsDoc = onJsDoc(this.#node.jsDoc);
+		return topHeader + '\n\n' + outline + jsDoc + sectionsCode;
 	}
 }
 
@@ -370,7 +372,7 @@ class ClassSections
 
 	#kind;
 
-	constructor(kind: 'class'|'interface'|'typeAlias'|'enum'|'function'|'variable'|'namespace')
+	constructor(kind: DocNodeKind)
 	{	this.#kind = kind;
 	}
 
