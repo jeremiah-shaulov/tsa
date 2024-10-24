@@ -1,34 +1,40 @@
-import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef} from '../../doc_node/mod.ts';
+import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, TsTypeTypeLiteralDef, LiteralMethodDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
 export type Accessor =
-{	getter: ClassMethodDef|InterfaceMethodDef|undefined;
-	setter: ClassMethodDef|InterfaceMethodDef|undefined;
+{	getter: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|undefined;
+	setter: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|undefined;
 	name: string;
 	isStatic: boolean;
-	accessibility?: Accessibility;
-	location: Location;
-	jsDoc?: JsDoc;
+	accessibility: Accessibility|undefined;
+	location: Location|undefined;
+	jsDoc: JsDoc|undefined;
 };
 
 type ClassConverter =
 {	onConstructorDecl(m: ClassConstructorDef): string;
 	onIndexSignatureDecl(m: ClassIndexSignatureDef): string;
-	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|Accessor): string;
-	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef): string;
+	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
+	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef): string;
 	onJsDoc(m: JsDoc|undefined): string;
 };
 
-type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | Accessor;
+type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor;
 type MemberHeader = {name: string, headerLine: string, headerId: string};
 
-export function isPublicOrProtected(node: {accessibility?: Accessibility, jsDoc?: JsDoc})
-{	return node.accessibility !== 'private' && (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
+export function isPublicOrProtected(node: {} | {accessibility?: Accessibility, jsDoc?: JsDoc})
+{	if ('accessibility' in node && node.accessibility==='private')
+	{	return false;
+	}
+	if ('jsDoc' in node)
+	{	return (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
+	}
+	return true;
 }
 
-export function isDeprecated(node: {jsDoc?: JsDoc})
-{	return node.jsDoc?.tags?.find(t => t.kind == 'deprecated') != undefined;
+export function isDeprecated(node: {} | {jsDoc?: JsDoc})
+{	return ('jsDoc' in node ? node.jsDoc : undefined)?.tags?.find(t => t.kind == 'deprecated') != undefined;
 }
 
 const enum What
@@ -43,14 +49,14 @@ export class MdClassGen
 {	#kind;
 	#converter;
 	#constructors = new Array<ClassConstructorDef>;
-	#destructors = new Array<ClassMethodDef|InterfaceMethodDef>;
+	#destructors = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
 	#indexSignatures = new Array<ClassIndexSignatureDef>;
-	#propertiesAndAccessors = new Array<ClassPropertyDef|InterfacePropertyDef|Accessor>;
-	#methods = new Array<ClassMethodDef|InterfaceMethodDef>;
+	#propertiesAndAccessors = new Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>;
+	#methods = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNodeClass|DocNodeInterface, converter: ClassConverter)
+	constructor(node: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef, converter: ClassConverter)
 	{	this.#kind = node.kind;
 		this.#converter = converter;
 		getClassMembers
@@ -109,7 +115,7 @@ export class MdClassGen
 		}
 		// destructors
 		for (const m of this.#destructors)
-		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
+		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
 		}
 		// index signatures
 		for (const m of this.#indexSignatures)
@@ -118,20 +124,20 @@ export class MdClassGen
 		// properties
 		for (const m of this.#propertiesAndAccessors)
 		{	let code = '';
-			if ('getter' in m && m.getter?.jsDoc && m.setter?.jsDoc)
+			if ('getter' in m && m.getter && m.setter && 'jsDoc' in m.getter && 'jsDoc' in m.setter && m.getter.jsDoc && m.setter.jsDoc)
 			{	code += 'get\n\n';
 				code += onJsDoc(m.getter.jsDoc);
 				code += 'set\n\n';
 				code += onJsDoc(m.setter.jsDoc);
 			}
 			else
-			{	code += onJsDoc(m.jsDoc);
+			{	code += onJsDoc('jsDoc' in m ? m.jsDoc : undefined);
 			}
 			sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), code);
 		}
 		// methods
 		for (const m of this.#methods)
-		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc(m.jsDoc));
+		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
 		}
 		// done
 		const sectionsCode = sections+'';
@@ -145,15 +151,15 @@ function getMemberKey(name: string, isStatic=false)
 }
 
 function getClassMembers
-(	node: DocNodeClass|DocNodeInterface,
+(	node: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef,
 	constructors: ClassConstructorDef[],
-	destructors: Array<ClassMethodDef|InterfaceMethodDef>,
+	destructors: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
 	indexSignatures: ClassIndexSignatureDef[],
-	propertiesAndAccessors: Array<ClassPropertyDef|InterfacePropertyDef|Accessor>,
-	methods: Array<ClassMethodDef|InterfaceMethodDef>,
+	propertiesAndAccessors: Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>,
+	methods: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
 )
-{	const settersOnly = new Array<ClassMethodDef|InterfaceMethodDef>;
-	const def = 'classDef' in node ? node.classDef : node.interfaceDef;
+{	const settersOnly = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
+	const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : node.typeLiteral;
 	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
 	for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
 	{	const m = methodsAndAccessors[i];
@@ -171,13 +177,21 @@ function getClassMembers
 					break;
 				}
 				case 'getter':
-				{	const accessor: Accessor = {getter: m, setter: undefined, name: m.name, isStatic, accessibility, location: m.location, jsDoc: m.jsDoc};
+				{	const accessor: Accessor =
+					{	getter: m,
+						setter: undefined,
+						name: m.name,
+						isStatic,
+						accessibility,
+						location: 'location' in m ? m.location : undefined,
+						jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+					};
 					const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
 					if (j != -1)
 					{	const setter = methodsAndAccessors[j];
 						accessor.setter = setter;
 						if (!accessor.jsDoc)
-						{	accessor.jsDoc = setter.jsDoc;
+						{	accessor.jsDoc = 'jsDoc' in setter ? setter.jsDoc : undefined;
 						}
 						propertiesAndAccessors.push(accessor);
 						if (j < i)
@@ -200,7 +214,16 @@ function getClassMembers
 	for (const m of settersOnly)
 	{	const isStatic = 'isStatic' in m && m.isStatic;
 		const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-		propertiesAndAccessors.push({getter: undefined, setter: m, name: m.name, isStatic, accessibility, location: m.location, jsDoc: m.jsDoc});
+		propertiesAndAccessors.push
+		(	{	getter: undefined,
+				setter: m,
+				name: m.name,
+				isStatic,
+				accessibility,
+				location: 'location' in m ? m.location : undefined,
+				jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+			}
+		);
 	}
 	for (const p of def.properties)
 	{	if (isPublicOrProtected(p))
@@ -243,7 +266,17 @@ function getClassMembers
 		}
 	}
 	// Sort `propertiesAndAccessors`
-	propertiesAndAccessors.sort((a, b) => a.location.filename < b.location.filename ? -1 : a.location.filename > b.location.filename ? +1 : a.location.line - b.location.line);
+	propertiesAndAccessors.sort
+	(	(a, b) =>
+		{	const aLocation = 'location' in a ? a.location : undefined;
+			const aFilename = aLocation?.filename ?? '';
+			const aLine = aLocation?.line ?? 0;
+			const bLocation = 'location' in b ? b.location : undefined;
+			const bFilename = bLocation?.filename ?? '';
+			const bLine = bLocation?.line ?? 0;
+			return aFilename < bFilename ? -1 : aFilename > bFilename ? +1 : aLine - bLine;
+		}
+	);
 	// Add `classDef.indexSignatures` to `indexSignatures`
 	for (const m of def.indexSignatures)
 	{	indexSignatures.push(m);
@@ -279,7 +312,7 @@ class ClassSections
 
 	#kind;
 
-	constructor(kind: 'class'|'interface')
+	constructor(kind: 'class'|'interface'|'typeLiteral')
 	{	this.#kind = kind;
 	}
 
@@ -372,7 +405,7 @@ class ClassSections
 		// deprecated
 		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
 		// done
-		return code ? `This ${this.#kind} has:\n${code}\n\n` : '';
+		return code ? `This ${this.#kind=='typeLiteral' ? 'type' : this.#kind} has:\n${code}\n\n` : '';
 	}
 
 	#genMemberOutline(memberHeader: MemberHeader[], titleSingular: string, titlePlural: string, numberOnly: boolean)

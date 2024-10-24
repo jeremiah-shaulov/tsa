@@ -1,5 +1,5 @@
 import {indentAndWrap} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, InterfaceDef, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef, TsTypeTypeLiteralDef} from '../../doc_node/mod.ts';
 import {Accessor, MdClassGen, isDeprecated, isPublicOrProtected} from './md_class_gen.ts';
 
 const INDEX_N_COLUMNS = 4;
@@ -214,56 +214,68 @@ export class MdGen
 		this.#gens = new Gens
 		(	nodes,
 			node =>
-			{	switch (node.kind)
-				{	case 'class':
-					case 'interface':
-						return new MdClassGen
-						(	node,
-							{	onConstructorDecl: m =>
-								{	let codeCur = '';
-									if (isDeprecated(m))
-									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
-									}
-									if (m.accessibility === 'protected')
-									{	codeCur += '<span class="lit-keyword">protected</span> ';
-									}
-									codeCur += '<span class="lit-keyword">constructor</span>';
-									codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
-									return codeCur;
-								},
-								onIndexSignatureDecl: m =>
-								{	let codeCur = '';
-									if (m.readonly)
-									{	codeCur += '<span class="lit-keyword">readonly</span> ';
-									}
-									codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
-									codeCur += this.#convertTsTypeColon(m.tsType);
-									return codeCur;
-								},
-								onPropertyDecl: m =>
-								{	let codeCur = '';
-									if (isDeprecated(m))
-									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
-									}
-									codeCur += this.#convertPropertyOrAccessor(m);
-									return codeCur;
-								},
-								onMethodDecl: m =>
-								{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-									const isAbstract = 'isAbstract' in m && m.isAbstract;
-									const isStatic = 'isStatic' in m && m.isStatic;
-									let codeCur = '';
-									if (isDeprecated(m))
-									{	codeCur += '<span class="lit-keyword">deprecated</span> ';
-									}
-									codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
-									return codeCur;
-								},
-								onJsDoc: jsDoc =>
-								{	return this.#convertJsDoc(jsDoc, true);
-								},
-							}
-						);
+			{	let nodeForGen: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef|undefined;
+				if (node.kind=='class' ||node.kind=='interface')
+				{	nodeForGen = node;
+				}
+				else if (node.kind == 'typeAlias')
+				{	const {typeAliasDef} = node;
+					let {tsType} = typeAliasDef;
+					if (tsType.kind == 'parenthesized')
+					{	tsType = tsType.parenthesized;
+					}
+					if (tsType.kind == 'typeLiteral')
+					{	nodeForGen = tsType;
+					}
+				}
+				if (nodeForGen)
+				{	return new MdClassGen
+					(	nodeForGen,
+						{	onConstructorDecl: m =>
+							{	let codeCur = '';
+								if (isDeprecated(m))
+								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								}
+								if (m.accessibility === 'protected')
+								{	codeCur += '<span class="lit-keyword">protected</span> ';
+								}
+								codeCur += '<span class="lit-keyword">constructor</span>';
+								codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
+								return codeCur;
+							},
+							onIndexSignatureDecl: m =>
+							{	let codeCur = '';
+								if (m.readonly)
+								{	codeCur += '<span class="lit-keyword">readonly</span> ';
+								}
+								codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
+								codeCur += this.#convertTsTypeColon(m.tsType);
+								return codeCur;
+							},
+							onPropertyDecl: m =>
+							{	let codeCur = '';
+								if (isDeprecated(m))
+								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								}
+								codeCur += this.#convertPropertyOrAccessor(m);
+								return codeCur;
+							},
+							onMethodDecl: m =>
+							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+								const isAbstract = 'isAbstract' in m && m.isAbstract;
+								const isStatic = 'isStatic' in m && m.isStatic;
+								let codeCur = '';
+								if (isDeprecated(m))
+								{	codeCur += '<span class="lit-keyword">deprecated</span> ';
+								}
+								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+								return codeCur;
+							},
+							onJsDoc: jsDoc =>
+							{	return this.#convertJsDoc(jsDoc, true);
+							},
+						}
+					);
 				}
 			}
 		);
@@ -342,7 +354,23 @@ export class MdGen
 		}
 		else if (node.kind == 'typeAlias')
 		{	const {typeAliasDef} = node;
-			code += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)} = ${this.#convertTsType(typeAliasDef.tsType)}`;
+			code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
+			const gen = this.#gens.getGen(node);
+			if (gen)
+			{	code += '\n\n';
+				const {outline, sectionsCode} = gen.getCode();
+				// Outline
+				code += outline;
+				// Properties and methods
+				code += sectionsCode;
+			}
+			else
+			{	let {tsType} = typeAliasDef;
+				if (tsType.kind == 'parenthesized')
+				{	tsType = tsType.parenthesized;
+				}
+				code += ' = ' + this.#convertTsType(tsType);
+			}
 		}
 		else if (node.kind == 'function')
 		{	const {functionDef} = node;
@@ -419,7 +447,7 @@ export class MdGen
 		return code;
 	}
 
-	#convertPropertyOrAccessor(p: ClassPropertyDef|InterfacePropertyDef|Accessor)
+	#convertPropertyOrAccessor(p: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor)
 	{	let code = '';
 		if (!('getter' in p))
 		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
