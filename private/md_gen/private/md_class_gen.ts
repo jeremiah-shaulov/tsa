@@ -1,4 +1,4 @@
-import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef} from '../../doc_node/mod.ts';
+import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef} from '../../doc_node/mod.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
@@ -18,11 +18,13 @@ type ClassConverter =
 	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
 	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction): string;
 	onTypeAlias(m: TypeAliasDef): string;
+	onEnumMember(m: EnumMemberDef): string;
 	onVariable(m: VariableDef): string;
+	onNamespace(m: NamespaceDef): string;
 	onJsDoc(m: JsDoc|undefined): string;
 };
 
-type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor;
+type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor | EnumMemberDef;
 type MemberHeader = {name: string, headerLine: string, headerId: string};
 
 export function isPublicOrProtected(node: object | {accessibility?: Accessibility, jsDoc?: JsDoc})
@@ -56,15 +58,22 @@ export class MdClassGen
 	#propertiesAndAccessors = new Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>;
 	#methods = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
 	#typeAlias: [] | [TypeAliasDef] = [];
-	#other: [] | [DocNodeFunction|DocNodeVariable] = [];
+	#other: [] | [DocNodeEnum|DocNodeFunction|DocNodeVariable|DocNodeNamespace] = [];
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias|DocNodeFunction|DocNodeVariable, converter: ClassConverter)
+	constructor(node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias|DocNodeEnum|DocNodeFunction|DocNodeVariable|DocNodeNamespace, converter: ClassConverter)
 	{	this.#kind = node.kind;
 		this.#converter = converter;
-		if (node.kind=='function' || node.kind=='variable')
+		const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl, onEnumMember} = this.#converter;
+		if (node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
 		{	this.#other[0] = node;
+		}
+		else if (node.kind == 'enum')
+		{	this.#other[0] = node;
+			for (const m of node.enumDef.members)
+			{	this.#addHeader(m, m.name, false, onEnumMember(m));
+			}
 		}
 		else
 		{	getClassMembers
@@ -76,7 +85,6 @@ export class MdClassGen
 				this.#methods,
 				this.#typeAlias,
 			);
-			const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#converter;
 			// constructors
 			for (const m of this.#constructors)
 			{	this.#addHeader(m, m.name, false, onConstructorDecl(m));
@@ -101,7 +109,7 @@ export class MdClassGen
 	}
 
 	#addHeader(m: Member, name: string, isStatic: boolean, headerLine: string)
-	{	const memberHeader = {name: name, headerLine, headerId: parseHeaderId(headerLine)};
+	{	const memberHeader = {name, headerLine, headerId: parseHeaderId(headerLine)};
 		this.#memberHeaders.set(m, memberHeader);
 		const key = getMemberKey(name, isStatic);
 		this.#memberHeadersByKey.set(key, memberHeader);
@@ -116,10 +124,29 @@ export class MdClassGen
 	}
 
 	getCode()
-	{	const {onMethodDecl, onTypeAlias, onVariable, onJsDoc} = this.#converter;
+	{	const {onMethodDecl, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+		const memberHeaders = this.#memberHeaders;
 		if (this.#other.length)
 		{	const other = this.#other[0];
-			const sectionsCode = other.kind=='function' ? onMethodDecl(other) : onVariable(other.variableDef);
+			let sectionsCode = '';
+			switch (other.kind)
+			{	case 'enum':
+					for (const m of other.enumDef.members)
+					{	const memberHeader = memberHeaders.get(m);
+						const code = onJsDoc(m.jsDoc);
+						sectionsCode += `#### ${memberHeader?.headerLine ?? ''}\n\n${code}\n\n`;
+					}
+					break;
+				case 'function':
+					sectionsCode = onMethodDecl(other);
+					break;
+				case 'variable':
+					sectionsCode = onVariable(other.variableDef);
+					break;
+				case 'namespace':
+					sectionsCode = onNamespace(other.namespaceDef);
+					break;
+			}
 			return {outline: '', sectionsCode};
 		}
 		else if (this.#typeAlias.length)
@@ -127,8 +154,7 @@ export class MdClassGen
 			return {outline: '', sectionsCode};
 		}
 		else
-		{	const memberHeaders = this.#memberHeaders;
-			const sections = new ClassSections(this.#kind);
+		{	const sections = new ClassSections(this.#kind);
 			// constructors
 			for (const m of this.#constructors)
 			{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
@@ -344,7 +370,7 @@ class ClassSections
 
 	#kind;
 
-	constructor(kind: 'class'|'interface'|'typeAlias'|'function'|'variable')
+	constructor(kind: 'class'|'interface'|'typeAlias'|'enum'|'function'|'variable'|'namespace')
 	{	this.#kind = kind;
 	}
 
