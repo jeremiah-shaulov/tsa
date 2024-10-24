@@ -1,4 +1,5 @@
-import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, TsTypeTypeLiteralDef, LiteralMethodDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
+import ts from 'npm:typescript@5.6.2';
+import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, TsTypeTypeLiteralDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TsTypeDef, TypeAliasDef} from '../../doc_node/mod.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
@@ -17,6 +18,7 @@ type ClassConverter =
 	onIndexSignatureDecl(m: ClassIndexSignatureDef): string;
 	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
 	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef): string;
+	onTypeAlias(m: TypeAliasDef): string;
 	onJsDoc(m: JsDoc|undefined): string;
 };
 
@@ -53,10 +55,11 @@ export class MdClassGen
 	#indexSignatures = new Array<ClassIndexSignatureDef>;
 	#propertiesAndAccessors = new Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>;
 	#methods = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
+	#typeAlias: [] | [TypeAliasDef] = [];
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef, converter: ClassConverter)
+	constructor(node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias, converter: ClassConverter)
 	{	this.#kind = node.kind;
 		this.#converter = converter;
 		getClassMembers
@@ -66,6 +69,7 @@ export class MdClassGen
 			this.#indexSignatures,
 			this.#propertiesAndAccessors,
 			this.#methods,
+			this.#typeAlias,
 		);
 		const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl} = this.#converter;
 		// constructors
@@ -106,43 +110,49 @@ export class MdClassGen
 	}
 
 	getCode()
-	{	const {onJsDoc} = this.#converter;
-		const memberHeaders = this.#memberHeaders;
-		const sections = new ClassSections(this.#kind);
-		// constructors
-		for (const m of this.#constructors)
-		{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
+	{	const {onTypeAlias, onJsDoc} = this.#converter;
+		if (this.#typeAlias.length)
+		{	const sectionsCode = onTypeAlias(this.#typeAlias[0]);
+			return {outline: '', sectionsCode};
 		}
-		// destructors
-		for (const m of this.#destructors)
-		{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
-		}
-		// index signatures
-		for (const m of this.#indexSignatures)
-		{	sections.add(sectionIndex(m), What.IndexSignature, memberHeaders.get(m), '');
-		}
-		// properties
-		for (const m of this.#propertiesAndAccessors)
-		{	let code = '';
-			if ('getter' in m && m.getter && m.setter && 'jsDoc' in m.getter && 'jsDoc' in m.setter && m.getter.jsDoc && m.setter.jsDoc)
-			{	code += 'get\n\n';
-				code += onJsDoc(m.getter.jsDoc);
-				code += 'set\n\n';
-				code += onJsDoc(m.setter.jsDoc);
+		else
+		{	const memberHeaders = this.#memberHeaders;
+			const sections = new ClassSections(this.#kind);
+			// constructors
+			for (const m of this.#constructors)
+			{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
 			}
-			else
-			{	code += onJsDoc('jsDoc' in m ? m.jsDoc : undefined);
+			// destructors
+			for (const m of this.#destructors)
+			{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
 			}
-			sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), code);
+			// index signatures
+			for (const m of this.#indexSignatures)
+			{	sections.add(sectionIndex(m), What.IndexSignature, memberHeaders.get(m), '');
+			}
+			// properties
+			for (const m of this.#propertiesAndAccessors)
+			{	let code = '';
+				if ('getter' in m && m.getter && m.setter && 'jsDoc' in m.getter && 'jsDoc' in m.setter && m.getter.jsDoc && m.setter.jsDoc)
+				{	code += 'get\n\n';
+					code += onJsDoc(m.getter.jsDoc);
+					code += 'set\n\n';
+					code += onJsDoc(m.setter.jsDoc);
+				}
+				else
+				{	code += onJsDoc('jsDoc' in m ? m.jsDoc : undefined);
+				}
+				sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), code);
+			}
+			// methods
+			for (const m of this.#methods)
+			{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
+			}
+			// done
+			const sectionsCode = sections+'';
+			const outline = sections.getOutline();
+			return {outline, sectionsCode};
 		}
-		// methods
-		for (const m of this.#methods)
-		{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
-		}
-		// done
-		const sectionsCode = sections+'';
-		const outline = sections.getOutline();
-		return {outline, sectionsCode};
 	}
 }
 
@@ -151,135 +161,146 @@ function getMemberKey(name: string, isStatic=false)
 }
 
 function getClassMembers
-(	node: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef,
+(	node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias,
 	constructors: ClassConstructorDef[],
 	destructors: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
 	indexSignatures: ClassIndexSignatureDef[],
 	propertiesAndAccessors: Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>,
 	methods: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
+	typeAlias: [] | [TypeAliasDef],
 )
 {	const settersOnly = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
-	const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : node.typeLiteral;
-	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
-	for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
-	{	const m = methodsAndAccessors[i];
-		if (isPublicOrProtected(m))
-		{	const isStatic = 'isStatic' in m && m.isStatic;
-			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-			switch (m.kind)
-			{	case 'method':
-				{	if (!isStatic && accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
-					{	destructors.push(m);
-					}
-					else
-					{	methods.push(m);
-					}
-					break;
-				}
-				case 'getter':
-				{	const accessor: Accessor =
-					{	getter: m,
-						setter: undefined,
-						name: m.name,
-						isStatic,
-						accessibility,
-						location: 'location' in m ? m.location : undefined,
-						jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
-					};
-					const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
-					if (j != -1)
-					{	const setter = methodsAndAccessors[j];
-						accessor.setter = setter;
-						if (!accessor.jsDoc)
-						{	accessor.jsDoc = 'jsDoc' in setter ? setter.jsDoc : undefined;
-						}
-						propertiesAndAccessors.push(accessor);
-						if (j < i)
-						{	const k = settersOnly.indexOf(setter);
-							settersOnly.splice(k, 1);
+	const typeAliasDef = 'typeAliasDef' in node ? node.typeAliasDef : undefined;
+	let tsType = typeAliasDef?.tsType;
+	while (tsType?.kind === 'parenthesized')
+	{	tsType = tsType.parenthesized;
+	}
+	const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : tsType && 'typeLiteral' in tsType ? tsType.typeLiteral : undefined;
+	if (def)
+	{	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
+		for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
+		{	const m = methodsAndAccessors[i];
+			if (isPublicOrProtected(m))
+			{	const isStatic = 'isStatic' in m && m.isStatic;
+				const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+				switch (m.kind)
+				{	case 'method':
+					{	if (!isStatic && accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
+						{	destructors.push(m);
 						}
 						else
-						{	methodsAndAccessors.splice(j, 1);
+						{	methods.push(m);
+						}
+						break;
+					}
+					case 'getter':
+					{	const accessor: Accessor =
+						{	getter: m,
+							setter: undefined,
+							name: m.name,
+							isStatic,
+							accessibility,
+							location: 'location' in m ? m.location : undefined,
+							jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+						};
+						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
+						if (j != -1)
+						{	const setter = methodsAndAccessors[j];
+							accessor.setter = setter;
+							if (!accessor.jsDoc)
+							{	accessor.jsDoc = 'jsDoc' in setter ? setter.jsDoc : undefined;
+							}
+							propertiesAndAccessors.push(accessor);
+							if (j < i)
+							{	const k = settersOnly.indexOf(setter);
+								settersOnly.splice(k, 1);
+							}
+							else
+							{	methodsAndAccessors.splice(j, 1);
+							}
+						}
+						break;
+					}
+					case 'setter':
+					{	settersOnly.push(m);
+					}
+				}
+			}
+		}
+		// Add `settersOnly` and `def.properties` to propertiesAndAccessors
+		for (const m of settersOnly)
+		{	const isStatic = 'isStatic' in m && m.isStatic;
+			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+			propertiesAndAccessors.push
+			(	{	getter: undefined,
+					setter: m,
+					name: m.name,
+					isStatic,
+					accessibility,
+					location: 'location' in m ? m.location : undefined,
+					jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+				}
+			);
+		}
+		for (const p of def.properties)
+		{	if (isPublicOrProtected(p))
+			{	propertiesAndAccessors.push(p);
+			}
+		}
+		// Add `def.constructors` to `constructors`
+		// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
+		if ('classDef' in node)
+		{	for (const c of node.classDef.constructors)
+			{	if (isPublicOrProtected(c))
+				{	constructors.push(c);
+				}
+				for (const p of c.params)
+				{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
+					{	let param = p;
+						let init: string|undefined;
+						if (p.kind == 'assign')
+						{	param = p.left;
+							init = p.right;
+						}
+						if (param.kind == 'identifier')
+						{	propertiesAndAccessors.push
+							(	{	tsType: param.tsType,
+									readonly: param.readonly ?? false,
+									accessibility: param.accessibility,
+									optional: param.optional,
+									isAbstract: false,
+									isStatic: false,
+									isOverride: param.isOverride,
+									name: param.name,
+									decorators: param.decorators,
+									location: c.location,
+									init,
+								}
+							);
 						}
 					}
-					break;
-				}
-				case 'setter':
-				{	settersOnly.push(m);
 				}
 			}
 		}
-	}
-	// Add `settersOnly` and `def.properties` to propertiesAndAccessors
-	for (const m of settersOnly)
-	{	const isStatic = 'isStatic' in m && m.isStatic;
-		const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-		propertiesAndAccessors.push
-		(	{	getter: undefined,
-				setter: m,
-				name: m.name,
-				isStatic,
-				accessibility,
-				location: 'location' in m ? m.location : undefined,
-				jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+		// Sort `propertiesAndAccessors`
+		propertiesAndAccessors.sort
+		(	(a, b) =>
+			{	const aLocation = 'location' in a ? a.location : undefined;
+				const aFilename = aLocation?.filename ?? '';
+				const aLine = aLocation?.line ?? 0;
+				const bLocation = 'location' in b ? b.location : undefined;
+				const bFilename = bLocation?.filename ?? '';
+				const bLine = bLocation?.line ?? 0;
+				return aFilename < bFilename ? -1 : aFilename > bFilename ? +1 : aLine - bLine;
 			}
 		);
-	}
-	for (const p of def.properties)
-	{	if (isPublicOrProtected(p))
-		{	propertiesAndAccessors.push(p);
+		// Add `classDef.indexSignatures` to `indexSignatures`
+		for (const m of def.indexSignatures)
+		{	indexSignatures.push(m);
 		}
 	}
-	// Add `def.constructors` to `constructors`
-	// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
-	if ('classDef' in node)
-	{	for (const c of node.classDef.constructors)
-		{	if (isPublicOrProtected(c))
-			{	constructors.push(c);
-			}
-			for (const p of c.params)
-			{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
-				{	let param = p;
-					let init: string|undefined;
-					if (p.kind == 'assign')
-					{	param = p.left;
-						init = p.right;
-					}
-					if (param.kind == 'identifier')
-					{	propertiesAndAccessors.push
-						(	{	tsType: param.tsType,
-								readonly: param.readonly ?? false,
-								accessibility: param.accessibility,
-								optional: param.optional,
-								isAbstract: false,
-								isStatic: false,
-								isOverride: param.isOverride,
-								name: param.name,
-								decorators: param.decorators,
-								location: c.location,
-								init,
-							}
-						);
-					}
-				}
-			}
-		}
-	}
-	// Sort `propertiesAndAccessors`
-	propertiesAndAccessors.sort
-	(	(a, b) =>
-		{	const aLocation = 'location' in a ? a.location : undefined;
-			const aFilename = aLocation?.filename ?? '';
-			const aLine = aLocation?.line ?? 0;
-			const bLocation = 'location' in b ? b.location : undefined;
-			const bFilename = bLocation?.filename ?? '';
-			const bLine = bLocation?.line ?? 0;
-			return aFilename < bFilename ? -1 : aFilename > bFilename ? +1 : aLine - bLine;
-		}
-	);
-	// Add `classDef.indexSignatures` to `indexSignatures`
-	for (const m of def.indexSignatures)
-	{	indexSignatures.push(m);
+	else if (typeAliasDef)
+	{	typeAlias[0] = typeAliasDef;
 	}
 }
 
@@ -312,7 +333,7 @@ class ClassSections
 
 	#kind;
 
-	constructor(kind: 'class'|'interface'|'typeLiteral')
+	constructor(kind: 'class'|'interface'|'typeAlias')
 	{	this.#kind = kind;
 	}
 
@@ -405,7 +426,7 @@ class ClassSections
 		// deprecated
 		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
 		// done
-		return code ? `This ${this.#kind=='typeLiteral' ? 'type' : this.#kind} has:\n${code}\n\n` : '';
+		return code ? `This ${this.#kind=='typeAlias' ? 'type' : this.#kind} has:\n${code}\n\n` : '';
 	}
 
 	#genMemberOutline(memberHeader: MemberHeader[], titleSingular: string, titlePlural: string, numberOnly: boolean)

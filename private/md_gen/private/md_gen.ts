@@ -215,22 +215,9 @@ export class MdGen
 		(	nodes,
 			node =>
 			{	let nodeForGen: DocNodeClass|DocNodeInterface|TsTypeTypeLiteralDef|undefined;
-				if (node.kind=='class' ||node.kind=='interface')
-				{	nodeForGen = node;
-				}
-				else if (node.kind == 'typeAlias')
-				{	const {typeAliasDef} = node;
-					let {tsType} = typeAliasDef;
-					if (tsType.kind == 'parenthesized')
-					{	tsType = tsType.parenthesized;
-					}
-					if (tsType.kind == 'typeLiteral')
-					{	nodeForGen = tsType;
-					}
-				}
-				if (nodeForGen)
+				if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
 				{	return new MdClassGen
-					(	nodeForGen,
+					(	node,
 						{	onConstructorDecl: m =>
 							{	let codeCur = '';
 								if (isDeprecated(m))
@@ -271,6 +258,11 @@ export class MdGen
 								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
 								return codeCur;
 							},
+							onTypeAlias: m =>
+							{	let codeCur = '';
+								codeCur += `<span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(m.typeParams)} = ` + this.#convertTsType(m.tsType);
+								return codeCur;
+							},
 							onJsDoc: jsDoc =>
 							{	return this.#convertJsDoc(jsDoc, true);
 							},
@@ -307,7 +299,7 @@ export class MdGen
 	#convertDocNode(node: DocNode)
 	{	let code = STYLE;
 		// class def
-		if (node.kind=='class' || node.kind=='interface')
+		if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
 		{	if ('classDef' in node)
 			{	const {classDef} = node;
 				// Decorators
@@ -331,7 +323,7 @@ export class MdGen
 				// Implements
 				code += classDef.implements.length==0 ? '' : ' <span class="lit-keyword">implements</span> ' + this.#convertActualTypeParams(classDef.implements);
 			}
-			else
+			else if ('interfaceDef' in node)
 			{	const {interfaceDef} = node;
 				// Interface (h1 header)
 				code += `# <span class="lit-keyword">interface</span> ${node.name}`;
@@ -339,6 +331,10 @@ export class MdGen
 				code += this.#convertTypeParams(interfaceDef.typeParams);
 				// Extends
 				code += !interfaceDef.extends.length ? '' : ' <span class="lit-keyword">extends</span> ' + interfaceDef.extends.map(e => this.#convertTsType(e)).join(', ');
+			}
+			else
+			{	const {typeAliasDef} = node;
+				code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
 			}
 			// End h1 header
 			code += '\n\n';
@@ -350,26 +346,6 @@ export class MdGen
 				code += outline;
 				// Properties and methods
 				code += sectionsCode;
-			}
-		}
-		else if (node.kind == 'typeAlias')
-		{	const {typeAliasDef} = node;
-			code += `# <span class="lit-keyword">type</span> ${node.name}${this.#convertTypeParams(typeAliasDef.typeParams)}`;
-			const gen = this.#gens.getGen(node);
-			if (gen)
-			{	code += '\n\n';
-				const {outline, sectionsCode} = gen.getCode();
-				// Outline
-				code += outline;
-				// Properties and methods
-				code += sectionsCode;
-			}
-			else
-			{	let {tsType} = typeAliasDef;
-				if (tsType.kind == 'parenthesized')
-				{	tsType = tsType.parenthesized;
-				}
-				code += ' = ' + this.#convertTsType(tsType);
 			}
 		}
 		else if (node.kind == 'function')
