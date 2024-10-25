@@ -330,7 +330,7 @@ class MdGen
 							{	return this.#convertNamespace(m.elements);
 							},
 							onJsDoc: jsDoc =>
-							{	return this.#convertJsDoc(jsDoc, true);
+							{	return this.#convertJsDoc(jsDoc);
 							},
 						}
 					);
@@ -642,7 +642,7 @@ class MdGen
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertJsDoc(jsDoc?: JsDoc, isBlockquote=false)
+	#convertJsDoc(jsDoc?: JsDoc)
 	{	let doc = jsDoc?.doc ?? '';
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
@@ -709,9 +709,6 @@ class MdGen
 		{	return '';
 		}
 		doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
-		if (isBlockquote)
-		{	doc = '> ' + doc.replaceAll('\n', '\n> ') + '\n\n';
-		}
 		return doc;
 	}
 }

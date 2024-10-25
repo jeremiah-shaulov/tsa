@@ -4,6 +4,7 @@ const RE_NLS = /\r?\n/g;
 const RE_MD_ESCAPE = /[`[{<*_~\\#]/g;
 const RE_MD_ESCAPE_LINK_TEXT = /[`[{<*_~\\#\]]/g;
 const RE_MD_ENCODE_URI = /[^a-z0–9_\-$.';\/?:@&=+,#]+/gi;
+const RE_MD_BLOCKQUOTE = /^>*/gm;
 
 const encoder = new TextEncoder;
 
@@ -33,6 +34,10 @@ export function mdLink(text: string, href: string)
 {	text = mdEscapeLinkText(text);
 	href = mdEncodeURI(href);
 	return `[${text}](${href})`;
+}
+
+export function mdBlockquote(text: string)
+{	return !text ? '' : text.replace(RE_MD_BLOCKQUOTE, m => m ? m+'>' : '> ') + '\n\n';
 }
 
 export function isPublicOrProtected(node: object | {accessibility?: Accessibility, jsDoc?: JsDoc})

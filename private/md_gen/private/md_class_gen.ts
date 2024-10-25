@@ -1,5 +1,5 @@
 import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind} from '../../doc_node/mod.ts';
-import {isDeprecated, isPublicOrProtected, mdLink} from './util.ts';
+import {isDeprecated, isPublicOrProtected, mdBlockquote, mdLink} from './util.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
@@ -124,7 +124,7 @@ export class MdClassGen
 			{	case 'enum':
 					for (const m of other.enumDef.members)
 					{	const memberHeader = memberHeaders.get(m);
-						const code = onJsDoc(m.jsDoc);
+						const code = mdBlockquote(onJsDoc(m.jsDoc));
 						sectionsCode += `#### ${memberHeader?.headerLine ?? ''}\n\n${code}\n\n`;
 					}
 					break;
@@ -146,11 +146,11 @@ export class MdClassGen
 		{	const sections = new ClassSections(this.#node.kind);
 			// constructors
 			for (const m of this.#constructors)
-			{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), onJsDoc(m.jsDoc));
+			{	sections.add(sectionIndex(m), What.Constructor, memberHeaders.get(m), mdBlockquote(onJsDoc(m.jsDoc)));
 			}
 			// destructors
 			for (const m of this.#destructors)
-			{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
+			{	sections.add(sectionIndex(m), What.Destructor, memberHeaders.get(m), mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined)));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
@@ -161,18 +161,18 @@ export class MdClassGen
 			{	let code = '';
 				if ('getter' in m && m.getter && m.setter && 'jsDoc' in m.getter && 'jsDoc' in m.setter && m.getter.jsDoc && m.setter.jsDoc)
 				{	code += '`get`\n\n';
-					code += onJsDoc(m.getter.jsDoc);
+					code +=  mdBlockquote(onJsDoc(m.getter.jsDoc));
 					code += '`set`\n\n';
-					code += onJsDoc(m.setter.jsDoc);
+					code +=  mdBlockquote(onJsDoc(m.setter.jsDoc));
 				}
 				else
-				{	code += onJsDoc('jsDoc' in m ? m.jsDoc : undefined);
+				{	code +=  mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
 				}
 				sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeaders.get(m), code);
 			}
 			// methods
 			for (const m of this.#methods)
-			{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m), onJsDoc('jsDoc' in m ? m.jsDoc : undefined));
+			{	sections.add(sectionIndex(m), What.Method, memberHeaders.get(m),  mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined)));
 			}
 			// done
 			sectionsCode = sections+'';
