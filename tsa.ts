@@ -181,20 +181,48 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 	}
 	else
 	{	const gen = new MdGen(result);
+		const createdDirs = new Array<string>;
+		let nRemoved = 0;
 		for (const {dir, code} of gen.genFiles())
-		{	const filename = path.join(outFileOrDir, dir, 'README.md');
+		{	// Need to write `code` to `${dir}/README.md`
+			const curDir = !dir ? outFileOrDir : path.join(outFileOrDir, dir);
+			const filename = path.join(curDir, 'README.md');
+			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
 			{	try
 				{	await Deno.writeTextFile(filename, code);
+					// If successfully written from the first attempt, see what else files exist in this directory, and remove them
+					if (i==0 && dir)
+					{	for await (const {name} of Deno.readDir(curDir))
+						{	if (name != 'README.md')
+							{	// Remove this file or directory
+								await Deno.remove(path.join(curDir, name), {recursive: true});
+								nRemoved++;
+							}
+						}
+					}
 				}
 				catch (e)
 				{	if (i!=0 || e.code!='ENOENT')
 					{	throw e;
 					}
-					await Deno.mkdir(path.join(outFileOrDir, dir), {recursive: true});
+					await Deno.mkdir(curDir, {recursive: true});
+				}
+			}
+			createdDirs.push(dir);
+		}
+		// Delete existing files that i didn't create
+		if (createdDirs.length)
+		{	for await (const {name} of Deno.readDir(outFileOrDir))
+			{	if (name!='README.md' && !createdDirs.includes(name))
+				{	// Remove this file or directory
+					await Deno.remove(path.join(outFileOrDir, name), {recursive: true});
+					nRemoved++;
 				}
 			}
 		}
+		// Done
+		console.log(`Created ${createdDirs.length} README.md files. Removed ${nRemoved} files or directories.`);
 	}
 }
 
