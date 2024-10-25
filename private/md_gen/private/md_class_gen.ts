@@ -18,7 +18,7 @@ type ClassConverter =
 	onConstructor(m: ClassConstructorDef): string;
 	onIndexSignature(m: ClassIndexSignatureDef): string;
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
-	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction): string;
+	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction, isDestructor: boolean): string;
 	onTypeAlias(m: TypeAliasDef): string;
 	onEnumMember(m: EnumMemberDef): string;
 	onVariable(m: VariableDef): string;
@@ -81,7 +81,7 @@ export class MdClassGen
 			}
 			// destructors
 			for (const m of this.#destructors)
-			{	this.#addHeader(m, m.name, false, onMethod(m));
+			{	this.#addHeader(m, m.name, false, onMethod(m, true));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
@@ -93,7 +93,7 @@ export class MdClassGen
 			}
 			// methods
 			for (const m of this.#methods)
-			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onMethod(m));
+			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onMethod(m, false));
 			}
 		}
 	}
@@ -129,7 +129,7 @@ export class MdClassGen
 					}
 					break;
 				case 'function':
-					sectionsCode = onMethod(other);
+					sectionsCode = onMethod(other, false);
 					break;
 				case 'variable':
 					sectionsCode = onVariable(other.variableDef);

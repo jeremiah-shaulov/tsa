@@ -271,7 +271,7 @@ class MdGen
 								return code;
 							},
 							onConstructor: m =>
-							{	let codeCur = '';
+							{	let codeCur = '🔧 ';
 								if (isDeprecated(m))
 								{	codeCur += '`deprecated` ';
 								}
@@ -283,7 +283,7 @@ class MdGen
 								return codeCur;
 							},
 							onIndexSignature: m =>
-							{	let codeCur = '';
+							{	let codeCur = '🔍 ';
 								if (m.readonly)
 								{	codeCur += '`readonly` ';
 								}
@@ -292,18 +292,18 @@ class MdGen
 								return codeCur;
 							},
 							onProperty: m =>
-							{	let codeCur = '';
+							{	let codeCur = '📄 ';
 								if (isDeprecated(m))
 								{	codeCur += '`deprecated` ';
 								}
 								codeCur += this.#convertPropertyOrAccessor(m);
 								return codeCur;
 							},
-							onMethod: m =>
+							onMethod: (m, isDestructor) =>
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
-								let codeCur = '';
+								let codeCur = isDestructor ? '🔨 ' : '⚙ ';
 								if (isDeprecated(m))
 								{	codeCur += '`deprecated` ';
 								}
