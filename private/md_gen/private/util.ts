@@ -30,10 +30,10 @@ function mdEncodeURI(text: string)
 	);
 }
 
-export function mdLink(text: string, href: string)
+export function mdLink(text: string, href: string, isMonospace=false)
 {	text = mdEscapeLinkText(text);
 	href = mdEncodeURI(href);
-	return `[${text}](${href})`;
+	return isMonospace ? `[\`${text}\`](${href})` : `[${text}](${href})`;
 }
 
 export function mdBlockquote(text: string)

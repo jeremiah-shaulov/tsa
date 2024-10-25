@@ -94,8 +94,9 @@ L:		while (pos < namepath.length)
 			if (!RE_LINK_PATH.test(namepath))
 			{	return '';
 			}
-			pos = RE_LINK_PATH.lastIndex;
-			const name = namepath.charAt(0)=='"' ? namepath.slice(1, pos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : namepath.slice(0, pos);
+			const nextPos = RE_LINK_PATH.lastIndex;
+			const name = namepath.charAt(pos)=='"' ? namepath.slice(pos+1, nextPos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : namepath.slice(pos, nextPos);
+			pos = nextPos;
 			if (!node)
 			{	// Find public symbol
 				node = this.#nodes.find(n => n.name==name && n.declarationKind=='export');
@@ -671,35 +672,34 @@ class MdGen
 						}
 						else
 						{	// Link close
-							let linkText = '';
-							if (doc.endsWith(']'))
-							{	const pos = doc.lastIndexOf('[');
-								if (pos != -1)
-								{	linkText = doc.slice(pos+1, -1);
-									if (RE_NO_NL.test(linkText))
-									{	linkText = '';
-									}
-									else
-									{	doc = doc.slice(0, pos);
+							curNamepath = curNamepath.trim();
+							if (curNamepath)
+							{	let linkText = '';
+								if (doc.endsWith(']'))
+								{	const pos = doc.lastIndexOf('[');
+									if (pos != -1)
+									{	linkText = doc.slice(pos+1, -1);
+										if (RE_NO_NL.test(linkText))
+										{	linkText = '';
+										}
+										else
+										{	doc = doc.slice(0, pos);
+										}
 									}
 								}
-							}
-							if (!linkText)
-							{	const pos = curNamepath.lastIndexOf('|');
-								if (pos != -1)
-								{	linkText = curNamepath.slice(pos+1);
-									curNamepath = curNamepath.slice(0, pos);
+								if (!linkText)
+								{	const pos = curNamepath.lastIndexOf('|');
+									if (pos != -1)
+									{	linkText = curNamepath.slice(pos+1);
+										curNamepath = curNamepath.slice(0, pos);
+									}
 								}
+								if (!linkText)
+								{	linkText = curNamepath;
+								}
+								const link = this.#gens.getLinkByNamepath(curNamepath);
+								doc += link ? mdLink(linkText, link, curLinkIsMonospace) : linkText;
 							}
-							if (!linkText)
-							{	linkText = curNamepath;
-							}
-							// TODO: parse `curLinkHref`
-							if (curLinkIsMonospace)
-							{	linkText = '`' + linkText.replaceAll('`', '\\`') + '`';
-							}
-							const link = this.#gens.getLinkByNamepath(curNamepath);
-							doc += link ? mdLink(linkText, link) : linkText;
 						}
 				}
 			}
