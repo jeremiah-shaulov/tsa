@@ -196,11 +196,15 @@ L:		while (pos < namepath.length)
 	}
 }
 
-export class MdGen
+export function mdGen(nodes: DocNode[], moduleName='', importUrls=new Map<string, string>)
+{	return new MdGen(nodes, importUrls).genFiles(moduleName);
+}
+
+class MdGen
 {	#nodes: DocNode[];
 	#gens: Gens;
 
-	constructor(nodes: DocNode[])
+	constructor(nodes: DocNode[], importUrls: Map<string, string>)
 	{	this.#nodes = nodes;
 		this.#gens = new Gens
 		(	nodes,
@@ -208,6 +212,7 @@ export class MdGen
 			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='enum' || node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
 				{	return new MdClassGen
 					(	node,
+						importUrls,
 						{	onTopHeader: node =>
 							{	let code = '';
 								if (node.kind == 'class')
@@ -334,7 +339,7 @@ export class MdGen
 		);
 	}
 
-	*genFiles(moduleName='')
+	*genFiles(moduleName: string)
 	{	let code = `# ${mdEscape(moduleName) || 'Module'}\n\n`;
 		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
 		code += this.#convertNamespace(this.#nodes);

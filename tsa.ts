@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
-import {tsa, printDiagnostics, MdGen} from './mod.ts';
+import {tsa, printDiagnostics, mdGen} from './mod.ts';
 import {Command, path} from './private/deps.ts';
 
 const program = new Command('tsa');
@@ -62,17 +62,32 @@ program
 program
 	.command('doc-md <file1.ts> [fileN.ts...]')
 	.description
-	(	'Generate JSON AST suitable for further documentation generation.'
+	(	'Generate documentation in markdown format.'
 	)
 	.option('--outDir <generated-doc>', 'To what directory to save the resulting files (default: "generated-doc"). The directory will be created or emptied if necessary.')
+	.option('--name <My Project>', 'The title that will appear in the main README.md file.')
+	.option('--importUrl <URL>', 'Optionally specify one such flag per each source file in corresponding order. This lets including in the documentation import examples for public symbols. The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator. For example: tsa doc-md foo/mod.ts --importUrl https://deno.land/foo@1.0.0/mod.ts bar/mod.ts --importUrl https://deno.land/bar@1.0.0/mod.ts (the number of --importUrl options must be the same as number of given files).', optionStringArray)
 	.action
-	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
+	(	async (file1: string, files: string[], options: Record<string, string|boolean|string[]>) =>
 		{	// Input options
 			const entryPoints = [file1, ...files];
 			const outDir = String(options.outDir || 'generated-doc');
+			const moduleName = String(options.name || '');
+			const importUrlsArray = Array.isArray(options.importUrl) ? options.importUrl : [];
+
+			// Validate options
+			const importUrls = new Map<string, string>;
+			if (importUrlsArray.length)
+			{	if (importUrlsArray.length!=entryPoints.length)
+				{	throw new Error(`Number of --importUrl options must be the same as number of given source files (${entryPoints.length})`);
+				}
+				for (let i=0; i<entryPoints.length; i++)
+				{	importUrls.set(path.toFileUrl(path.resolve(entryPoints[i])).href, importUrlsArray[i]);
+				}
+			}
 
 			// Gen doc
-			await doc(entryPoints, outDir, false, true);
+			await doc(entryPoints, outDir, false, true, moduleName, importUrls);
 
 			// Done
 			Deno.exit();
@@ -167,23 +182,27 @@ program
 
 program.parse(Deno.args);
 
-async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean)
+function optionStringArray(value: unknown, previous: unknown[])
+{	const arr = [String(value)];
+	return !previous ? arr : previous.concat(arr);
+}
+
+async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Map<string, string>)
 {	// Create program
 	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Generate doc
-	const result = program.emitDoc({includeReferenced: true, noImportNodes: true});
+	const nodes = program.emitDoc({includeReferenced: true, noImportNodes: true});
 
 	if (!isMd)
-	{	// Save the result to file (or print to stdout), and exit
-		await writeTextFile(outFileOrDir, JSON.stringify(result, undefined, pretty ? '\t' : undefined));
+	{	// Save the resulting nodes to file (or print to stdout), and exit
+		await writeTextFile(outFileOrDir, JSON.stringify(nodes, undefined, pretty ? '\t' : undefined));
 	}
 	else
-	{	const gen = new MdGen(result);
-		const createdDirs = new Array<string>;
+	{	const createdDirs = new Array<string>;
 		let nRemoved = 0;
-		for (const {dir, code} of gen.genFiles())
+		for (const {dir, code} of mdGen(nodes, moduleName, importUrls))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? outFileOrDir : path.join(outFileOrDir, dir);
 			const filename = path.join(curDir, 'README.md');

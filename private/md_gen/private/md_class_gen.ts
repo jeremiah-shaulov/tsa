@@ -39,6 +39,7 @@ const enum What
 
 export class MdClassGen
 {	#node;
+	#importUrls;
 	#converter;
 	#constructors = new Array<ClassConstructorDef>;
 	#destructors = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
@@ -50,8 +51,9 @@ export class MdClassGen
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNode, converter: ClassConverter)
+	constructor(node: DocNode, importUrls: Map<string, string>, converter: ClassConverter)
 	{	this.#node = node;
+		this.#importUrls = importUrls;
 		this.#converter = converter;
 		const {onConstructor, onMethod, onIndexSignature, onProperty, onEnumMember} = this.#converter;
 		if (node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
@@ -178,8 +180,31 @@ export class MdClassGen
 		}
 		const topHeader = onTopHeader(this.#node);
 		const jsDoc = onJsDoc(this.#node.jsDoc);
-		return topHeader + '\n\n' + outline + jsDoc + sectionsCode;
+		const importCode = getImportCode(this.#node, this.#importUrls);
+		return topHeader + '\n\n' + importCode + outline + jsDoc + sectionsCode;
 	}
+}
+
+function getImportCode(node: DocNode, importUrls: Map<string, string>)
+{	let code = '';
+	if (node.declarationKind == 'export')
+	{	// Find shortest export URL, assuming this is the module root
+		let {name, location: {filename}} = node.exports?.sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
+		let found = false;
+		for (const [k, v] of importUrls)
+		{	if (filename.startsWith(k))
+			{	filename = v + filename.slice(k.length);
+				found = true;
+				break;
+			}
+		}
+		if (found || !filename.startsWith('file://'))
+		{	code += '```ts\n';
+			code += `import {${name}} from ` + JSON.stringify(filename);
+			code += '\n```\n\n';
+		}
+	}
+	return code;
 }
 
 function getMemberKey(name: string, isStatic=false)
@@ -460,12 +485,13 @@ class ClassSections
 		if (memberHeader.length > 0)
 		{	if (!numberOnly)
 			{	if (memberHeader.length == 1)
-				{	code += `- ${titleSingular} `;
+				{	const p = memberHeader[0];
+					code += `- ${titleSingular} ${!p.headerId ? p.name : mdLink(p.name, '#'+p.headerId)}`;
 				}
 				else
-				{	code += `- ${memberHeader.length} ${titlePlural}: `;
+				{	code += `- ${memberHeader.length} ${titlePlural}:\n`;
+					code += memberHeader.map(p => !p.headerId ? p.name : mdLink(p.name, '#'+p.headerId)).join(',\n');
 				}
-				code += memberHeader.map(p => !p.headerId ? p.name : mdLink(p.name, '#'+p.headerId)).join(', ');
 			}
 			else
 			{	const title = memberHeader.length==1 ? titleSingular : memberHeader.length+' '+titlePlural;
