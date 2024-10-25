@@ -1,4 +1,5 @@
 import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind} from '../../doc_node/mod.ts';
+import {isDeprecated, isPublicOrProtected, mdLink} from './util.ts';
 
 const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
@@ -14,10 +15,10 @@ export type Accessor =
 
 type ClassConverter =
 {	onTopHeader(node: DocNode): string;
-	onConstructorDecl(m: ClassConstructorDef): string;
-	onIndexSignatureDecl(m: ClassIndexSignatureDef): string;
-	onPropertyDecl(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
-	onMethodDecl(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction): string;
+	onConstructor(m: ClassConstructorDef): string;
+	onIndexSignature(m: ClassIndexSignatureDef): string;
+	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
+	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction): string;
 	onTypeAlias(m: TypeAliasDef): string;
 	onEnumMember(m: EnumMemberDef): string;
 	onVariable(m: VariableDef): string;
@@ -27,20 +28,6 @@ type ClassConverter =
 
 type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor | EnumMemberDef;
 type MemberHeader = {name: string, headerLine: string, headerId: string};
-
-export function isPublicOrProtected(node: object | {accessibility?: Accessibility, jsDoc?: JsDoc})
-{	if ('accessibility' in node && node.accessibility==='private')
-	{	return false;
-	}
-	if ('jsDoc' in node)
-	{	return (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
-	}
-	return true;
-}
-
-export function isDeprecated(node: object | {jsDoc?: JsDoc})
-{	return ('jsDoc' in node ? node.jsDoc : undefined)?.tags?.find(t => t.kind == 'deprecated') != undefined;
-}
 
 const enum What
 {	Constructor,
@@ -66,7 +53,7 @@ export class MdClassGen
 	constructor(node: DocNode, converter: ClassConverter)
 	{	this.#node = node;
 		this.#converter = converter;
-		const {onConstructorDecl, onMethodDecl, onIndexSignatureDecl, onPropertyDecl, onEnumMember} = this.#converter;
+		const {onConstructor, onMethod, onIndexSignature, onProperty, onEnumMember} = this.#converter;
 		if (node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
 		{	this.#other[0] = node;
 		}
@@ -88,23 +75,23 @@ export class MdClassGen
 			);
 			// constructors
 			for (const m of this.#constructors)
-			{	this.#addHeader(m, m.name, false, onConstructorDecl(m));
+			{	this.#addHeader(m, m.name, false, onConstructor(m));
 			}
 			// destructors
 			for (const m of this.#destructors)
-			{	this.#addHeader(m, m.name, false, onMethodDecl(m));
+			{	this.#addHeader(m, m.name, false, onMethod(m));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
-			{	this.#addHeader(m, '', false, onIndexSignatureDecl(m));
+			{	this.#addHeader(m, '', false, onIndexSignature(m));
 			}
 			// properties
 			for (const m of this.#propertiesAndAccessors)
-			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onPropertyDecl(m));
+			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onProperty(m));
 			}
 			// methods
 			for (const m of this.#methods)
-			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onMethodDecl(m));
+			{	this.#addHeader(m, m.name, 'isStatic' in m && m.isStatic, onMethod(m));
 			}
 		}
 	}
@@ -125,7 +112,7 @@ export class MdClassGen
 	}
 
 	getCode()
-	{	const {onTopHeader, onMethodDecl, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+	{	const {onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
 		let sectionsCode = '';
@@ -140,7 +127,7 @@ export class MdClassGen
 					}
 					break;
 				case 'function':
-					sectionsCode = onMethodDecl(other);
+					sectionsCode = onMethod(other);
 					break;
 				case 'variable':
 					sectionsCode = onVariable(other.variableDef);
@@ -171,9 +158,9 @@ export class MdClassGen
 			for (const m of this.#propertiesAndAccessors)
 			{	let code = '';
 				if ('getter' in m && m.getter && m.setter && 'jsDoc' in m.getter && 'jsDoc' in m.setter && m.getter.jsDoc && m.setter.jsDoc)
-				{	code += 'get\n\n';
+				{	code += '`get`\n\n';
 					code += onJsDoc(m.getter.jsDoc);
-					code += 'set\n\n';
+					code += '`set`\n\n';
 					code += onJsDoc(m.setter.jsDoc);
 				}
 				else
@@ -478,14 +465,14 @@ class ClassSections
 				else
 				{	code += `- ${memberHeader.length} ${titlePlural}: `;
 				}
-				code += memberHeader.map(p => !p.headerId ? p.name : `[${p.name}](#${p.headerId})`).join(', ');
-				code += '\n';
+				code += memberHeader.map(p => !p.headerId ? p.name : mdLink(p.name, '#'+p.headerId)).join(', ');
 			}
 			else
 			{	const title = memberHeader.length==1 ? titleSingular : memberHeader.length+' '+titlePlural;
 				const p = memberHeader[0];
-				code += '- ' + (!p.headerId ? title : `[${title}](#${p.headerId})`) + '\n';
+				code += '- ' + (!p.headerId ? title : mdLink(title, '#'+p.headerId));
 			}
+			code += '\n';
 		}
 		return code;
 	}

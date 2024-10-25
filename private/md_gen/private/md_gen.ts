@@ -1,11 +1,12 @@
 import {indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
-import {Accessor, MdClassGen, isDeprecated, isPublicOrProtected} from './md_class_gen.ts';
+import {Accessor, MdClassGen} from './md_class_gen.ts';
+import {isDeprecated, isPublicOrProtected} from './util.ts';
+import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
 
-const RE_NL = /[\r\n]/;
-const RE_MD_ESCAPE = /[`~=#!^()[\]{}<>+\-*_\\.&|]/g;
+const RE_NO_NL = /[\r\n]/;
 const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
 
@@ -216,16 +217,12 @@ export class MdGen
 									{	for (const d of classDef.decorators)
 										{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
 											const name = link ? mdLink(d.name, `../${link}`) : d.name;
-											code += `@${name}(${d.args?.join(', ') ?? ''})\n\n`;
+											code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 										}
 									}
 									// Class (h1 header)
-									code += '# `';
-									if (classDef.isAbstract)
-									{	code += 'abstract ';
-									}
-									code += 'class` ';
-									code += node.name;
+									code += classDef.isAbstract ? '# `abstract` `class` ' : '# `class` ';
+									code += mdEscape(node.name);
 									// Type params
 									code += this.#convertTypeParams(classDef.typeParams);
 									// Extends
@@ -237,7 +234,7 @@ export class MdGen
 								{	const {interfaceDef} = node;
 									// Interface (h1 header)
 									code += '# `interface` ';
-									code += node.name;
+									code += mdEscape(node.name);
 									// Type params
 									code += this.#convertTypeParams(interfaceDef.typeParams);
 									// Extends
@@ -246,41 +243,41 @@ export class MdGen
 								else if (node.kind == 'typeAlias')
 								{	const {typeAliasDef} = node;
 									code += '# `type` ';
-									code += node.name + this.#convertTypeParams(typeAliasDef.typeParams);
+									code += mdEscape(node.name) + this.#convertTypeParams(typeAliasDef.typeParams);
 								}
 								else if (node.kind == 'enum')
 								{	const {enumDef} = node;
-									code += enumDef.isConst ? '# `const enum` ' : '# `enum` ';
-									code += node.name;
+									code += enumDef.isConst ? '# `const` `enum` ' : '# `enum` ';
+									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'function')
 								{	code += '# `function` ';
-									code += node.name;
+									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'variable')
 								{	const {variableDef} = node;
 									code += variableDef.kind=='const' ? '# `const` ' : '# `var` ';
-									code += node.name;
+									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'namespace')
 								{	code += '# `namespace` ';
-									code += node.name;
+									code += mdEscape(node.name);
 								}
 								return code;
 							},
-							onConstructorDecl: m =>
-							{	let codeCur = '`';
+							onConstructor: m =>
+							{	let codeCur = '';
 								if (isDeprecated(m))
-								{	codeCur += 'deprecated ';
+								{	codeCur += '`deprecated` ';
 								}
 								if (m.accessibility === 'protected')
-								{	codeCur += 'protected ';
+								{	codeCur += '`protected` ';
 								}
-								codeCur += 'constructor`';
+								codeCur += '`constructor`';
 								codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
 								return codeCur;
 							},
-							onIndexSignatureDecl: m =>
+							onIndexSignature: m =>
 							{	let codeCur = '';
 								if (m.readonly)
 								{	codeCur += '`readonly` ';
@@ -289,7 +286,7 @@ export class MdGen
 								codeCur += this.#convertTsTypeColon(m.tsType);
 								return codeCur;
 							},
-							onPropertyDecl: m =>
+							onProperty: m =>
 							{	let codeCur = '';
 								if (isDeprecated(m))
 								{	codeCur += '`deprecated` ';
@@ -297,7 +294,7 @@ export class MdGen
 								codeCur += this.#convertPropertyOrAccessor(m);
 								return codeCur;
 							},
-							onMethodDecl: m =>
+							onMethod: m =>
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
@@ -310,15 +307,15 @@ export class MdGen
 							},
 							onTypeAlias: m =>
 							{	let codeCur = '`type` ';
-								codeCur += node.name + this.#convertTypeParams(m.typeParams) + ' = ' + this.#convertTsType(m.tsType);
+								codeCur += mdEscape(node.name) + this.#convertTypeParams(m.typeParams) + ' = ' + this.#convertTsType(m.tsType);
 								return codeCur;
 							},
 							onVariable: m =>
 							{	const introducer = m.kind == 'const' ? '`const` ' : '`var` ';
-								return introducer + node.name + this.#convertTsTypeColon(m.tsType);
+								return introducer + mdEscape(node.name) + this.#convertTsTypeColon(m.tsType);
 							},
 							onEnumMember: m =>
-							{	let codeCur = m.name;
+							{	let codeCur = mdEscape(m.name);
 								if (m.init)
 								{	codeCur += ' = '+this.#convertTsType(m.init);
 								}
@@ -338,7 +335,7 @@ export class MdGen
 	}
 
 	*genFiles(moduleName='')
-	{	let code = `# ${moduleName || 'Module'}\n\n`;
+	{	let code = `# ${mdEscape(moduleName) || 'Module'}\n\n`;
 		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
 		code += this.#convertNamespace(this.#nodes);
 		yield {dir: '', code};
@@ -436,23 +433,20 @@ export class MdGen
 	}
 
 	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
-	{	const qual = new Array<string>;
-		if (accessibility === 'protected')
-		{	qual.push('protected');
-		}
+	{	let code = accessibility==='protected' ? '`protected` ' : '';
 		if (isAbstract)
-		{	qual.push('abstract');
+		{	code += '`abstract` ';
 		}
 		if (isStatic)
-		{	qual.push('static');
+		{	code += '`static` ';
 		}
 		if (readonly)
-		{	qual.push('readonly');
+		{	code += '`readonly` ';
 		}
 		else if (isAccessor)
-		{	qual.push('accessor');
+		{	code += '`accessor` ';
 		}
-		let code = !qual.length ? name : '`'+qual.join(' ')+'` '+name;
+		code += mdEscape(name);
 		if (optional)
 		{	code += '?';
 		}
@@ -461,23 +455,17 @@ export class MdGen
 	}
 
 	#convertFunction(isMethod: 'function'|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
-	{	const qual = new Array<string>;
-		if (accessibility === 'protected')
-		{	qual.push('protected');
-		}
+	{	let code = accessibility==='protected' ? '`protected` ' : '';
 		if (isAbstract)
-		{	qual.push('abstract');
+		{	code += '`abstract` ';
 		}
 		if (isStatic)
-		{	qual.push('static');
-		}
-		if (isStatic)
-		{	qual.push('static');
+		{	code += '`static` ';
 		}
 		if (isMethod != 'method')
-		{	qual.push(isMethod=='getter' ? 'get' : isMethod=='setter' ? 'set' : 'function');
+		{	code += isMethod=='getter' ? '`get` ' : isMethod=='setter' ? '`set` ' : '`function` ';
 		}
-		let code = !qual.length ? name : '`'+qual.join(' ')+'` '+name;
+		code += mdEscape(name);
 		if (optional)
 		{	code += '?';
 		}
@@ -490,13 +478,13 @@ export class MdGen
 		{	const isAsync = 'isAsync' in functionDef && functionDef.isAsync;
 			const isGenerator = 'isGenerator' in functionDef && functionDef.isGenerator;
 			if (isAsync && isGenerator)
-			{	code += ': AsyncGenerator<unknown>';
+			{	code += ': AsyncGenerator<`unknown`>';
 			}
 			else if (isAsync)
-			{	code += ': Promise<unknown>';
+			{	code += ': Promise<`unknown`>';
 			}
 			else if (isGenerator)
-			{	code += ': Generator<unknown>';
+			{	code += ': Generator<`unknown`>';
 			}
 		}
 		return code;
@@ -509,13 +497,13 @@ export class MdGen
 				code += '\\[' + arg.elements.map(a => (!a ? '' : this.#convertArg(a))).join(', ') + ']' + this.#convertTsTypeColon(arg.tsType);
 				break;
 			case 'object':
-				code += '\\{' + arg.props.map(p => (p.kind=='rest' ? '...'+this.#convertArg(p.arg) : p.key+(p.kind=='keyValue' ? '='+this.#convertArg(p.value) : p.value!=undefined ? '='+p.value : ''))).join(', ') + '}' + this.#convertTsTypeColon(arg.tsType);
+				code += '\\{' + arg.props.map(p => (p.kind=='rest' ? '...'+this.#convertArg(p.arg) : mdEscape(p.key)+(p.kind=='keyValue' ? '='+this.#convertArg(p.value) : p.value!=undefined ? '='+mdEscape(p.value) : ''))).join(', ') + '}' + this.#convertTsTypeColon(arg.tsType);
 				break;
 			case 'assign':
-				code += this.#convertArg(arg.left) + this.#convertTsTypeColon(arg.tsType) + '=' + arg.right;
+				code += this.#convertArg(arg.left) + this.#convertTsTypeColon(arg.tsType) + '=' + mdEscape(arg.right);
 				break;
 			case 'identifier':
-				code += arg.name;
+				code += mdEscape(arg.name);
 				if (arg.optional)
 				{	code += '?';
 				}
@@ -561,17 +549,17 @@ export class MdGen
 			case 'conditional':
 				return this.#convertTsType(typeDef.conditionalType.checkType) + ' `extends` ' + this.#convertTsType(typeDef.conditionalType.extendsType) + ' ? ' + this.#convertTsType(typeDef.conditionalType.trueType) + ' : ' + this.#convertTsType(typeDef.conditionalType.falseType);
 			case 'infer':
-				return '`infer` '+typeDef.infer.typeParam.name;
+				return '`infer` '+mdEscape(typeDef.infer.typeParam.name);
 			case 'mapped':
 				return '\\{' + (typeDef.mappedType.readonly ? '`readonly` ' : '') + '\\[' + this.#convertTypeParam(typeDef.mappedType.typeParam, 'in') + this.#convertTsTypeColon(typeDef.mappedType.nameType) + ']' + (typeDef.mappedType.optional ? '?' : '') + this.#convertTsTypeColon(typeDef.mappedType.tsType) + '}';
 			case 'importType':
-				return '`import`('+JSON.stringify(typeDef.importType.specifier)+')'+(!typeDef.importType.qualifier ? '' : '.'+typeDef.importType.qualifier) + this.#convertActualTypeParams(typeDef.importType.typeParams);
+				return '`import`(' + mdEscape(JSON.stringify(typeDef.importType.specifier)) + ')' + (!typeDef.importType.qualifier ? '' : '.'+mdEscape(typeDef.importType.qualifier)) + this.#convertActualTypeParams(typeDef.importType.typeParams);
 			case 'indexedAccess':
 				return (typeDef.indexedAccess.readonly ? '`readonly` ' : '') + this.#convertTsType(typeDef.indexedAccess.objType) + '\\[' + this.#convertTsType(typeDef.indexedAccess.indexType) + ']';
 			case 'typeLiteral':
 				return '\\{' + this.#convertTsTypeLiteralDef(typeDef.typeLiteral) + '}';
 			case 'typePredicate':
-				return (typeDef.typePredicate.asserts ? '`asserts` ' : '') + (typeDef.typePredicate.param.name ?? '`this`') + (!typeDef.typePredicate.type ? '' : ' `is` ' + this.#convertTsType(typeDef.typePredicate.type));
+				return (typeDef.typePredicate.asserts ? '`asserts` ' : '') + (typeDef.typePredicate.param.name ? mdEscape(typeDef.typePredicate.param.name) : '`this`') + (!typeDef.typePredicate.type ? '' : ' `is` ' + this.#convertTsType(typeDef.typePredicate.type));
 		}
 	}
 
@@ -592,16 +580,15 @@ export class MdGen
 
 	#convertTsLiteralType(litDef: LiteralDef, repr: string)
 	{	switch (litDef.kind)
-		{	case 'string':
-				return `<mark>${mdEscape(JSON.stringify(litDef.string))}</mark>`;
-			case 'number':
-				return `<mark>${repr}</mark>`;
-			case 'bigInt':
-				return `<mark>${repr}</mark>`;
-			case 'boolean':
+		{	case 'boolean':
 				return '`' + repr + '`';
+			case 'number':
+			case 'bigInt':
+				return '<mark>' + repr + '</mark>';
+			case 'string':
+				return '<mark>' + mdEscape(JSON.stringify(litDef.string)) + '</mark>';
 			case 'template':
-				return `<mark>${mdEscape('`'+repr+'`')}</mark>`;
+				return '<mark>' + mdEscape('`'+repr+'`') + '</mark>';
 		}
 	}
 
@@ -619,7 +606,7 @@ export class MdGen
 			if (p.readonly)
 			{	code += '`readonly` ';
 			}
-			code += '[' + p.params.map(pp => this.#convertArg(pp)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType);
+			code += '\\[' + p.params.map(pp => this.#convertArg(pp)).join('; ') + ']' + this.#convertTsTypeColon(p.tsType);
 			separ = ', ';
 		}
 		for (const p of properties)
@@ -641,7 +628,7 @@ export class MdGen
 	}
 
 	#convertTypeParam(typeParam: TsTypeParamDef, constraint: string)
-	{	return `${typeParam.name}${!typeParam.constraint ? '' : ' `'+constraint+'` '+this.#convertTsType(typeParam.constraint)}${!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default)}`;
+	{	return mdEscape(typeParam.name) + (!typeParam.constraint ? '' : ' `'+constraint+'` '+this.#convertTsType(typeParam.constraint)) + (!typeParam.default ? '' : '='+this.#convertTsType(typeParam.default));
 	}
 
 	#convertActualTypeParams(typeParams: TsTypeDef[]|undefined)
@@ -683,7 +670,7 @@ export class MdGen
 							{	const pos = doc.lastIndexOf('[');
 								if (pos != -1)
 								{	linkText = doc.slice(pos+1, -1);
-									if (RE_NL.test(linkText))
+									if (RE_NO_NL.test(linkText))
 									{	linkText = '';
 									}
 									else
@@ -721,16 +708,6 @@ export class MdGen
 		}
 		return doc;
 	}
-}
-
-function mdEscape(code: string)
-{	return code.replace(RE_MD_ESCAPE, c => `\\${c}`);
-}
-
-function mdLink(text: string, href: string)
-{	text = text.replaceAll(']', '\\]');
-	href = encodeURI(href).replaceAll(')', '&#41;');
-	return `[${text}](${href})`;
 }
 
 function mdGrid(oneLineHeader: string, cells: string[], nColumns: number)
