@@ -1,7 +1,7 @@
 import {indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, MdClassGen} from './md_class_gen.ts';
-import {isDeprecated, isPublicOrProtected} from './util.ts';
+import {escapeShellArg, isDeprecated, isPublicOrProtected} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
@@ -341,7 +341,8 @@ class MdGen
 	}
 
 	*genFiles(moduleName: string)
-	{	let code = `# ${mdEscape(moduleName) || 'Module'}\n\n`;
+	{	let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://deno.land/x/tsa/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
+		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
 		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
 		code += this.#convertNamespace(this.#nodes);
 		yield {dir: '', code};

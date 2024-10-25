@@ -3,8 +3,9 @@ import {Accessibility, JsDoc} from "../../doc_node/mod.ts";
 const RE_NLS = /\r?\n/g;
 const RE_MD_ESCAPE = /[`[{<*_~\\#]/g;
 const RE_MD_ESCAPE_LINK_TEXT = /[`[{<*_~\\#\]]/g;
-const RE_MD_ENCODE_URI = /[^a-z0–9_\-$.';\/?:@&=+,#]+/gi;
+const RE_MD_ENCODE_URI = /[^\w\-$.';\/?:@&=+,#]+/g;
 const RE_MD_BLOCKQUOTE = /^>*/gm;
+const RE_BAD_SHELL_CHAR = /[^\w%+\-.\/:=@]/;
 
 const encoder = new TextEncoder;
 
@@ -52,4 +53,8 @@ export function isPublicOrProtected(node: object | {accessibility?: Accessibilit
 
 export function isDeprecated(node: object | {jsDoc?: JsDoc})
 {	return ('jsDoc' in node ? node.jsDoc : undefined)?.tags?.find(t => t.kind == 'deprecated') != undefined;
+}
+
+export function escapeShellArg(arg: string)
+{	return RE_BAD_SHELL_CHAR.test(arg) ? "'" + arg.replaceAll("'", "'\\''") + "'" : arg;
 }
