@@ -3,7 +3,7 @@ import {Accessibility, JsDoc} from "../../doc_node/mod.ts";
 const RE_NLS = /\r?\n/g;
 const RE_MD_ESCAPE = /[`[{<*_~\\#]/g;
 const RE_MD_ESCAPE_LINK_TEXT = /[`[{<*_~\\#\]]/g;
-const RE_MD_ENCODE_URI = /[^A–Za-z0–9_\-$.';\/?:@&=+,#]/g;
+const RE_MD_ENCODE_URI = /[^a-z0–9_\-$.';\/?:@&=+,#]+/gi;
 
 const encoder = new TextEncoder;
 
