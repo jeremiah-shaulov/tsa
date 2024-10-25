@@ -65,14 +65,14 @@ program
 	(	'Generate documentation in markdown format.'
 	)
 	.option('--outDir <generated-doc>', 'To what directory to save the resulting files (default: "generated-doc"). The directory will be created or emptied if necessary.')
-	.option('--name <My Project>', 'The title that will appear in the main README.md file.')
+	.option('--moduleName <My Project>', 'The title that will appear in the main README.md file.')
 	.option('--importUrl <URL>', 'Optionally specify one such flag per each source file in corresponding order. This lets including in the documentation import examples for public symbols. The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator. For example: tsa doc-md foo/mod.ts --importUrl https://deno.land/foo@1.0.0/mod.ts bar/mod.ts --importUrl https://deno.land/bar@1.0.0/mod.ts (the number of --importUrl options must be the same as number of given files).', optionStringArray)
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean|string[]>) =>
 		{	// Input options
 			const entryPoints = [file1, ...files];
 			const outDir = String(options.outDir || 'generated-doc');
-			const moduleName = String(options.name || '');
+			const moduleName = String(options.moduleName || '');
 			const importUrlsArray = Array.isArray(options.importUrl) ? options.importUrl : [];
 
 			// Validate options
