@@ -73,17 +73,11 @@ program
 			const entryPoints = [file1, ...files];
 			const outDir = String(options.outDir || 'generated-doc');
 			const moduleName = String(options.moduleName || '');
-			const importUrlsArray = Array.isArray(options.importUrl) ? options.importUrl : [];
+			const importUrls = Array.isArray(options.importUrl) ? options.importUrl : [];
 
 			// Validate options
-			const importUrls = new Map<string, string>;
-			if (importUrlsArray.length)
-			{	if (importUrlsArray.length!=entryPoints.length)
-				{	throw new Error(`Number of --importUrl options must be the same as number of given source files (${entryPoints.length})`);
-				}
-				for (let i=0; i<entryPoints.length; i++)
-				{	importUrls.set(path.toFileUrl(path.resolve(entryPoints[i])).href, importUrlsArray[i]);
-				}
+			if (importUrls.length && importUrls.length!=entryPoints.length)
+			{	throw new Error(`Number of --importUrl options must be the same as number of given source files (${entryPoints.length})`);
 			}
 
 			// Gen doc
@@ -187,7 +181,7 @@ function optionStringArray(value: unknown, previous: unknown[])
 	return !previous ? arr : previous.concat(arr);
 }
 
-async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Map<string, string>)
+async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Array<string>)
 {	// Create program
 	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));

@@ -196,7 +196,7 @@ L:		while (pos < namepath.length)
 	}
 }
 
-export function mdGen(nodes: DocNode[], moduleName='', importUrls=new Map<string, string>)
+export function mdGen(nodes: DocNode[], moduleName='', importUrls=new Array<string>)
 {	return new MdGen(nodes, importUrls).genFiles(moduleName);
 }
 
@@ -204,7 +204,7 @@ class MdGen
 {	#nodes: DocNode[];
 	#gens: Gens;
 
-	constructor(nodes: DocNode[], importUrls: Map<string, string>)
+	constructor(nodes: DocNode[], importUrls: string[])
 	{	this.#nodes = nodes;
 		this.#gens = new Gens
 		(	nodes,
@@ -365,7 +365,8 @@ class MdGen
 	}
 
 	#convertNamespace(nodes: DocNode[])
-	{	const namespaces = new Array<DocNodeNamespace>;
+	{	const isMain = nodes == this.#nodes;
+		const namespaces = new Array<DocNodeNamespace>;
 		const variables = new Array<DocNodeVariable>;
 		const functions = new Array<DocNodeFunction>;
 		const classes = new Array<DocNodeClass>;
@@ -373,34 +374,34 @@ class MdGen
 		for (const node of nodes)
 		{	switch (node.kind)
 			{	case 'namespace':
-					if (node.declarationKind=='export' && isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	namespaces.push(node);
 					}
 					break;
 				case 'variable':
-					if (node.declarationKind=='export' && isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	variables.push(node);
 					}
 					break;
 				case 'function':
-					if (node.declarationKind=='export' && isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	functions.push(node);
 					}
 					break;
 				case 'class':
-					if (node.declarationKind=='export' && isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	classes.push(node);
 					}
 					break;
 				case 'enum':
 				case 'typeAlias':
 				case 'interface':
-					if (node.declarationKind=='export' && isPublicOrProtected(node))
+					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	types.push(node);
 					}
 			}
 		}
-		const dirPrefix = nodes==this.#nodes ? '' : '../';
+		const dirPrefix = isMain ? '' : '../';
 		let code = '';
 		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
 		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
@@ -713,6 +714,10 @@ class MdGen
 		}
 		return doc;
 	}
+}
+
+function isExportFromEntryPoint(node: DocNode)
+{	return node.location.entryPointNumber!=undefined || node.exports?.find(e => e.location.entryPointNumber != undefined)!=undefined;
 }
 
 function mdGrid(oneLineHeader: string, cells: string[], nColumns: number)

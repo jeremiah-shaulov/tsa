@@ -51,7 +51,7 @@ export class MdClassGen
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNode, importUrls: Map<string, string>, converter: ClassConverter)
+	constructor(node: DocNode, importUrls: string[], converter: ClassConverter)
 	{	this.#node = node;
 		this.#importUrls = importUrls;
 		this.#converter = converter;
@@ -185,23 +185,20 @@ export class MdClassGen
 	}
 }
 
-function getImportCode(node: DocNode, importUrls: Map<string, string>)
+function getImportCode(node: DocNode, importUrls: string[])
 {	let code = '';
 	if (node.declarationKind == 'export')
 	{	// Find shortest export URL, assuming this is the module root
-		let {name, location: {filename}} = node.exports?.sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
-		let found = false;
-		for (const [k, v] of importUrls)
-		{	if (filename.startsWith(k))
-			{	filename = v + filename.slice(k.length);
-				found = true;
-				break;
+		let {name, location: {filename, entryPointNumber}} = node.exports?.sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
+		if (entryPointNumber != undefined)
+		{	if (importUrls.length)
+			{	filename = importUrls[entryPointNumber];
 			}
-		}
-		if (found || !filename.startsWith('file://'))
-		{	code += '```ts\n';
-			code += `import {${name}} from ` + JSON.stringify(filename);
-			code += '\n```\n\n';
+			if (importUrls.length || !filename.startsWith('file://'))
+			{	code += '```ts\n';
+				code += `import {${name}} from ` + JSON.stringify(filename);
+				code += '\n```\n\n';
+			}
 		}
 	}
 	return code;
