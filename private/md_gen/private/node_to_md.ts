@@ -45,13 +45,13 @@ const enum What
 	When you create this object, it calls `onConstructor`, `onIndexSignature`, `onProperty`, `onMethod` and `onEnumMember`
 	to generate typescript presentation for those members.
 
-	Later, when you call {@link NodeToMd#getCode()}, it calls the rest of the callbacks.
+	Later, when you call {@link NodeToMd.getCode()}, it calls the rest of the callbacks.
 
 	The usage pattern is to create `NodeToMd` wrappers on each {@link DocNode} first, so all the members are indexed.
-	Then to start calling {@link NodeToMd#getCode()} on each object.
+	Then to start calling {@link NodeToMd.getCode()} on each object.
 	It will call `onJsDoc` callback to convert node's documentation.
 	The documentation may contain `@`link tags that will want to produce links to object members,
-	so the `onJsDoc` callback can access the corresponding `NodeToMd` to call {@link NodeToMd#getHeaderId()}.
+	so the `onJsDoc` callback can access the corresponding `NodeToMd` to call {@link NodeToMd.getHeaderId()}.
  **/
 export class NodeToMd
 {	#node;
@@ -197,7 +197,7 @@ export class NodeToMd
 		const topHeader = onTopHeader(this.#node);
 		const jsDoc = onJsDoc(this.#node.jsDoc);
 		const importCode = getImportCode(this.#node, this.#importUrls);
-		return topHeader + '\n\n' + importCode + outline + jsDoc + sectionsCode;
+		return topHeader + '\n\n' + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
 	}
 }
 
@@ -490,7 +490,7 @@ class ClassSections
 		// deprecated
 		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
 		// done
-		return code ? `This ${this.#kind=='typeAlias' ? 'type' : this.#kind} has:\n${code}\n\n` : '';
+		return code ? `## This ${this.#kind=='typeAlias' ? 'type' : this.#kind} has\n\n${code}\n\n` : '';
 	}
 
 	#genMemberOutline(memberHeader: MemberHeader[], titleSingular: string, titlePlural: string, numberOnly: boolean)

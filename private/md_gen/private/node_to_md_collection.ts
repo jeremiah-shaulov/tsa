@@ -1,8 +1,6 @@
-import {DocNode, TsTypeDef, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
+import {DocNode} from '../../doc_node/mod.ts';
+import {findNamepathTarget} from './find_namepath_target.ts';
 import {NodeToMd} from './node_to_md.ts';
-
-const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
-const RE_BACKSLASH_ESCAPE = /\\./g;
 
 export class NodeToMdCollection
 {	#nodes;
@@ -67,121 +65,14 @@ export class NodeToMdCollection
 	}
 
 	getLinkByNamepath(namepath: string)
-	{	let pos = 0;
-		let isStatic = false;
-		let node: DocNode|undefined;
-		let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef|undefined;
-L:		while (pos < namepath.length)
-		{	if (pos != 0)
-			{	const c = namepath.charAt(pos++);
-				isStatic = c == '.';
-				if (!isStatic && c!='#')
-				{	return '';
-				}
-			}
-			RE_LINK_PATH.lastIndex = pos;
-			if (!RE_LINK_PATH.test(namepath))
-			{	return '';
-			}
-			const nextPos = RE_LINK_PATH.lastIndex;
-			const name = namepath.charAt(pos)=='"' ? namepath.slice(pos+1, nextPos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : namepath.slice(pos, nextPos);
-			pos = nextPos;
-			if (!node)
-			{	// Find public symbol
-				node = this.#nodes.find(n => n.name==name && n.declarationKind=='export');
-				if (!node)
-				{	return '';
-				}
-			}
-			else
-			{	if (member)
-				{	// Convert `member` to `node`
-					node = undefined;
-					if ('tsType' in member && member.tsType)
-					{	node = this.#tsTypeToNode(member.tsType);
-					}
-					if (!node)
-					{	return '';
-					}
-					member = undefined;
-				}
-				// Get member of node
-				while (true)
-				{	switch (node.kind)
-					{	case 'class':
-							member =
-							(	node.classDef.properties.find(p => p.name==name && p.isStatic==isStatic) ??
-								node.classDef.methods.find(p => p.name==name && p.isStatic==isStatic)
-							);
-							break;
-						case 'interface':
-							member =
-							(	node.interfaceDef.properties.find(p => p.name==name) ??
-								node.interfaceDef.methods.find(p => p.name==name)
-							);
-							break;
-						case 'enum':
-							member = node.enumDef.members.find(p => p.name == name);
-							break;
-						case 'typeAlias':
-							node = this.#tsTypeToNode(node.typeAliasDef.tsType);
-							if (!node)
-							{	return '';
-							}
-							continue;
-						case 'namespace':
-							node = node.namespaceDef.elements.find(p => p.name == name);
-							if (!node)
-							{	return '';
-							}
-							member = undefined;
-							continue L;
-					}
-					break;
-				}
-				if (!member)
-				{	return '';
-				}
+	{	const found = findNamepathTarget(this.#nodes, namepath);
+		if (found)
+		{	const dir = this.getDir(found.node);
+			if (dir)
+			{	const hashHeaderId = this.#getHashHeaderId(found.node, found.member?.name, found.isStatic);
+				return `../${dir}/README.md${hashHeaderId}`;
 			}
 		}
-		const dir = this.getDir(node);
-		if (!dir)
-		{	return '';
-		}
-		const hashHeaderId = this.#getHashHeaderId(node, member?.name, isStatic);
-		return `../${dir}/README.md${hashHeaderId}`;
-	}
-
-	#tsTypeToNode(tsType: TsTypeDef)
-	{	while (true)
-		{	switch (tsType.kind)
-			{	case 'typeRef':
-					return this.#nodes[tsType.typeRef.nodeIndex ?? -1];
-				case 'parenthesized':
-					tsType = tsType.parenthesized;
-					continue;
-				/*case 'optional':
-				case 'intersection':
-				case 'typeLiteral':
-
-				case 'conditional':
-				case 'mapped':
-				case 'keyword':
-				case 'literal':
-				case 'union':
-				case 'array':
-				case 'tuple':
-				case 'typeOperator':
-				case 'rest':
-				case 'typeQuery':
-				case 'this':
-				case 'fnOrConstructor':
-				case 'importType':
-				case 'infer':
-				case 'indexedAccess':
-				case 'typePredicate':*/
-			}
-			break;
-		}
+		return '';
 	}
 }
