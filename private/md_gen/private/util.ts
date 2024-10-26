@@ -1,4 +1,4 @@
-import {Accessibility, JsDoc} from "../../doc_node/mod.ts";
+import {Accessibility, JsDoc, JsDocTagDoc} from "../../doc_node/mod.ts";
 
 const RE_NLS = /\r?\n/g;
 const RE_MD_ESCAPE = /[`[{<*_~\\#]/g;
@@ -51,7 +51,7 @@ export function mdBlockquote(text: string)
 }
 
 /**	Returns false if the given node has `private` modifier.
-	Also returns false if this node has attached doc-comment that contains `@`private tag.
+	Also returns false if this node has attached doc-comment that contains `@`private or `@`internal tag.
 	Otherwise returns true.
  **/
 export function isPublicOrProtected(node: object | {accessibility?: Accessibility, jsDoc?: JsDoc})
@@ -59,15 +59,22 @@ export function isPublicOrProtected(node: object | {accessibility?: Accessibilit
 	{	return false;
 	}
 	if ('jsDoc' in node)
-	{	return (node.jsDoc?.tags?.findIndex(v => v.kind == 'private') ?? -1) == -1;
+	{	return (node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value=='@internal') ?? -1) == -1;
 	}
 	return true;
 }
 
 /**	Returns true if the given node has attached doc-comment that contains `@`deprecated tag.
  **/
-export function isDeprecated(node: object | {jsDoc?: JsDoc})
-{	return ('jsDoc' in node ? node.jsDoc : undefined)?.tags?.find(t => t.kind == 'deprecated') != undefined;
+export function isDeprecated(node: object | {jsDoc?: JsDoc}): JsDocTagDoc|undefined
+{	const tags = ('jsDoc' in node ? node.jsDoc : undefined)?.tags;
+	if (tags)
+	{	for (const t of tags)
+		{	if (t.kind == 'deprecated')
+			{	return t;
+			}
+		}
+	}
 }
 
 /**	Enclose text in apostrophs and/or add backslashes if the text contains characters that must be escaped in bash command line.
