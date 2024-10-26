@@ -1,8 +1,8 @@
 import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind} from '../../doc_node/mod.ts';
-import {isDeprecated, isPublicOrProtected, mdBlockquote, mdLink} from './util.ts';
+import {isDeprecated, isPublicOrProtected, mdBlockquote, mdLink, parseHeaderId} from './util.ts';
 
-const RE_HEADER_SAN = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
-
+/**	Getter and/or setter for a given property - both in single object.
+ **/
 export type Accessor =
 {	getter: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|undefined;
 	setter: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|undefined;
@@ -37,7 +37,23 @@ const enum What
 	Method,
 }
 
-export class MdClassGen
+/**	Object that wraps {@link DocNode}. If the node is a class, interface, type alias or enum,
+	this object indexes it's members, and allows to get header ids to create links to particular members.
+
+	This object doesn't generate markdown by itself, but uses {@link ClassConverter} provided to it.
+
+	When you create this object, it calls `onConstructor`, `onIndexSignature`, `onProperty`, `onMethod` and `onEnumMember`
+	to generate typescript presentation for those members.
+
+	Later, when you call {@link NodeToMd#getCode()}, it calls the rest of the callbacks.
+
+	The usage pattern is to create `NodeToMd` wrappers on each {@link DocNode} first, so all the members are indexed.
+	Then to start calling {@link NodeToMd#getCode()} on each object.
+	It will call `onJsDoc` callback to convert node's documentation.
+	The documentation may contain `@`link tags that will want to produce links to object members,
+	so the `onJsDoc` callback can access the corresponding `NodeToMd` to call {@link NodeToMd#getHeaderId()}.
+ **/
+export class NodeToMd
 {	#node;
 	#importUrls;
 	#converter;
@@ -513,23 +529,4 @@ function sectionIndex(node: Member)
 	{	i |= 1;
 	}
 	return i;
-}
-
-function parseHeaderId(headerLine: string)
-{	let headerId = '';
-	if (headerLine)
-	{	RE_HEADER_SAN.lastIndex = 0;
-		let m;
-		while ((m = RE_HEADER_SAN.exec(headerLine)))
-		{	if (m[1])
-			{	headerId += m[1]==' ' ? '-' : m[1].toLocaleLowerCase();
-			}
-			else if (m[2])
-			{	const pos = RE_HEADER_SAN.lastIndex;
-				headerId += parseHeaderId(m[2]);
-				RE_HEADER_SAN.lastIndex = pos;
-			}
-		}
-	}
-	return headerId;
 }

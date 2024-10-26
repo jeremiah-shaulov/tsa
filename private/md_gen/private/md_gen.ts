@@ -1,217 +1,28 @@
 import {APP_GIT_TAG, indentAndWrap} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
-import {Accessor, MdClassGen} from './md_class_gen.ts';
+import {Accessor, NodeToMd} from './node_to_md.ts';
+import {NodeToMdCollection} from './node_to_md_collection.ts';
 import {escapeShellArg, isDeprecated, isPublicOrProtected} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
-
 const RE_NO_NL = /[\r\n]/;
-const RE_LINK_PATH = /(?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*"/yu;
-const RE_BACKSLASH_ESCAPE = /\\./g;
 
-type Gen =
-{	getHeaderId(name?: string, isStatic?: boolean): string;
-	getCode(): string;
-};
-
-class Gens
-{	#nodes;
-	#nodeToGen;
-	#pathNames = new Set<string>;
-	#paths = new Map<DocNode, string>;
-	#gens = new Map<DocNode, Gen>;
-
-	constructor(nodes: DocNode[], nodeToGen: (node: DocNode) => Gen|undefined)
-	{	this.#nodes = nodes;
-		this.#nodeToGen = nodeToGen;
-	}
-
-	getGen(node?: DocNode)
-	{	if (node)
-		{	let gen = this.#gens.get(node);
-			if (!gen)
-			{	gen = this.#nodeToGen(node);
-				if (gen)
-				{	this.#gens.set(node, gen);
-				}
-			}
-			return gen;
-		}
-	}
-
-	getDir(node?: DocNode)
-	{	if (node)
-		{	const dir = this.#paths.get(node);
-			if (dir != undefined)
-			{	return dir;
-			}
-			const {name, kind} = node;
-			const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
-			const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
-			for (let i=1; true; i++)
-			{	const curName = i==1 ? fullName : fullName+'.'+i;
-				if (!this.#pathNames.has(curName))
-				{	this.#pathNames.add(curName);
-					this.#paths.set(node, curName);
-					return curName;
-				}
-			}
-		}
-	}
-
-	getLink(node?: DocNode, nodeSubIndex?: number)
-	{	const dir = this.getDir(node);
-		if (!dir)
-		{	return '';
-		}
-		let hashHeaderId = '';
-		if (nodeSubIndex!=undefined && node?.kind==='enum')
-		{	hashHeaderId = this.#getHashHeaderId(node, node.enumDef.members[nodeSubIndex]?.name);
-		}
-		return `${dir}/README.md${hashHeaderId}`;
-	}
-
-	#getHashHeaderId(node?: DocNode, name?: string, isStatic=false)
-	{	const headerId = this.getGen(node)?.getHeaderId(name, isStatic);
-		return headerId ? '#'+headerId : '';
-	}
-
-	getLinkByNamepath(namepath: string)
-	{	let pos = 0;
-		let isStatic = false;
-		let node: DocNode|undefined;
-		let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef|undefined;
-L:		while (pos < namepath.length)
-		{	if (pos != 0)
-			{	const c = namepath.charAt(pos++);
-				isStatic = c == '.';
-				if (!isStatic && c!='#')
-				{	return '';
-				}
-			}
-			RE_LINK_PATH.lastIndex = pos;
-			if (!RE_LINK_PATH.test(namepath))
-			{	return '';
-			}
-			const nextPos = RE_LINK_PATH.lastIndex;
-			const name = namepath.charAt(pos)=='"' ? namepath.slice(pos+1, nextPos-1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : namepath.slice(pos, nextPos);
-			pos = nextPos;
-			if (!node)
-			{	// Find public symbol
-				node = this.#nodes.find(n => n.name==name && n.declarationKind=='export');
-				if (!node)
-				{	return '';
-				}
-			}
-			else
-			{	if (member)
-				{	// Convert `member` to `node`
-					node = undefined;
-					if ('tsType' in member && member.tsType)
-					{	node = this.#tsTypeToNode(member.tsType);
-					}
-					if (!node)
-					{	return '';
-					}
-					member = undefined;
-				}
-				// Get member of node
-				while (true)
-				{	switch (node.kind)
-					{	case 'class':
-							member =
-							(	node.classDef.properties.find(p => p.name==name && p.isStatic==isStatic) ??
-								node.classDef.methods.find(p => p.name==name && p.isStatic==isStatic)
-							);
-							break;
-						case 'interface':
-							member =
-							(	node.interfaceDef.properties.find(p => p.name==name) ??
-								node.interfaceDef.methods.find(p => p.name==name)
-							);
-							break;
-						case 'enum':
-							member = node.enumDef.members.find(p => p.name == name);
-							break;
-						case 'typeAlias':
-							node = this.#tsTypeToNode(node.typeAliasDef.tsType);
-							if (!node)
-							{	return '';
-							}
-							continue;
-						case 'namespace':
-							node = node.namespaceDef.elements.find(p => p.name == name);
-							if (!node)
-							{	return '';
-							}
-							member = undefined;
-							continue L;
-					}
-					break;
-				}
-				if (!member)
-				{	return '';
-				}
-			}
-		}
-		const dir = this.getDir(node);
-		if (!dir)
-		{	return '';
-		}
-		const hashHeaderId = this.#getHashHeaderId(node, member?.name, isStatic);
-		return `../${dir}/README.md${hashHeaderId}`;
-	}
-
-	#tsTypeToNode(tsType: TsTypeDef)
-	{	while (true)
-		{	switch (tsType.kind)
-			{	case 'typeRef':
-					return this.#nodes[tsType.typeRef.nodeIndex ?? -1];
-				case 'parenthesized':
-					tsType = tsType.parenthesized;
-					continue;
-				/*case 'optional':
-				case 'intersection':
-				case 'typeLiteral':
-
-				case 'conditional':
-				case 'mapped':
-				case 'keyword':
-				case 'literal':
-				case 'union':
-				case 'array':
-				case 'tuple':
-				case 'typeOperator':
-				case 'rest':
-				case 'typeQuery':
-				case 'this':
-				case 'fnOrConstructor':
-				case 'importType':
-				case 'infer':
-				case 'indexedAccess':
-				case 'typePredicate':*/
-			}
-			break;
-		}
-	}
+export function nodesToMd(nodes: DocNode[], moduleName='', importUrls=new Array<string>)
+{	return new NodesToMd(nodes, importUrls).genFiles(moduleName);
 }
 
-export function mdGen(nodes: DocNode[], moduleName='', importUrls=new Array<string>)
-{	return new MdGen(nodes, importUrls).genFiles(moduleName);
-}
-
-class MdGen
+class NodesToMd
 {	#nodes: DocNode[];
-	#gens: Gens;
+	#collection: NodeToMdCollection;
 
 	constructor(nodes: DocNode[], importUrls: string[])
 	{	this.#nodes = nodes;
-		this.#gens = new Gens
+		this.#collection = new NodeToMdCollection
 		(	nodes,
 			node =>
 			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='enum' || node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
-				{	return new MdClassGen
+				{	return new NodeToMd
 					(	node,
 						importUrls,
 						{	onTopHeader: node =>
@@ -221,7 +32,7 @@ class MdGen
 									// Decorators
 									if (classDef.decorators)
 									{	for (const d of classDef.decorators)
-										{	const link = this.#gens.getLink(this.#nodes[d.nodeIndex ?? -1]);
+										{	const link = this.#collection.getLink(this.#nodes[d.nodeIndex ?? -1]);
 											const name = link ? mdLink(d.name, `../${link}`) : d.name;
 											code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 										}
@@ -354,9 +165,9 @@ class MdGen
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
-					const gen = this.#gens.getGen(node);
-					const code = gen?.getCode() ?? '';
-					const dir = this.#gens.getDir(node) ?? '';
+					const nodeToMd = this.#collection.getNodeToMd(node);
+					const code = nodeToMd?.getCode() ?? '';
+					const dir = this.#collection.getDir(node) ?? '';
 					yield {dir, code};
 					if (node.kind == 'namespace')
 					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, nodesDone);
@@ -405,11 +216,11 @@ class MdGen
 		}
 		const dirPrefix = isMain ? '' : '../';
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#gens.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -579,7 +390,7 @@ class MdGen
 	}
 
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
-	{	const link = this.#gens.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
+	{	const link = this.#collection.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
 		if (link)
 		{	typeName = mdLink(typeName, `../${link}`);
 		}
@@ -698,7 +509,7 @@ class MdGen
 								if (!linkText)
 								{	linkText = curNamepath;
 								}
-								const link = this.#gens.getLinkByNamepath(curNamepath);
+								const link = this.#collection.getLinkByNamepath(curNamepath);
 								doc += link ? mdLink(linkText, link, curLinkIsMonospace) : linkText;
 							}
 						}

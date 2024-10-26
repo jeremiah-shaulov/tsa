@@ -1,1 +1,1 @@
-export {mdGen} from './private/md_gen.ts';
+export {nodesToMd} from './private/md_gen.ts';

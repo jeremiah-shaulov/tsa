@@ -4,7 +4,7 @@
  **/
 
 export {tsa} from './private/tsa_ns.ts';
-export {mdGen} from './private/md_gen/mod.ts';
+export {nodesToMd} from './private/md_gen/mod.ts';
 export {formatDiagnostics, printDiagnostics} from './private/util.ts';
 export {defaultResolve, defaultLoad, type LoadOptions} from './private/load_options.ts';
 export {type EmitDocOptions} from './private/convert/mod.ts';
