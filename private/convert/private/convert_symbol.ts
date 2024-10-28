@@ -11,7 +11,7 @@ import {convertVar} from './convert_var.ts';
 import {Converter} from './converter.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 
-export function convertSymbol(ts: typeof tsa, converter: Converter, name: string, symbol: tsa.Symbol, isExportAssignment: boolean): {declaration: tsa.Declaration, node: DocNode} | undefined
+export function convertSymbol(ts: typeof tsa, converter: Converter, name: string, symbol: tsa.Symbol, forceExport: boolean): {declaration: tsa.Declaration, node: DocNode} | undefined
 {	const declarations = symbol.getDeclarations();
 	if (declarations)
 	{	for (const declaration of declarations)
@@ -25,7 +25,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'class',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
 								classDef,
 							}
@@ -68,7 +68,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'interface',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
 								interfaceDef,
 							}
@@ -85,7 +85,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								enumDef,
 							}
 						};
@@ -100,7 +100,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'typeAlias',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
 								typeAliasDef,
 							}
@@ -119,7 +119,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 									name,
 									location: convertLocation(ts, converter, useDeclaration),
 									...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(useDeclaration)),
-									declarationKind: getDeclarationKind(ts, useDeclaration, isExportAssignment),
+									declarationKind: getDeclarationKind(ts, useDeclaration, forceExport),
 									functionDef,
 								}
 							};
@@ -136,7 +136,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								variableDef,
 							}
 						};
@@ -152,7 +152,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
-								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment),
+								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								typeAliasDef:
 								{	tsType,
 									typeParams: [],
@@ -165,13 +165,17 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 				{	const node = converter.convertNamespace(declaration.fileName, name, convertLocation(ts, converter, declaration));
 					return {declaration, node};
 				}
+				else if (ts.isModuleDeclaration(declaration))
+				{	const node = converter.convertNamespace(declaration.getSourceFile().fileName, name, convertLocation(ts, converter, declaration));
+					return {declaration, node};
+				}
 			}
 		}
 	}
 }
 
-function getDeclarationKind(ts: typeof tsa, declaration: tsa.Declaration, isExportAssignment: boolean)
-{	if (isExportAssignment)
+function getDeclarationKind(ts: typeof tsa, declaration: tsa.Declaration, forceExport: boolean)
+{	if (forceExport)
 	{	return 'export';
 	}
 	const flags = ts.getCombinedModifierFlags(declaration);

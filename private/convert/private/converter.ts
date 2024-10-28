@@ -241,9 +241,10 @@ export class Converter
 		// 3. Add exported symbols
 		const mainSymbol = this.checker.getSymbolAtLocation(sourceFile);
 		if (mainSymbol)
-		{	for (const symbol of this.checker.getExportsOfModule(mainSymbol))
+		{	const {isDeclarationFile} = sourceFile;
+			for (const symbol of this.checker.getExportsOfModule(mainSymbol))
 			{	exportedSymbols?.add(symbol);
-				this.#convertSymbol(symbol, true, false);
+				this.#convertSymbol(symbol, true, isDeclarationFile);
 			}
 		}
 	}
@@ -331,7 +332,7 @@ export class Converter
 		const node = this.#symbolDone(resolvedSymbol, true)?.node;
 		if (!node)
 		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExported, this.checker) : isExported || isDeclarationFile)
-			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, isExportAssignment);
+			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, isExportAssignment || isDeclarationFile);
 				if (result)
 				{	if (exports?.length && !onlyResolvedIsExported)
 					{	result.node.exports = exports;

@@ -14,11 +14,15 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 {	let exports: Array<Export> | undefined;
 	let onlyResolvedIsExported = false;
 	let isExportAssignment = false;
+	let origDeclarations: tsa.Declaration[]|undefined;
 	// 1. Dereference and record reexports
 	while (symbol && (symbol.flags & ts.SymbolFlags.Alias))
 	{	const declarations = symbol.getDeclarations();
+		if (!origDeclarations)
+		{	origDeclarations = declarations;
+		}
 		isExportAssignment = !!declarations?.some(ts.isExportAssignment);
-		const declaration = isExportAssignment ? undefined : declarations?.find(ts.isExportSpecifier);
+		const declaration = isExportAssignment ? origDeclarations?.[0] : declarations?.find(ts.isExportSpecifier);
 		if (declaration)
 		{	if (!exports)
 			{	exports = [];
