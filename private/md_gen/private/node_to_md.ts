@@ -208,7 +208,7 @@ function getImportCode(node: DocNode, importUrls: string[])
 {	let code = '';
 	if (node.declarationKind == 'export')
 	{	// Find shortest export URL, assuming this is the module root
-		let {name, location: {filename, entryPointNumber}} = node.exports?.sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
+		let {name, location: {filename, entryPointNumber}} = node.exports?.filter(e => e.location.entryPointNumber != undefined).sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
 		if (entryPointNumber != undefined)
 		{	if (importUrls.length)
 			{	filename = importUrls[entryPointNumber];
