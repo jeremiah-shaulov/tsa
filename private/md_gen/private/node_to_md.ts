@@ -126,7 +126,13 @@ export class NodeToMd
 		{	return '';
 		}
 		const key = getMemberKey(name, isStatic);
-		return this.#memberHeadersByKey.get(key)?.headerId ?? '';
+		let header = this.#memberHeadersByKey.get(key);
+		if (!header && isStatic)
+		{	// Instance members can be accessed by both '#' and '.'
+			const key = getMemberKey(name);
+			header = this.#memberHeadersByKey.get(key);
+		}
+		return header?.headerId ?? '';
 	}
 
 	getCode()
