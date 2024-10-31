@@ -1,4 +1,4 @@
-import {DocNode, TsTypeDef, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef} from '../../doc_node/mod.ts';
+import {DocNode, TsTypeDef, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralMethodDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 
 const RE_LINK_PATH = /((?:\p{L}|\p{N}|_)+|"[^"\\]*(?:\\.[^"\\]*)*")\s*(?:\((?:[^)"']|"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*')*\))?/yu;
 const RE_BACKSLASH_ESCAPE = /\\./g;
@@ -21,7 +21,7 @@ export function findNamepathTarget(nodes: DocNode[], namepath: string)
 {	let pos = 0;
 	let isStatic = false;
 	let node: DocNode|undefined;
-	let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|EnumMemberDef|undefined;
+	let member: ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|LiteralMethodDef|LiteralPropertyDef|EnumMemberDef|undefined;
 L:	while (pos < namepath.length)
 	{	if (pos != 0)
 		{	const c = namepath.charAt(pos++);
@@ -83,11 +83,21 @@ L:	while (pos < namepath.length)
 						member = node.enumDef.members.find(p => p.name == name);
 						break;
 					case 'typeAlias':
-						node = tsTypeToNode(nodes, node.typeAliasDef.tsType);
-						if (!node)
-						{	return;
+						if (node.typeAliasDef.tsType.kind == 'typeLiteral')
+						{	const {typeLiteral} = node.typeAliasDef.tsType;
+							member =
+							(	typeLiteral.properties.find(p => p.name==name) ??
+								typeLiteral.methods.find(p => p.name==name)
+							);
 						}
-						continue;
+						else
+						{	node = tsTypeToNode(nodes, node.typeAliasDef.tsType);
+							if (!node)
+							{	return;
+							}
+							continue;
+						}
+						break;
 					case 'namespace':
 						node = node.namespaceDef.elements.find(p => p.name == name);
 						if (!node)

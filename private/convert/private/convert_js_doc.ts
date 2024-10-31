@@ -30,7 +30,7 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 		if (symbolDisplayParts)
 		{	for (const {text, kind} of symbolDisplayParts)
 			{	doc += text;
-				docTokens.push({text, kind: kind=='link' || kind=='linkText' || kind=='lineBreak' ? kind : 'text'});
+				docTokens.push({text, kind: kind=='link' || kind=='linkText' || kind=='lineBreak' || kind=='linkName' ? kind : 'text'});
 			}
 		}
 		const tags: JsDocTag[]|undefined = docTags?.map(tag => convertJsDocTag(ts, converter, tag));

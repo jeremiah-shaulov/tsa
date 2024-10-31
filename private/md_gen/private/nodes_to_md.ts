@@ -473,6 +473,7 @@ class NodesToMd
 						doc += '\n\n------\n\n';
 						break;
 					case 'linkText':
+					case 'linkName':
 						// Link text
 						curNamepath += text;
 						break;

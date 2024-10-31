@@ -264,7 +264,7 @@ export interface InterfacePropertyDef {
  **/
 export interface JsDocToken {
   text: string;
-  kind: 'text' | 'lineBreak' | 'link' | 'linkText';
+  kind: 'text' | 'lineBreak' | 'link' | 'linkText' | 'linkName';
 }
 
 export interface JsDoc {

@@ -65,7 +65,10 @@ export class NodeToMdCollection
 	}
 
 	getLinkByNamepath(namepath: string, backToTopDir: ''|'../'='../')
-	{	const found = findNamepathTarget(this.#nodes, namepath);
+	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
+		{	return namepath;
+		}
+		const found = findNamepathTarget(this.#nodes, namepath);
 		if (found)
 		{	const dir = this.getDir(found.node);
 			if (dir)
