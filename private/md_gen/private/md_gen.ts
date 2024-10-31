@@ -154,7 +154,7 @@ class NodesToMd
 	*genFiles(moduleName: string)
 	{	let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
 		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
-		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc);
+		code += this.#convertJsDoc(this.#nodes.find(n => n.kind == 'moduleDoc')?.jsDoc, '');
 		code += this.#convertNamespace(this.#nodes);
 		yield {dir: '', code};
 		yield *this.#genFilesForNodes(this.#nodes, new Set);
@@ -455,7 +455,7 @@ class NodesToMd
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertJsDoc(jsDoc?: JsDoc)
+	#convertJsDoc(jsDoc?: JsDoc, backToTopDir: ''|'../'='../')
 	{	let doc = jsDoc?.doc ?? '';
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
@@ -509,7 +509,7 @@ class NodesToMd
 								if (!linkText)
 								{	linkText = curNamepath;
 								}
-								const link = this.#collection.getLinkByNamepath(curNamepath);
+								const link = this.#collection.getLinkByNamepath(curNamepath, backToTopDir);
 								doc += link ? mdLink(linkText, link, curLinkIsMonospace) : linkText;
 							}
 						}

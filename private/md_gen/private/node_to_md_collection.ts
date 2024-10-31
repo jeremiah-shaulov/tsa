@@ -64,13 +64,13 @@ export class NodeToMdCollection
 		return headerId ? '#'+headerId : '';
 	}
 
-	getLinkByNamepath(namepath: string)
+	getLinkByNamepath(namepath: string, backToTopDir: ''|'../'='../')
 	{	const found = findNamepathTarget(this.#nodes, namepath);
 		if (found)
 		{	const dir = this.getDir(found.node);
 			if (dir)
 			{	const hashHeaderId = this.#getHashHeaderId(found.node, found.member?.name, found.isStatic);
-				return `../${dir}/README.md${hashHeaderId}`;
+				return `${backToTopDir}${dir}/README.md${hashHeaderId}`;
 			}
 		}
 		return '';
