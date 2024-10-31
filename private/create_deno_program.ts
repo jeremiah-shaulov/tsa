@@ -8,6 +8,7 @@ import {existsSync, isUrl} from './util.ts';
 import {LoadOptions, Loader} from './load_options.ts';
 import {getNpmFilename} from './npm.ts';
 import {emitTsaBundle} from './emit_bundle/mod.ts';
+import {DocNodes} from './md_gen/mod.ts';
 
 type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
@@ -121,7 +122,8 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 
 	(program as tsa.TsaProgram).emitDoc = function(options?: EmitDocOptions)
 	{	const converter = new Converter(ts, this, loader, libLocation, options);
-		return converter.convertEntryPoints();
+		const nodes = converter.convertEntryPoints();
+		return new DocNodes(nodes);
 	};
 
 	(program as tsa.TsaProgram).emitTsaBundle = function()

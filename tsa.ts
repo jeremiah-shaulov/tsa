@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
-import {tsa, printDiagnostics, nodesToMd} from './mod.ts';
+import {tsa, printDiagnostics, DocNodes} from './mod.ts';
 import {Command, path} from './private/deps.ts';
 
 const program = new Command('tsa');
@@ -187,16 +187,16 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Generate doc
-	const nodes = program.emitDoc({includeReferenced: true, noImportNodes: true});
+	const docNodes = program.emitDoc({includeReferenced: true, noImportNodes: true});
 
 	if (!isMd)
 	{	// Save the resulting nodes to file (or print to stdout), and exit
-		await writeTextFile(outFileOrDir, JSON.stringify(nodes, undefined, pretty ? '\t' : undefined));
+		await writeTextFile(outFileOrDir, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
 	}
 	else
 	{	const createdDirs = new Array<string>;
 		let nRemoved = 0;
-		for (const {dir, code} of nodesToMd(nodes, moduleName, importUrls))
+		for (const {dir, code} of docNodes.toMd(moduleName, importUrls))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? outFileOrDir : path.join(outFileOrDir, dir);
 			const filename = path.join(curDir, 'README.md');
