@@ -25,7 +25,7 @@ export function convertInterface(ts: typeof tsa, converter: Converter, ifaceDecl
 						params: sig.parameters.map((p, i) => convertParameter(ts, converter, p, declaration.parameters[i])),
 						tsType: convertSignatureReturnType(ts, converter, sig),
 						typeParams: sig.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(p => p) ?? [],
-						...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+						...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration),
 					}
 				);
 			}
@@ -49,7 +49,7 @@ export function convertInterface(ts: typeof tsa, converter: Converter, ifaceDecl
 				(	{	name: 'new',
 						kind: 'method',
 						location: convertLocation(ts, converter, declaration),
-						...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+						...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration),
 						optional: false,
 						params: sig.parameters.map((p, i) => convertParameter(ts, converter, p, declaration.parameters[i])),
 						returnType: convertType(ts, converter, sig.getReturnType()),
@@ -78,7 +78,7 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 			(	{	name: getPropertySpecialName(ts, declaration.name, true) ?? symbol.name,
 					kind: ts.isGetAccessorDeclaration(declaration) ? 'getter' : 'setter',
 					location: convertLocation(ts, converter, declaration),
-					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
 					...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
 					optional: declaration.questionToken != undefined,
 					params: sig?.parameters.map(param => convertParameter(ts, converter, param)) ?? [],
@@ -93,7 +93,7 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 			(	{	name: getPropertySpecialName(ts, declaration.name, true) ?? symbol.name,
 					kind: 'method',
 					location: convertLocation(ts, converter, declaration),
-					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
 					...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
 					optional: declaration.questionToken != undefined,
 					params: sig?.parameters.map((param, i) => convertParameter(ts, converter, param, declaration.parameters[i])) ?? [],
@@ -113,7 +113,7 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 				(	{	name: getPropertySpecialName(ts, propertyName, true) ?? symbol.name,
 						kind: 'method',
 						location: convertLocation(ts, converter, declaration),
-						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration && ts.getJSDocTags(symbol.valueDeclaration)),
+						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
 						...(propertyName && ts.isComputedPropertyName(propertyName) ? {computed: true} : undefined),
 						optional,
 						params: tsType.fnOrConstructor.params,
@@ -127,7 +127,7 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 				outProperties.push
 				(	{	name: getPropertySpecialName(ts, propertyName, true) ?? symbol.name,
 						location: convertLocation(ts, converter, declaration),
-						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration && ts.getJSDocTags(symbol.valueDeclaration)),
+						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
 						...(init && {init}),
 						params: [],
 						...(readonly && {readonly}),

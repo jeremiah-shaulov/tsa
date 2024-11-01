@@ -219,7 +219,7 @@ export class Converter
 
 	#convertSourceFile(sourceFile: tsa.SourceFile, exportedSymbols?: Set<tsa.Symbol>, addToEntryPoints?: string[])
 	{	// 1. Add the first doc-comment in the file, if it contains @module tag
-		this.#convertModuleDoc(sourceFile.statements[0]);
+		this.#convertModuleDoc(sourceFile);
 
 		// 2. Add import statements, and collect imported and reexported modules
 		for (const statement of sourceFile.statements)
@@ -308,8 +308,8 @@ export class Converter
 		}
 	}
 
-	#convertModuleDoc(firstStmt?: tsa.Statement)
-	{	const moduleDoc = convertModuleDoc(this.ts, this, firstStmt);
+	#convertModuleDoc(sourceFile: tsa.SourceFile)
+	{	const moduleDoc = convertModuleDoc(this.ts, this, sourceFile);
 		if (moduleDoc)
 		{	if (!this.#doingNamespace)
 			{	this.outNodes.push(moduleDoc);

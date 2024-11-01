@@ -26,7 +26,7 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 			{	const modifiers = ts.getCombinedModifierFlags(declaration);
 				const accessibility = modifiers & ts.ModifierFlags.Private ? 'private' : modifiers & ts.ModifierFlags.Protected ? 'protected' : modifiers & ts.ModifierFlags.Public ? 'public' : undefined;
 				constructors.push
-				(	{	...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+				(	{	...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration),
 						hasBody: true,
 						name: 'constructor',
 						params: sig.parameters.map((p, i) => convertParameter(ts, converter, p, declaration.parameters[i], true)),
@@ -84,7 +84,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 			{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 				const isOverride = declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.OverrideKeyword) ?? false;
 				outMethods.push
-				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
 						...convertAccessibility(ts, declaration.modifiers),
 						optional: declaration.questionToken != undefined,
 						isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
@@ -111,7 +111,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 			{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 				const isOverride = declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.OverrideKeyword) ?? false;
 				outMethods.push
-				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), ts.getJSDocTags(declaration)),
+				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
 						...convertAccessibility(ts, declaration.modifiers),
 						optional: declaration.questionToken != undefined,
 						isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
@@ -145,7 +145,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 				const isAbstract = !!(modifiers & ts.ModifierFlags.Abstract);
 				if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method
 				{	outMethods.push
-					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration && ts.getJSDocTags(symbol.valueDeclaration)),
+					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
 							...(accessibility && {accessibility}),
 							optional,
 							isAbstract,
@@ -169,7 +169,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 				else
 				{	const init = convertDefaultValue(ts, declaration);
 					outProperties.push
-					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration && ts.getJSDocTags(symbol.valueDeclaration)),
+					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
 							tsType,
 							readonly,
 							...((ts.isPropertyDeclaration(declaration) || ts.isPropertySignature(declaration)) && convertDecorators(ts, converter, declaration.modifiers)),

@@ -3,6 +3,7 @@ import {JsDoc, JsDocTag, JsDocToken} from '../../doc_node/mod.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertTypeParamNode} from './convert_type_parameter.ts';
 import {Converter} from './converter.ts';
+import {indentAndWrap} from '../../deps.ts';
 
 const C_BRACE_OPEN = '{'.charCodeAt(0);
 const C_BRACE_CLOSE = '}'.charCodeAt(0);
@@ -11,8 +12,13 @@ const C_PAREN_CLOSE = ')'.charCodeAt(0);
 const C_SQUARE_OPEN = '['.charCodeAt(0);
 const C_SQUARE_CLOSE = ']'.charCodeAt(0);
 const C_EQ = '='.charCodeAt(0);
+const C_SPACE = ' '.charCodeAt(0);
+const C_TAB = '\t'.charCodeAt(0);
 
 const RE_TRIM_TAG = /\s*\*{0,2}$/;
+const RE_EXTRACT_DOC_COMMENT = /\s*\/\*\*+[ \t]*/y;
+const RE_PARSE_DOC_COMMENT = /^\/\*+[ \t]*|\*+\/$/g;
+const RE_PARSE_DOC_COMMENT_2 = /^\s*\*/gm;
 
 function tagToString(tag: tsa.JSDocTag)
 {	return tag.getText().replace(RE_TRIM_TAG, '');
@@ -23,15 +29,24 @@ function tagToString(tag: tsa.JSDocTag)
 	- `docTags` - is an object obtained by calling `ts.getJSDocTags(declaration)`.
 	Those will be converted to `{jsDoc: JsDoc}` if any of them is not empty.
  **/
-export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplayParts?: readonly tsa.SymbolDisplayPart[], docTags?: readonly tsa.JSDocTag[]): {jsDoc: JsDoc} | undefined
-{	if (symbolDisplayParts?.length || docTags?.length)
-	{	let doc = '';
+export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplayParts?: readonly tsa.SymbolDisplayPart[], node?: tsa.Node, docTags?: readonly tsa.JSDocTag[]): {jsDoc: JsDoc} | undefined
+{	if (!docTags && node)
+	{	docTags = ts.getJSDocTags(node);
+	}
+	if (symbolDisplayParts?.length || docTags?.length)
+	{	const extracted = extractJsDocComment(node);
+		let doc = extracted;
 		const docTokens = new Array<JsDocToken>();
 		if (symbolDisplayParts)
 		{	for (const {text, kind} of symbolDisplayParts)
-			{	doc += text;
+			{	if (!extracted)
+				{	doc += text;
+				}
 				docTokens.push({text, kind: kind=='link' || kind=='linkText' || kind=='lineBreak' || kind=='linkName' ? kind : 'text'});
 			}
+		}
+		if (extracted)
+		{	correctIndentInTokensAccordingToText(docTokens, extracted);
 		}
 		const tags: JsDocTag[]|undefined = docTags?.map(tag => convertJsDocTag(ts, converter, tag));
 		return {
@@ -44,11 +59,29 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 	}
 }
 
+function extractJsDocComment(node?: tsa.Node)
+{	if (node)
+	{	const {text} = node.getSourceFile();
+		RE_EXTRACT_DOC_COMMENT.lastIndex = node.pos;
+		if (RE_EXTRACT_DOC_COMMENT.test(text))
+		{	const from = RE_EXTRACT_DOC_COMMENT.lastIndex;
+			const to = text.indexOf('**/', from);
+			if (to!=-1 && to<node.end)
+			{	let doc = text.slice(from, to);
+				doc = doc.replace(RE_PARSE_DOC_COMMENT_2, '');
+				doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
+				return doc;
+			}
+		}
+	}
+	return '';
+}
+
 /**	Returns object with 2 properties:
 	- `doc` is what `ts.getTextOfJSDocComment(comment)` returns.
 	- `docTokens` - is the `doc` text, split to tokens in the same format how `symbol.getDocumentationComment()` returns.
  **/
-export function convertJsDocComment(ts: typeof tsa, comment?: string | tsa.NodeArray<tsa.JSDocComment>): {doc?: string, docTokens?: JsDocToken[]} | undefined
+export function convertJsDocComment(ts: typeof tsa, comment?: string|tsa.NodeArray<tsa.JSDocComment>, commentText=''): {doc?: string, docTokens?: JsDocToken[]} | undefined
 {	if (comment)
 	{	if (typeof(comment) == 'string')
 		{	if (comment!='*' && comment!='**')
@@ -75,10 +108,79 @@ export function convertJsDocComment(ts: typeof tsa, comment?: string | tsa.NodeA
 					return [{text, kind: 'link'}, {text: comment.getText().slice(text.length, -1), kind: 'linkText'}, {text: '}', kind: 'link'}];
 				}
 			);
-			return {
-				doc: docTokens.map(c => c.text).join(''),
-				docTokens,
+			if (commentText)
+			{	commentText = commentText.replace(RE_PARSE_DOC_COMMENT, '').replace(RE_PARSE_DOC_COMMENT_2, '');
+				commentText = indentAndWrap(commentText, {indent: '', ignoreFirstIndent: true});
+				correctIndentInTokensAccordingToText(docTokens, commentText);
 			}
+			else
+			{	commentText = docTokens.map(c => c.text).join('');
+			}
+			return {doc: commentText, docTokens};
+		}
+	}
+}
+
+function correctIndentInTokensAccordingToText(docTokens: JsDocToken[], commentText: string)
+{	if (docTokens.length)
+	{	let pos = 0;
+		let i = 0;
+		let iText = docTokens[0].text;
+		let j = 0;
+		// deno-lint-ignore no-inner-declarations
+		function skip(from: number, to: number)
+		{	let jFrom = j;
+			j += to - from;
+			while (j >= iText.length)
+			{	const nextFrom = from + (iText.length - jFrom);
+				if (commentText.slice(from, nextFrom) != iText.slice(jFrom))
+				{	return false;
+				}
+				from = nextFrom;
+				j -= iText.length;
+				if (++i >= docTokens.length)
+				{	return false;
+				}
+				iText = docTokens[i].text;
+				jFrom = 0;
+			}
+			return commentText.slice(from, to) == iText.slice(jFrom, jFrom + (to - from));
+		}
+		while (true)
+		{	let pos2 = commentText.indexOf('\n', pos);
+			if (pos2 == -1)
+			{	break;
+			}
+			pos2++;
+			if (!skip(pos, pos2))
+			{	break;
+			}
+			let rmFrom = -1;
+			let rmTo = -1;
+			let insFrom = -1;
+			while (true)
+			{	const c = commentText.charCodeAt(pos2);
+				if (c!=C_SPACE && c!=C_TAB)
+				{	break;
+				}
+				if (rmFrom == -1)
+				{	let c2 = iText.charCodeAt(j);
+					if (c2 != c)
+					{	insFrom = pos2;
+						rmFrom = j;
+						while (c2==C_SPACE || c2==C_TAB)
+						{	c2 = iText.charCodeAt(++j);
+						}
+						rmTo = j;
+					}
+				}
+				pos2++;
+			}
+			if (insFrom != -1)
+			{	docTokens[i].text = iText = iText.slice(0, rmFrom) + commentText.slice(insFrom, pos2) + iText.slice(rmTo);
+				j += pos2 - insFrom;
+			}
+			pos = pos2;
 		}
 	}
 }

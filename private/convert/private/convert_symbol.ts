@@ -26,7 +26,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								classDef,
 							}
 						};
@@ -69,7 +69,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								interfaceDef,
 							}
 						};
@@ -84,7 +84,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'enum',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								enumDef,
 							}
@@ -101,7 +101,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								typeAliasDef,
 							}
 						};
@@ -118,7 +118,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								{	kind: 'function',
 									name,
 									location: convertLocation(ts, converter, useDeclaration),
-									...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(useDeclaration)),
+									...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), useDeclaration),
 									declarationKind: getDeclarationKind(ts, useDeclaration, forceExport),
 									functionDef,
 								}
@@ -135,7 +135,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'variable',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								variableDef,
 							}
@@ -151,7 +151,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'typeAlias',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration)),
+								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								declarationKind: getDeclarationKind(ts, declaration, forceExport),
 								typeAliasDef:
 								{	tsType,
@@ -167,7 +167,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 				}
 				else if (ts.isModuleDeclaration(declaration))
 				{	const node = converter.convertNamespace(declaration.getSourceFile().fileName, name, convertLocation(ts, converter, declaration));
-					node.jsDoc = convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), ts.getJSDocTags(declaration))?.jsDoc;
+					node.jsDoc = convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration)?.jsDoc;
 					return {declaration, node};
 				}
 			}

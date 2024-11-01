@@ -13,7 +13,7 @@ export function convertEnum(ts: typeof tsa, converter: Converter, declaration: t
 			const memberSymbol = converter.checker.getSymbolAtLocation(member.name);
 			members.push
 			(	{	name: member.name.getText(),
-					...convertJsDoc(ts, converter, memberSymbol?.getDocumentationComment(converter.checker), ts.getJSDocTags(member)),
+					...convertJsDoc(ts, converter, memberSymbol?.getDocumentationComment(converter.checker), member),
 					...
 					(	typeof(value)=='number' ? {init: {repr: value+'', kind: 'literal', literal: {kind: 'number', number: value}}} :
 						typeof(value)=='string' ? {init: {repr: JSON.stringify(value), kind: 'literal', literal: {kind: 'string', string: value}}} :
