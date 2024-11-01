@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
-import {tsa, printDiagnostics, DocNodes} from './mod.ts';
+import {tsa, printDiagnostics} from './mod.ts';
 import {Command, path} from './private/deps.ts';
 
 const program = new Command('tsa');
@@ -67,6 +67,7 @@ program
 	.option('--outDir <generated-doc>', 'To what directory to save the resulting files (default: "generated-doc"). The directory will be created or emptied if necessary.')
 	.option('--moduleName <My Project>', 'The title that will appear in the main README.md file.')
 	.option('--importUrl <URL>', 'Optionally specify one such flag per each source file in corresponding order. This lets including in the documentation import examples for public symbols. The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator. For example: tsa doc-md foo/mod.ts --importUrl https://deno.land/foo@1.0.0/mod.ts bar/mod.ts --importUrl https://deno.land/bar@1.0.0/mod.ts (the number of --importUrl options must be the same as number of given files).', optionStringArray)
+	.option('--outUrl <URL>', 'If you plan to upload the resulting files to a public resource (such as github), you can optionally specify URL by which the --outDir directory will be publicly accessible. Then you can use script examples in doc-comments marked as "// To run this example:" on the first line, and followed by a line that contains "example.ts", like "// deno run --allow-all example.ts", and these lines will be converted to "// To download and run this example:"...')
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean|string[]>) =>
 		{	// Input options
@@ -74,6 +75,7 @@ program
 			const outDir = String(options.outDir || 'generated-doc');
 			const moduleName = String(options.moduleName || '');
 			const importUrls = Array.isArray(options.importUrl) ? options.importUrl : [];
+			const outUrl = String(options.outUrl || '');
 
 			// Validate options
 			if (importUrls.length && importUrls.length!=entryPoints.length)
@@ -81,7 +83,7 @@ program
 			}
 
 			// Gen doc
-			await doc(entryPoints, outDir, false, true, moduleName, importUrls);
+			await doc(entryPoints, outDir, false, true, moduleName, importUrls, outUrl);
 
 			// Done
 			Deno.exit();
@@ -181,7 +183,7 @@ function optionStringArray(value: unknown, previous: unknown[])
 	return !previous ? arr : previous.concat(arr);
 }
 
-async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Array<string>)
+async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Array<string>, outUrl='')
 {	// Create program
 	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
@@ -196,7 +198,7 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 	else
 	{	const createdDirs = new Array<string>;
 		let nRemoved = 0;
-		for (const {dir, code} of docNodes.toMd(moduleName, importUrls))
+		for (const {dir, code} of docNodes.toMd(moduleName, importUrls, outUrl))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? outFileOrDir : path.join(outFileOrDir, dir);
 			const filename = path.join(curDir, 'README.md');
@@ -279,7 +281,7 @@ async function bundle(entryPoints: string[], outFile: string, target: tsa.Script
 		let contents = '';
 		const result2 = program2.emit
 		(	undefined,
-			(_fileName: string, text: string) =>
+			(_fileName, text) =>
 			{	contents = text;
 			}
 		);

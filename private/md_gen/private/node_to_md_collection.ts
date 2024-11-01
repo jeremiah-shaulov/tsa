@@ -34,6 +34,9 @@ export class NodeToMdCollection
 			{	return dir;
 			}
 			const {name, kind} = node;
+			if (kind == 'moduleDoc')
+			{	return '';
+			}
 			const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
 			const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
 			for (let i=1; true; i++)
@@ -45,6 +48,7 @@ export class NodeToMdCollection
 				}
 			}
 		}
+		return '';
 	}
 
 	getLink(node?: DocNode, nodeSubIndex?: number)
