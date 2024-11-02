@@ -9,6 +9,9 @@ export class TsaBundle
 	{
 	}
 
+	/**	Convert this bundle to single Typescript file that contains all the imported modules.
+		Returns source code of the file as string.
+	 **/
 	toTs(logToConsole=false)
 	{	if (this.#text == undefined)
 		{	const {nodesWithInfo, newLine} = this;
@@ -33,6 +36,56 @@ export class TsaBundle
 		return this.#text;
 	}
 
+	/**	Convert this bundle to another
+		{@link tsa.TsaProgram}, on which you can call {@link tsa.TsaProgram.emit()} to convert it to single Javascript file.
+		This method first calls [toTs()]{@link TsaBundle.toTs}, and then {@link tsa.createTsaProgram()}.
+
+		```ts
+		// To run this example:
+		// deno run --allow-env --allow-net --allow-read --allow-write example.ts
+
+		import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.23/mod.ts';
+
+		const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
+		const OUT_FILE = '/tmp/dist.js';
+
+		// Create typescript program
+		const program = await tsa.createTsaProgram([SUBJ]);
+
+		// Print errors and warnings (if any)
+		printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+		// Bundle
+		const bundle = program.emitTsaBundle();
+
+		// Convert the bundle to another program
+		const program2 = await bundle.toProgram({outFile: OUT_FILE, target: tsa.ScriptTarget.ESNext});
+		printDiagnostics(tsa.getPreEmitDiagnostics(program2));
+
+		// Transpile
+		let contents = '';
+		const result = program2.emit
+		(	undefined,
+			(_fileName, text) =>
+			{	contents = text;
+			}
+		);
+		printDiagnostics(result.diagnostics);
+		if (result.emitSkipped)
+		{	console.error('Fatal errors');
+		}
+		else
+		{	// If not a module, wrap the code in an async scope
+			if (!bundle.hasExports)
+			{	contents = `(async function() {\n${contents}\n})()`;
+			}
+			// Save the code to file
+			await Deno.writeTextFile(OUT_FILE, contents);
+			// Done
+			console.error(`File saved: ${OUT_FILE}`);
+		}
+		```
+	 **/
 	async toProgram(compilerOptions: tsa.CompilerOptions, logToConsole=false)
 	{	const outFile = compilerOptions.outFile;
 		if (!outFile)
@@ -68,6 +121,9 @@ export class TsaBundle
 		);
 	}
 
+	/**	Alias of
+		[toTs()]{@link TsaBundle.toTs}
+	 **/
 	toString()
 	{	return this.toTs();
 	}
