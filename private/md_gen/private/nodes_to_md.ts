@@ -1,4 +1,4 @@
-import {APP_GIT_TAG, indentAndWrap, crc32} from '../../deps.ts';
+import {APP_GIT_TAG, indentAndWrap, crc32, path} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
@@ -12,17 +12,19 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*[\r\n]\s*\/\/([^\r\n]+)/y;
 
-export function nodesToMd(nodes: DocNode[], outDir: string, moduleName='', importUrls=new Array<string>, outUrl='')
-{	return new NodesToMd(nodes, outDir).genFiles(moduleName, importUrls, outUrl);
+export function nodesToMd(nodes: DocNode[], outFileBasename: string, outDir: string, moduleName='', importUrls=new Array<string>, outUrl='')
+{	return new NodesToMd(nodes, outFileBasename, outDir).genFiles(moduleName, importUrls, outUrl);
 }
 
 class NodesToMd
 {	#nodes;
+	#outFileBasename;
 	#outDir;
 	#collection: NodeToMdCollection;
 
-	constructor(nodes: DocNode[], outDir: string)
+	constructor(nodes: DocNode[], outFileBasename: string, outDir: string)
 	{	this.#nodes = nodes;
+		this.#outFileBasename = outFileBasename;
 		this.#outDir = outDir;
 		this.#collection = new NodeToMdCollection
 		(	nodes,
@@ -158,14 +160,21 @@ class NodesToMd
 	}
 
 	*genFiles(moduleName: string, importUrls: string[], outUrl: string)
-	{	let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
+	{	// Module doc
+		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
 		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
+		code += mdLink('Documentation Index', this.#outDir+'/README.md')+'\n\n';
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		if (moduleDoc)
 		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, outUrl, this.#outDir+'/');
 		}
-		code += this.#convertNamespace(this.#nodes);
 		yield {dir: '', code};
+		// Index
+		code = '# Documentation index\n\n';
+		code += mdLink('Top', '../'+this.#outFileBasename)+'\n\n';
+		code += this.#convertNamespace(this.#nodes, '');
+		yield {dir: this.#outDir, code};
+		// Symbols
 		yield *this.#genFilesForNodes(this.#nodes, importUrls, outUrl, new Set);
 	}
 
@@ -176,7 +185,7 @@ class NodesToMd
 				{	nodesDone.add(node);
 					const nodeToMd = this.#collection.getNodeToMd(node);
 					const code = nodeToMd?.getCode(importUrls, outUrl) ?? '';
-					const dir = this.#collection.getDir(node);
+					const dir = path.join(this.#outDir, this.#collection.getDir(node));
 					yield {dir, code};
 					if (node.kind == 'namespace')
 					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, importUrls, outUrl, nodesDone);
@@ -186,7 +195,7 @@ class NodesToMd
 		}
 	}
 
-	#convertNamespace(nodes: DocNode[])
+	#convertNamespace(nodes: DocNode[], toDocDir='../')
 	{	const isMain = nodes == this.#nodes;
 		const namespaces = new Array<DocNodeNamespace>;
 		const variables = new Array<DocNodeVariable>;
@@ -223,7 +232,6 @@ class NodesToMd
 					}
 			}
 		}
-		const toDocDir = isMain ? this.#outDir+'/' : '../';
 		let code = '';
 		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
 		code += mdGrid('Variables', variables.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);

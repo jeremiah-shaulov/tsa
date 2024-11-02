@@ -311,9 +311,10 @@ export class NodeToMd
 		}
 		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
 		const topHeader = onTopHeader(this.#node);
+		const index = mdLink('Documentation Index', '../README.md')+'\n\n';
 		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0, outUrl);
 		const importCode = getImportCode(this.#node, importUrls);
-		return decorators + '# ' + topHeader + '\n\n' + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
+		return decorators + '# ' + topHeader + '\n\n' + index + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
 	}
 }
 

@@ -206,11 +206,11 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 	else
 	{	const createdDirs = new Array<string>;
 		const baseDir = path.dirname(outFile);
-		const outDirPath = path.join(baseDir, outDir);
+		const outFileBasename = path.basename(outFile);
 		let nRemoved = 0;
-		for (const {dir, code} of docNodes.toMd(outDir, moduleName, importUrls, outUrl))
+		for (const {dir, code} of docNodes.toMd(outFileBasename, outDir, moduleName, importUrls, outUrl))
 		{	// Need to write `code` to `${dir}/README.md`
-			const curDir = !dir ? baseDir : path.join(outDirPath, dir);
+			const curDir = !dir ? baseDir : path.join(baseDir, dir);
 			const filename = !dir ? outFile : path.join(curDir, 'README.md');
 			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
@@ -226,6 +226,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 							}
 						}
 					}
+					break;
 				}
 				catch (e)
 				{	if (i!=0 || e.code!='ENOENT')
@@ -234,12 +235,15 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 					await Deno.mkdir(curDir, {recursive: true});
 				}
 			}
-			createdDirs.push(dir);
+			if (dir && dir!=outDir)
+			{	createdDirs.push(dir);
+			}
 		}
 		// Delete existing files that i didn't create
+		const outDirPath = path.join(baseDir, outDir);
 		if (createdDirs.length)
 		{	for await (const {name} of Deno.readDir(outDirPath))
-			{	if (name!='README.md' && !createdDirs.includes(name))
+			{	if (name!='README.md' && !createdDirs.includes(path.join(outDir, name)))
 				{	// Remove this file or directory
 					await Deno.remove(path.join(outDirPath, name), {recursive: true});
 					nRemoved++;
