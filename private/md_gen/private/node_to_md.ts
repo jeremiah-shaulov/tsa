@@ -1,5 +1,5 @@
-import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind} from '../../doc_node/mod.ts';
-import {isDeprecated, isPublicOrProtected, mdBlockquote, mdLink, parseHeaderId} from './util.ts';
+import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind, DecoratorDef} from '../../doc_node/mod.ts';
+import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
 /**	Getter and/or setter for a given property - both in single object.
  **/
@@ -14,7 +14,8 @@ export type Accessor =
 };
 
 type ClassConverter =
-{	onTopHeader(node: DocNode): string;
+{	onDecorators(m: DecoratorDef[]): string;
+	onTopHeader(node: DocNode): string;
 	onConstructor(m: ClassConstructorDef): string;
 	onIndexSignature(m: ClassIndexSignatureDef): string;
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
@@ -119,22 +120,113 @@ export class NodeToMd
 		this.#memberHeadersByKey.set(key, memberHeader);
 	}
 
-	getHeaderId(name?: string, isStatic=false)
-	{	if (!name)
-		{	return '';
+	getHeaderId(memberName?: string, isStatic=false)
+	{	return this.#getMemberHeader(memberName, isStatic)?.headerId ?? '';
+	}
+
+	getTsDecl(memberName?: string, isStatic=false)
+	{	if (memberName)
+		{	// Asked declaration of object member
+			return this.#getMemberHeader(memberName, isStatic)?.headerLine ?? '';
 		}
-		const key = getMemberKey(name, isStatic);
-		let header = this.#memberHeadersByKey.get(key);
-		if (!header && isStatic)
-		{	// Instance members can be accessed by both '#' and '.'
-			const key = getMemberKey(name);
-			header = this.#memberHeadersByKey.get(key);
+		else
+		{	// Asked declaration of the whole object
+			const other = this.#other[0];
+			if (other)
+			{	switch (other.kind)
+				{	case 'enum':
+					{	const {enumDef} = other;
+						let code = enumDef.isConst ? '`const` `enum` ' : '`enum` ';
+						code += mdEscape(other.name);
+						code += '<br>\n{<br>\n';
+						for (const m of other.enumDef.members)
+						{	const headerLine = this.#memberHeaders.get(m)?.headerLine;
+							if (headerLine)
+							{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+							}
+						}
+						code += '}';
+						return mdBlockquote(code);
+					}
+					case 'function':
+						return this.#converter.onMethod(other, false);
+					case 'variable':
+						return this.#converter.onVariable(other.variableDef);
+					case 'namespace':
+						return this.#converter.onNamespace(other.namespaceDef);
+				}
+			}
+			else if (this.#typeAlias.length)
+			{	return this.#converter.onTypeAlias(this.#typeAlias[0]);
+			}
+			else
+			{	const memberHeaders = this.#memberHeaders;
+				let code = this.#converter.onTopHeader(this.#node);
+				code += '<br>\n{<br>\n';
+				// constructors
+				for (const m of this.#constructors)
+				{	if (!isDeprecated(m))
+					{	const headerLine = memberHeaders.get(m)?.headerLine;
+						if (headerLine)
+						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+						}
+					}
+				}
+				// destructors
+				for (const m of this.#destructors)
+				{	if (!isDeprecated(m))
+					{	const headerLine = memberHeaders.get(m)?.headerLine;
+						if (headerLine)
+						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+						}
+					}
+				}
+				// index signatures
+				for (const m of this.#indexSignatures)
+				{	const headerLine = memberHeaders.get(m)?.headerLine;
+					if (headerLine)
+					{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+					}
+				}
+				// properties
+				for (const m of this.#propertiesAndAccessors)
+				{	if (!isDeprecated(m))
+					{	const headerLine = memberHeaders.get(m)?.headerLine;
+						if (headerLine)
+						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+						}
+					}
+				}
+				// methods
+				for (const m of this.#methods)
+				{	if (!isDeprecated(m))
+					{	const headerLine = memberHeaders.get(m)?.headerLine;
+						if (headerLine)
+						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+						}
+					}
+				}
+				code += '}';
+				return mdBlockquote(code);
+			}
 		}
-		return header?.headerId ?? '';
+	}
+
+	#getMemberHeader(memberName?: string, isStatic=false)
+	{	if (memberName)
+		{	const key = getMemberKey(memberName, isStatic);
+			let header = this.#memberHeadersByKey.get(key);
+			if (!header && isStatic)
+			{	// Instance members can be accessed by both '#' and '.'
+				const key = getMemberKey(memberName);
+				header = this.#memberHeadersByKey.get(key);
+			}
+			return header;
+		}
 	}
 
 	getCode(importUrls: string[], outUrl: string)
-	{	const {onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+	{	const {onDecorators, onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
 		let sectionsCode = '';
@@ -209,10 +301,11 @@ export class NodeToMd
 			sectionsCode = sections+'';
 			outline = sections.getOutline();
 		}
+		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
 		const topHeader = onTopHeader(this.#node);
 		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0, outUrl);
 		const importCode = getImportCode(this.#node, importUrls);
-		return topHeader + '\n\n' + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
+		return decorators + '# ' + topHeader + '\n\n' + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
 	}
 }
 

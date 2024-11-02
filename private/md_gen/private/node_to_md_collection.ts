@@ -68,7 +68,7 @@ export class NodeToMdCollection
 		return headerId ? '#'+headerId : '';
 	}
 
-	getLinkByNamepath(namepath: string, backToTopDir: ''|'../'='../')
+	getLinkByNamepath(namepath: string, toDocDir: ''|'../'='../')
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
 		}
@@ -77,8 +77,19 @@ export class NodeToMdCollection
 		{	const dir = this.getDir(found.node);
 			if (dir)
 			{	const hashHeaderId = this.#getHashHeaderId(found.node, found.member?.name, found.isStatic);
-				return `${backToTopDir}${dir}/README.md${hashHeaderId}`;
+				return `${toDocDir}${dir}/README.md${hashHeaderId}`;
 			}
+		}
+		return '';
+	}
+
+	getTsDeclByNamepath(namepath: string)
+	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
+		{	return namepath;
+		}
+		const found = findNamepathTarget(this.#nodes, namepath);
+		if (found)
+		{	return this.getNodeToMd(found.node)?.getTsDecl(found.member?.name, found.isStatic) ?? '';
 		}
 		return '';
 	}

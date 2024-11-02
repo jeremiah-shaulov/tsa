@@ -28,20 +28,21 @@ class NodesToMd
 			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='enum' || node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
 				{	return new NodeToMd
 					(	node,
-						{	onTopHeader: node =>
+						{	onDecorators: decorators =>
+							{	let code = '';
+								for (const d of decorators)
+								{	const link = this.#collection.getLink(this.#nodes[d.nodeIndex ?? -1]);
+									const name = link ? mdLink(d.name, `../${link}`) : d.name;
+									code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
+								}
+								return code;
+							},
+							onTopHeader: node =>
 							{	let code = '';
 								if (node.kind == 'class')
 								{	const {classDef} = node;
-									// Decorators
-									if (classDef.decorators)
-									{	for (const d of classDef.decorators)
-										{	const link = this.#collection.getLink(this.#nodes[d.nodeIndex ?? -1]);
-											const name = link ? mdLink(d.name, `../${link}`) : d.name;
-											code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
-										}
-									}
 									// Class (h1 header)
-									code += classDef.isAbstract ? '# `abstract` `class` ' : '# `class` ';
+									code += classDef.isAbstract ? '`abstract` `class` ' : '`class` ';
 									code += mdEscape(node.name);
 									// Type params
 									code += this.#convertTypeParams(classDef.typeParams);
@@ -53,7 +54,7 @@ class NodesToMd
 								else if (node.kind == 'interface')
 								{	const {interfaceDef} = node;
 									// Interface (h1 header)
-									code += '# `interface` ';
+									code += '`interface` ';
 									code += mdEscape(node.name);
 									// Type params
 									code += this.#convertTypeParams(interfaceDef.typeParams);
@@ -62,25 +63,25 @@ class NodesToMd
 								}
 								else if (node.kind == 'typeAlias')
 								{	const {typeAliasDef} = node;
-									code += '# `type` ';
+									code += '`type` ';
 									code += mdEscape(node.name) + this.#convertTypeParams(typeAliasDef.typeParams);
 								}
 								else if (node.kind == 'enum')
 								{	const {enumDef} = node;
-									code += enumDef.isConst ? '# `const` `enum` ' : '# `enum` ';
+									code += enumDef.isConst ? '`const` `enum` ' : '`enum` ';
 									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'function')
-								{	code += '# `function` ';
+								{	code += '`function` ';
 									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'variable')
 								{	const {variableDef} = node;
-									code += variableDef.kind=='const' ? '# `const` ' : '# `var` ';
+									code += variableDef.kind=='const' ? '`const` ' : '`var` ';
 									code += mdEscape(node.name);
 								}
 								else if (node.kind == 'namespace')
-								{	code += '# `namespace` ';
+								{	code += '`namespace` ';
 									code += mdEscape(node.name);
 								}
 								return code;
@@ -118,7 +119,7 @@ class NodesToMd
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
-								let codeCur = isDestructor ? '🔨 ' : '⚙ ';
+								let codeCur = isDestructor ? '🔨 ' : m.kind!='function' ? '⚙ ' : '';
 								if (isDeprecated(m))
 								{	codeCur += '`deprecated` ';
 								}
@@ -220,13 +221,13 @@ class NodesToMd
 					}
 			}
 		}
-		const dirPrefix = isMain ? '' : '../';
+		const toDocDir = isMain ? '' : '../';
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, dirPrefix+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -461,7 +462,7 @@ class NodesToMd
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string, backToTopDir: ''|'../'='../')
+	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string, toDocDir: ''|'../'='../')
 	{	let doc = jsDoc?.doc ?? '';
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
@@ -514,9 +515,16 @@ class NodesToMd
 									}
 								}
 								if (!linkText)
-								{	linkText = curNamepath;
+								{	if (curLinkIsMonospace)
+									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath);
+										if (tsDecl)
+										{	doc += tsDecl;
+											break;
+										}
+									}
+									linkText = curNamepath;
 								}
-								const link = this.#collection.getLinkByNamepath(curNamepath, backToTopDir);
+								const link = this.#collection.getLinkByNamepath(curNamepath, toDocDir);
 								doc += link ? mdLink(linkText, link, curLinkIsMonospace) : linkText;
 							}
 						}
