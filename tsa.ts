@@ -30,7 +30,7 @@ program
 			const pretty = !!options.pretty;
 
 			// Gen doc
-			await doc(entryPoints, outFile, pretty, false);
+			await doc(entryPoints, outFile, '', pretty, false);
 
 			// Done
 			Deno.exit();
@@ -52,7 +52,7 @@ program
 			const pretty = !!options.pretty;
 
 			// Gen doc
-			await doc(entryPoints, outFile, pretty, false);
+			await doc(entryPoints, outFile, '', pretty, false);
 
 			// Done
 			Deno.exit();
@@ -64,7 +64,8 @@ program
 	.description
 	(	'Generate documentation in markdown format.'
 	)
-	.option('--outDir <generated-doc>', 'To what directory to save the resulting files (default: "generated-doc"). The directory will be created or emptied if necessary.')
+	.requiredOption('--outFile <README.md>', 'Where to save the result.')
+	.option('--outDir <generated-doc>', 'This command also creates linked README.md files in the --outDir directory (default: "generated-doc"). The directory will be created near --outFile or existing directory will be emptied if necessary.')
 	.option('--moduleName <My Project>', 'The title that will appear in the main README.md file.')
 	.option('--importUrl <URL>', 'Optionally specify one such flag per each source file in corresponding order. This lets including in the documentation import examples for public symbols. The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator. For example: tsa doc-md foo/mod.ts --importUrl https://deno.land/foo@1.0.0/mod.ts bar/mod.ts --importUrl https://deno.land/bar@1.0.0/mod.ts (the number of --importUrl options must be the same as number of given files).', optionStringArray)
 	.option('--outUrl <URL>', 'If you plan to upload the resulting files to a public resource (such as github), you can optionally specify URL by which the --outDir directory will be publicly accessible. Then you can use script examples in doc-comments marked as "// To run this example:" on the first line, and followed by a line that contains "example.ts", like "// deno run --allow-all example.ts", and these lines will be converted to "// To download and run this example:"...')
@@ -72,18 +73,25 @@ program
 	(	async (file1: string, files: string[], options: Record<string, string|boolean|string[]>) =>
 		{	// Input options
 			const entryPoints = [file1, ...files];
+			const outFile = String(options.outFile);
 			const outDir = String(options.outDir || 'generated-doc');
 			const moduleName = String(options.moduleName || '');
 			const importUrls = Array.isArray(options.importUrl) ? options.importUrl : [];
 			const outUrl = String(options.outUrl || '');
 
 			// Validate options
+			if (!outFile)
+			{	throw new Error('--outFile must be specified');
+			}
+			if (outDir.includes('/') || outDir.includes(path.SEPARATOR))
+			{	throw new Error('Invalid --outDir. It must be name of the directory to be created/modified (not path)');
+			}
 			if (importUrls.length && importUrls.length!=entryPoints.length)
 			{	throw new Error(`Number of --importUrl options must be the same as number of given source files (${entryPoints.length})`);
 			}
 
 			// Gen doc
-			await doc(entryPoints, outDir, false, true, moduleName, importUrls, outUrl);
+			await doc(entryPoints, outFile, outDir, false, true, moduleName, importUrls, outUrl);
 
 			// Done
 			Deno.exit();
@@ -183,7 +191,7 @@ function optionStringArray(value: unknown, previous: unknown[])
 	return !previous ? arr : previous.concat(arr);
 }
 
-async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Array<string>, outUrl='')
+async function doc(entryPoints: string[], outFile: string, outDir: string, pretty: boolean, isMd: boolean, moduleName='', importUrls=new Array<string>, outUrl='')
 {	// Create program
 	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
@@ -193,15 +201,17 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 
 	if (!isMd)
 	{	// Save the resulting nodes to file (or print to stdout), and exit
-		await writeTextFile(outFileOrDir, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
+		await writeTextFile(outFile, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
 	}
 	else
 	{	const createdDirs = new Array<string>;
+		const baseDir = path.dirname(outFile);
+		const outDirPath = path.join(baseDir, outDir);
 		let nRemoved = 0;
-		for (const {dir, code} of docNodes.toMd(moduleName, importUrls, outUrl))
+		for (const {dir, code} of docNodes.toMd(outDir, moduleName, importUrls, outUrl))
 		{	// Need to write `code` to `${dir}/README.md`
-			const curDir = !dir ? outFileOrDir : path.join(outFileOrDir, dir);
-			const filename = path.join(curDir, 'README.md');
+			const curDir = !dir ? baseDir : path.join(outDirPath, dir);
+			const filename = !dir ? outFile : path.join(curDir, 'README.md');
 			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
 			{	try
@@ -228,10 +238,10 @@ async function doc(entryPoints: string[], outFileOrDir: string, pretty: boolean,
 		}
 		// Delete existing files that i didn't create
 		if (createdDirs.length)
-		{	for await (const {name} of Deno.readDir(outFileOrDir))
+		{	for await (const {name} of Deno.readDir(outDirPath))
 			{	if (name!='README.md' && !createdDirs.includes(name))
 				{	// Remove this file or directory
-					await Deno.remove(path.join(outFileOrDir, name), {recursive: true});
+					await Deno.remove(path.join(outDirPath, name), {recursive: true});
 					nRemoved++;
 				}
 			}

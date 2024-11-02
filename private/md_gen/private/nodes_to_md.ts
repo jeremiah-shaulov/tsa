@@ -12,16 +12,18 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*[\r\n]\s*\/\/([^\r\n]+)/y;
 
-export function nodesToMd(nodes: DocNode[], moduleName='', importUrls=new Array<string>, outUrl='')
-{	return new NodesToMd(nodes).genFiles(moduleName, importUrls, outUrl);
+export function nodesToMd(nodes: DocNode[], outDir: string, moduleName='', importUrls=new Array<string>, outUrl='')
+{	return new NodesToMd(nodes, outDir).genFiles(moduleName, importUrls, outUrl);
 }
 
 class NodesToMd
-{	#nodes: DocNode[];
+{	#nodes;
+	#outDir;
 	#collection: NodeToMdCollection;
 
-	constructor(nodes: DocNode[])
+	constructor(nodes: DocNode[], outDir: string)
 	{	this.#nodes = nodes;
+		this.#outDir = outDir;
 		this.#collection = new NodeToMdCollection
 		(	nodes,
 			node =>
@@ -32,7 +34,7 @@ class NodesToMd
 							{	let code = '';
 								for (const d of decorators)
 								{	const link = this.#collection.getLink(this.#nodes[d.nodeIndex ?? -1]);
-									const name = link ? mdLink(d.name, `../${link}`) : d.name;
+									const name = link ? mdLink(d.name, link) : d.name;
 									code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 								}
 								return code;
@@ -160,7 +162,7 @@ class NodesToMd
 		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		if (moduleDoc)
-		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, outUrl, '');
+		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, outUrl, this.#outDir+'/');
 		}
 		code += this.#convertNamespace(this.#nodes);
 		yield {dir: '', code};
@@ -221,13 +223,13 @@ class NodesToMd
 					}
 			}
 		}
-		const toDocDir = isMain ? '' : '../';
+		const toDocDir = isMain ? this.#outDir+'/' : '../';
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, toDocDir+this.#collection.getLink(n))), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -399,7 +401,7 @@ class NodesToMd
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
 	{	const link = this.#collection.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
 		if (link)
-		{	typeName = mdLink(typeName, `../${link}`);
+		{	typeName = mdLink(typeName, link);
 		}
 		return typeName;
 	}
@@ -462,7 +464,7 @@ class NodesToMd
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string, toDocDir: ''|'../'='../')
+	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string, toDocDir='../')
 	{	let doc = jsDoc?.doc ?? '';
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
@@ -516,7 +518,7 @@ class NodesToMd
 								}
 								if (!linkText)
 								{	if (curLinkIsMonospace)
-									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath);
+									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir);
 										if (tsDecl)
 										{	doc += tsDecl;
 											break;

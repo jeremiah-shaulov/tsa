@@ -1,6 +1,8 @@
 import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind, DecoratorDef} from '../../doc_node/mod.ts';
 import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
+const RE_REMAP_LINKS = /\\.|`[^`]*`|``.*``|```.*```|(\[[^\]\\]*(?:\\.[^\]\\]*)*\]\()\.\.\/([^)]*\))/sg;
+
 /**	Getter and/or setter for a given property - both in single object.
  **/
 export type Accessor =
@@ -124,10 +126,11 @@ export class NodeToMd
 	{	return this.#getMemberHeader(memberName, isStatic)?.headerId ?? '';
 	}
 
-	getTsDecl(memberName?: string, isStatic=false)
-	{	if (memberName)
+	getTsDecl(memberName?: string, isStatic=false, toDocDir='../')
+	{	let code = '';
+		if (memberName)
 		{	// Asked declaration of object member
-			return this.#getMemberHeader(memberName, isStatic)?.headerLine ?? '';
+			code = this.#getMemberHeader(memberName, isStatic)?.headerLine ?? '';
 		}
 		else
 		{	// Asked declaration of the whole object
@@ -136,7 +139,7 @@ export class NodeToMd
 			{	switch (other.kind)
 				{	case 'enum':
 					{	const {enumDef} = other;
-						let code = enumDef.isConst ? '`const` `enum` ' : '`enum` ';
+						code = enumDef.isConst ? '`const` `enum` ' : '`enum` ';
 						code += mdEscape(other.name);
 						code += '<br>\n{<br>\n';
 						for (const m of other.enumDef.members)
@@ -146,22 +149,25 @@ export class NodeToMd
 							}
 						}
 						code += '}';
-						return mdBlockquote(code);
+						break;
 					}
 					case 'function':
-						return this.#converter.onMethod(other, false);
+						code = this.#converter.onMethod(other, false);
+						break;
 					case 'variable':
-						return this.#converter.onVariable(other.variableDef);
+						code = this.#converter.onVariable(other.variableDef);
+						break;
 					case 'namespace':
-						return this.#converter.onNamespace(other.namespaceDef);
+						code = this.#converter.onNamespace(other.namespaceDef);
+						break;
 				}
 			}
 			else if (this.#typeAlias.length)
-			{	return this.#converter.onTypeAlias(this.#typeAlias[0]);
+			{	code = this.#converter.onTypeAlias(this.#typeAlias[0]);
 			}
 			else
 			{	const memberHeaders = this.#memberHeaders;
-				let code = this.#converter.onTopHeader(this.#node);
+				code = this.#converter.onTopHeader(this.#node);
 				code += '<br>\n{<br>\n';
 				// constructors
 				for (const m of this.#constructors)
@@ -207,9 +213,11 @@ export class NodeToMd
 					}
 				}
 				code += '}';
-				return mdBlockquote(code);
 			}
 		}
+		code = mdBlockquote(code);
+		code = remapLinks(code, toDocDir);
+		return code;
 	}
 
 	#getMemberHeader(memberName?: string, isStatic=false)
@@ -330,6 +338,16 @@ function getImportCode(node: DocNode, importUrls: string[])
 
 function getMemberKey(name: string, isStatic=false)
 {	return isStatic ? '.'+name : name;
+}
+
+function remapLinks(code: string, toDocDir: string)
+{	if (toDocDir != '../')
+	{	code = code.replace
+		(	RE_REMAP_LINKS,
+			(all, before, after) => !before ? all : before+toDocDir+after
+		);
+	}
+	return code;
 }
 
 function getClassMembers

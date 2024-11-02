@@ -51,7 +51,7 @@ export class NodeToMdCollection
 		return '';
 	}
 
-	getLink(node?: DocNode, nodeSubIndex?: number)
+	getLink(node: DocNode|undefined, nodeSubIndex?: number, toDocDir='../')
 	{	const dir = this.getDir(node);
 		if (!dir)
 		{	return '';
@@ -60,7 +60,7 @@ export class NodeToMdCollection
 		if (nodeSubIndex!=undefined && node?.kind==='enum')
 		{	hashHeaderId = this.#getHashHeaderId(node, node.enumDef.members[nodeSubIndex]?.name);
 		}
-		return `${dir}/README.md${hashHeaderId}`;
+		return `${toDocDir}${dir}/README.md${hashHeaderId}`;
 	}
 
 	#getHashHeaderId(node?: DocNode, name?: string, isStatic=false)
@@ -68,7 +68,7 @@ export class NodeToMdCollection
 		return headerId ? '#'+headerId : '';
 	}
 
-	getLinkByNamepath(namepath: string, toDocDir: ''|'../'='../')
+	getLinkByNamepath(namepath: string, toDocDir='../')
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
 		}
@@ -83,13 +83,13 @@ export class NodeToMdCollection
 		return '';
 	}
 
-	getTsDeclByNamepath(namepath: string)
+	getTsDeclByNamepath(namepath: string, toDocDir='../')
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
 		}
 		const found = findNamepathTarget(this.#nodes, namepath);
 		if (found)
-		{	return this.getNodeToMd(found.node)?.getTsDecl(found.member?.name, found.isStatic) ?? '';
+		{	return this.getNodeToMd(found.node)?.getTsDecl(found.member?.name, found.isStatic, toDocDir) ?? '';
 		}
 		return '';
 	}
