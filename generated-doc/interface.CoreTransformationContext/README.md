@@ -43,7 +43,7 @@
 
 
 
-#### ⚙ endLexicalEnvironment(): Statement\[]
+#### ⚙ endLexicalEnvironment(): [Statement](../interface.Statement/README.md)\[]
 
 > Ends a lexical environment, returning any declarations.
 

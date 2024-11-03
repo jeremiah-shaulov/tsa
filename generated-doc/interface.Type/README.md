@@ -64,7 +64,7 @@
 
 
 
-#### ⚙ getProperties(): Symbol\[]
+#### ⚙ getProperties(): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -72,7 +72,7 @@
 
 
 
-#### ⚙ getApparentProperties(): Symbol\[]
+#### ⚙ getApparentProperties(): [Symbol](../interface.Symbol/README.md)\[]
 
 
 

@@ -169,7 +169,7 @@
 
 <div style="opacity:0.6">
 
-#### ⚙ `deprecated` resolveModuleNames?(moduleNames: `string`\[], containingFile: `string`, reusedNames: `string`\[] | `undefined`, redirectedReference: [ResolvedProjectReference](../interface.ResolvedProjectReference/README.md) | `undefined`, options: [CompilerOptions](../interface.CompilerOptions/README.md), containingSourceFile?: [SourceFile](../interface.SourceFile/README.md)): ResolvedModule\[]
+#### ⚙ `deprecated` resolveModuleNames?(moduleNames: `string`\[], containingFile: `string`, reusedNames: `string`\[] | `undefined`, redirectedReference: [ResolvedProjectReference](../interface.ResolvedProjectReference/README.md) | `undefined`, options: [CompilerOptions](../interface.CompilerOptions/README.md), containingSourceFile?: [SourceFile](../interface.SourceFile/README.md)): [ResolvedModule](../interface.ResolvedModule/README.md)\[]
 
 > `deprecated`
 > 
@@ -177,7 +177,7 @@
 
 
 
-#### ⚙ `deprecated` resolveTypeReferenceDirectives?(typeDirectiveNames: `string`\[] | [FileReference](../interface.FileReference/README.md)\[], containingFile: `string`, redirectedReference: [ResolvedProjectReference](../interface.ResolvedProjectReference/README.md) | `undefined`, options: [CompilerOptions](../interface.CompilerOptions/README.md), containingFileMode?: [ResolutionMode](../type.ResolutionMode/README.md)): ResolvedTypeReferenceDirective\[]
+#### ⚙ `deprecated` resolveTypeReferenceDirectives?(typeDirectiveNames: `string`\[] | [FileReference](../interface.FileReference/README.md)\[], containingFile: `string`, redirectedReference: [ResolvedProjectReference](../interface.ResolvedProjectReference/README.md) | `undefined`, options: [CompilerOptions](../interface.CompilerOptions/README.md), containingFileMode?: [ResolutionMode](../type.ResolutionMode/README.md)): [ResolvedTypeReferenceDirective](../interface.ResolvedTypeReferenceDirective/README.md)\[]
 
 > `deprecated`
 > 

@@ -22,7 +22,8 @@ export function convertType(ts: typeof tsa, converter: Converter, typeNodeOrType
 
 function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|undefined, node: tsa.TypeNode): TsTypeDef|undefined
 {	if (ts.isArrayTypeNode(node))
-	{	const array = convertType(ts, converter, node.elementType);
+	{	const elementType = origType && 'typeArguments' in origType && Array.isArray(origType.typeArguments) && origType.typeArguments.length==1 && origType.symbol.name=='Array' ? origType.typeArguments[0] as tsa.Type : node.elementType;
+		const array = convertType(ts, converter, elementType);
 		return {
 			repr: array.repr+'[]', // no need parentheses, because tsc returns `ParenthesizedTypeNode` where needed
 			kind: 'array',
@@ -399,7 +400,9 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 		}
 	}
 	else if (ts.isTupleTypeNode(node))
-	{	const tuple = node.elements.map(node => convertType(ts, converter, ts.isNamedTupleMember(node) ? node.type : node));
+	{	const tuple = origType && 'typeArguments' in origType && Array.isArray(origType.typeArguments) ?
+			origType.typeArguments.map(node => convertType(ts, converter, ts.isNamedTupleMember(node) ? node.type : node)) :
+			node.elements.map(node => convertType(ts, converter, ts.isNamedTupleMember(node) ? node.type : node));
 		if (tuple.length)
 		{	return {
 				repr: '[' + tuple.map(p => p.repr).join(', ') + ']',

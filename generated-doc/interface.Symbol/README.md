@@ -66,15 +66,15 @@
 
 
 
-#### ⚙ getDeclarations(): Declaration\[]
+#### ⚙ getDeclarations(): [Declaration](../interface.Declaration/README.md)\[]
 
 
 
-#### ⚙ getDocumentationComment(typeChecker: [TypeChecker](../interface.TypeChecker/README.md) | `undefined`): SymbolDisplayPart\[]
+#### ⚙ getDocumentationComment(typeChecker: [TypeChecker](../interface.TypeChecker/README.md) | `undefined`): [SymbolDisplayPart](../interface.SymbolDisplayPart/README.md)\[]
 
 
 
-#### ⚙ getJsDocTags(checker?: [TypeChecker](../interface.TypeChecker/README.md)): JSDocTagInfo\[]
+#### ⚙ getJsDocTags(checker?: [TypeChecker](../interface.TypeChecker/README.md)): [JSDocTagInfo](../interface.JSDocTagInfo/README.md)\[]
 
 
 

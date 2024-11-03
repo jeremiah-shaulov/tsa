@@ -39,11 +39,11 @@
 
 
 
-#### ⚙ getTypeParameters(): TypeParameter\[]
+#### ⚙ getTypeParameters(): [TypeParameter](../interface.TypeParameter/README.md)\[]
 
 
 
-#### ⚙ getParameters(): Symbol\[]
+#### ⚙ getParameters(): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -55,11 +55,11 @@
 
 
 
-#### ⚙ getDocumentationComment(typeChecker: [TypeChecker](../interface.TypeChecker/README.md) | `undefined`): SymbolDisplayPart\[]
+#### ⚙ getDocumentationComment(typeChecker: [TypeChecker](../interface.TypeChecker/README.md) | `undefined`): [SymbolDisplayPart](../interface.SymbolDisplayPart/README.md)\[]
 
 
 
-#### ⚙ getJsDocTags(): JSDocTagInfo\[]
+#### ⚙ getJsDocTags(): [JSDocTagInfo](../interface.JSDocTagInfo/README.md)\[]
 
 
 

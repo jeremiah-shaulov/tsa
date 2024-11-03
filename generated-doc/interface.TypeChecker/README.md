@@ -110,7 +110,7 @@
 
 
 
-#### ⚙ getPropertiesOfType(type: [Type](../interface.Type/README.md)): Symbol\[]
+#### ⚙ getPropertiesOfType(type: [Type](../interface.Type/README.md)): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -237,7 +237,7 @@
 
 
 
-#### ⚙ getSymbolsInScope(location: [Node](../interface.Node/README.md), meaning: [SymbolFlags](../enum.SymbolFlags/README.md)): Symbol\[]
+#### ⚙ getSymbolsInScope(location: [Node](../interface.Node/README.md), meaning: [SymbolFlags](../enum.SymbolFlags/README.md)): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -245,7 +245,7 @@
 
 
 
-#### ⚙ getSymbolsOfParameterPropertyDeclaration(parameter: [ParameterDeclaration](../interface.ParameterDeclaration/README.md), parameterName: `string`): Symbol\[]
+#### ⚙ getSymbolsOfParameterPropertyDeclaration(parameter: [ParameterDeclaration](../interface.ParameterDeclaration/README.md), parameterName: `string`): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -307,7 +307,7 @@
 
 
 
-#### ⚙ getAugmentedPropertiesOfType(type: [Type](../interface.Type/README.md)): Symbol\[]
+#### ⚙ getAugmentedPropertiesOfType(type: [Type](../interface.Type/README.md)): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -374,11 +374,11 @@
 
 
 
-#### ⚙ getExportsOfModule(moduleSymbol: [Symbol](../interface.Symbol/README.md)): Symbol\[]
+#### ⚙ getExportsOfModule(moduleSymbol: [Symbol](../interface.Symbol/README.md)): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
-#### ⚙ getJsxIntrinsicTagNamesAt(location: [Node](../interface.Node/README.md)): Symbol\[]
+#### ⚙ getJsxIntrinsicTagNamesAt(location: [Node](../interface.Node/README.md)): [Symbol](../interface.Symbol/README.md)\[]
 
 
 
@@ -386,7 +386,7 @@
 
 
 
-#### ⚙ getAmbientModules(): Symbol\[]
+#### ⚙ getAmbientModules(): [Symbol](../interface.Symbol/README.md)\[]
 
 
 

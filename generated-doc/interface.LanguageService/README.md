@@ -80,7 +80,7 @@
 
 
 
-#### ⚙ getSyntacticDiagnostics(fileName: `string`): DiagnosticWithLocation\[]
+#### ⚙ getSyntacticDiagnostics(fileName: `string`): [DiagnosticWithLocation](../interface.DiagnosticWithLocation/README.md)\[]
 
 > Gets errors indicating invalid syntax in a file.
 > 
@@ -98,7 +98,7 @@
 
 
 
-#### ⚙ getSemanticDiagnostics(fileName: `string`): Diagnostic\[]
+#### ⚙ getSemanticDiagnostics(fileName: `string`): [Diagnostic](../interface.Diagnostic/README.md)\[]
 
 > Gets warnings or errors indicating type system issues in a given file.
 > Requesting semantic diagnostics may start up the type system and
@@ -114,7 +114,7 @@
 
 
 
-#### ⚙ getSuggestionDiagnostics(fileName: `string`): DiagnosticWithLocation\[]
+#### ⚙ getSuggestionDiagnostics(fileName: `string`): [DiagnosticWithLocation](../interface.DiagnosticWithLocation/README.md)\[]
 
 > Gets suggestion diagnostics for a specific file. These diagnostics tend to
 > proactively suggest refactors, as opposed to diagnostics that indicate
@@ -122,7 +122,7 @@
 
 
 
-#### ⚙ getCompilerOptionsDiagnostics(): Diagnostic\[]
+#### ⚙ getCompilerOptionsDiagnostics(): [Diagnostic](../interface.Diagnostic/README.md)\[]
 
 > Gets global diagnostics related to the program configuration and compiler options.
 
@@ -212,27 +212,27 @@
 
 
 
-#### ⚙ getReferencesAtPosition(fileName: `string`, position: `number`): ReferenceEntry\[]
+#### ⚙ getReferencesAtPosition(fileName: `string`, position: `number`): [ReferenceEntry](../interface.ReferenceEntry/README.md)\[]
 
 
 
-#### ⚙ findReferences(fileName: `string`, position: `number`): ReferencedSymbol\[]
+#### ⚙ findReferences(fileName: `string`, position: `number`): [ReferencedSymbol](../interface.ReferencedSymbol/README.md)\[]
 
 
 
-#### ⚙ getDocumentHighlights(fileName: `string`, position: `number`, filesToSearch: `string`\[]): DocumentHighlights\[]
+#### ⚙ getDocumentHighlights(fileName: `string`, position: `number`, filesToSearch: `string`\[]): [DocumentHighlights](../interface.DocumentHighlights/README.md)\[]
 
 
 
-#### ⚙ getFileReferences(fileName: `string`): ReferenceEntry\[]
+#### ⚙ getFileReferences(fileName: `string`): [ReferenceEntry](../interface.ReferenceEntry/README.md)\[]
 
 
 
-#### ⚙ getNavigateToItems(searchValue: `string`, maxResultCount?: `number`, fileName?: `string`, excludeDtsFiles?: `boolean`, excludeLibFiles?: `boolean`): NavigateToItem\[]
+#### ⚙ getNavigateToItems(searchValue: `string`, maxResultCount?: `number`, fileName?: `string`, excludeDtsFiles?: `boolean`, excludeLibFiles?: `boolean`): [NavigateToItem](../interface.NavigateToItem/README.md)\[]
 
 
 
-#### ⚙ getNavigationBarItems(fileName: `string`): NavigationBarItem\[]
+#### ⚙ getNavigationBarItems(fileName: `string`): [NavigationBarItem](../interface.NavigationBarItem/README.md)\[]
 
 
 
@@ -244,27 +244,27 @@
 
 
 
-#### ⚙ provideCallHierarchyIncomingCalls(fileName: `string`, position: `number`): CallHierarchyIncomingCall\[]
+#### ⚙ provideCallHierarchyIncomingCalls(fileName: `string`, position: `number`): [CallHierarchyIncomingCall](../interface.CallHierarchyIncomingCall/README.md)\[]
 
 
 
-#### ⚙ provideCallHierarchyOutgoingCalls(fileName: `string`, position: `number`): CallHierarchyOutgoingCall\[]
+#### ⚙ provideCallHierarchyOutgoingCalls(fileName: `string`, position: `number`): [CallHierarchyOutgoingCall](../interface.CallHierarchyOutgoingCall/README.md)\[]
 
 
 
-#### ⚙ provideInlayHints(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`): InlayHint\[]
+#### ⚙ provideInlayHints(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`): [InlayHint](../interface.InlayHint/README.md)\[]
 
 
 
-#### ⚙ getOutliningSpans(fileName: `string`): OutliningSpan\[]
+#### ⚙ getOutliningSpans(fileName: `string`): [OutliningSpan](../interface.OutliningSpan/README.md)\[]
 
 
 
-#### ⚙ getTodoComments(fileName: `string`, descriptors: [TodoCommentDescriptor](../interface.TodoCommentDescriptor/README.md)\[]): TodoComment\[]
+#### ⚙ getTodoComments(fileName: `string`, descriptors: [TodoCommentDescriptor](../interface.TodoCommentDescriptor/README.md)\[]): [TodoComment](../interface.TodoComment/README.md)\[]
 
 
 
-#### ⚙ getBraceMatchingAtPosition(fileName: `string`, position: `number`): TextSpan\[]
+#### ⚙ getBraceMatchingAtPosition(fileName: `string`, position: `number`): [TextSpan](../interface.TextSpan/README.md)\[]
 
 
 
@@ -272,15 +272,15 @@
 
 
 
-#### ⚙ getFormattingEditsForRange(fileName: `string`, start: `number`, end: `number`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): TextChange\[]
+#### ⚙ getFormattingEditsForRange(fileName: `string`, start: `number`, end: `number`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
-#### ⚙ getFormattingEditsForDocument(fileName: `string`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): TextChange\[]
+#### ⚙ getFormattingEditsForDocument(fileName: `string`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
-#### ⚙ getFormattingEditsAfterKeystroke(fileName: `string`, position: `number`, key: `string`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): TextChange\[]
+#### ⚙ getFormattingEditsAfterKeystroke(fileName: `string`, position: `number`, key: `string`, options: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
@@ -323,7 +323,7 @@
 
 
 
-#### ⚙ applyCodeActionCommand(action: [CodeActionCommand](../type.CodeActionCommand/README.md)\[], formatSettings?: [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): Promise\<ApplyCodeActionCommandResult\[]>
+#### ⚙ applyCodeActionCommand(action: [CodeActionCommand](../type.CodeActionCommand/README.md)\[], formatSettings?: [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): Promise\<[ApplyCodeActionCommandResult](../interface.ApplyCodeActionCommandResult/README.md)\[]>
 
 
 
@@ -331,7 +331,7 @@
 
 
 
-#### ⚙ getApplicableRefactors(fileName: `string`, positionOrRange: `number` | [TextRange](../interface.TextRange/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`, triggerReason?: [RefactorTriggerReason](../type.RefactorTriggerReason/README.md), kind?: `string`, includeInteractiveActions?: `boolean`): ApplicableRefactorInfo\[]
+#### ⚙ getApplicableRefactors(fileName: `string`, positionOrRange: `number` | [TextRange](../interface.TextRange/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`, triggerReason?: [RefactorTriggerReason](../type.RefactorTriggerReason/README.md), kind?: `string`, includeInteractiveActions?: `boolean`): [ApplicableRefactorInfo](../interface.ApplicableRefactorInfo/README.md)\[]
 
 
 
@@ -359,19 +359,19 @@
 
 
 
-#### ⚙ toggleLineComment(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): TextChange\[]
+#### ⚙ toggleLineComment(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
-#### ⚙ toggleMultilineComment(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): TextChange\[]
+#### ⚙ toggleMultilineComment(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
-#### ⚙ commentSelection(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): TextChange\[]
+#### ⚙ commentSelection(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
-#### ⚙ uncommentSelection(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): TextChange\[]
+#### ⚙ uncommentSelection(fileName: `string`, textRange: [TextRange](../interface.TextRange/README.md)): [TextChange](../interface.TextChange/README.md)\[]
 
 
 
@@ -389,7 +389,7 @@
 
 <div style="opacity:0.6">
 
-#### ⚙ `deprecated` getSyntacticClassifications(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md)): ClassifiedSpan\[]
+#### ⚙ `deprecated` getSyntacticClassifications(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md)): [ClassifiedSpan](../interface.ClassifiedSpan/README.md)\[]
 
 > `deprecated`
 > 
@@ -397,7 +397,7 @@
 
 
 
-#### ⚙ `deprecated` getSemanticClassifications(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md)): ClassifiedSpan\[]
+#### ⚙ `deprecated` getSemanticClassifications(fileName: `string`, span: [TextSpan](../interface.TextSpan/README.md)): [ClassifiedSpan](../interface.ClassifiedSpan/README.md)\[]
 
 > `deprecated`
 > 
@@ -429,7 +429,7 @@
 
 
 
-#### ⚙ `deprecated` applyCodeActionCommand(fileName: `string`, action: [CodeActionCommand](../type.CodeActionCommand/README.md)\[]): Promise\<ApplyCodeActionCommandResult\[]>
+#### ⚙ `deprecated` applyCodeActionCommand(fileName: `string`, action: [CodeActionCommand](../type.CodeActionCommand/README.md)\[]): Promise\<[ApplyCodeActionCommandResult](../interface.ApplyCodeActionCommandResult/README.md)\[]>
 
 > `deprecated`
 > 
