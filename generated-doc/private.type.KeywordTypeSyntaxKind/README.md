@@ -1,0 +1,5 @@
+# `type` KeywordTypeSyntaxKind
+
+[Documentation Index](../README.md)
+
+`type` KeywordTypeSyntaxKind = [SyntaxKind.AnyKeyword](../private.enum.SyntaxKind/README.md#anykeyword--133) | [SyntaxKind.BigIntKeyword](../private.enum.SyntaxKind/README.md#bigintkeyword--163) | [SyntaxKind.BooleanKeyword](../private.enum.SyntaxKind/README.md#booleankeyword--136) | [SyntaxKind.IntrinsicKeyword](../private.enum.SyntaxKind/README.md#intrinsickeyword--141) | [SyntaxKind.NeverKeyword](../private.enum.SyntaxKind/README.md#neverkeyword--146) | [SyntaxKind.NumberKeyword](../private.enum.SyntaxKind/README.md#numberkeyword--150) | [SyntaxKind.ObjectKeyword](../private.enum.SyntaxKind/README.md#objectkeyword--151) | [SyntaxKind.StringKeyword](../private.enum.SyntaxKind/README.md#stringkeyword--154) | [SyntaxKind.SymbolKeyword](../private.enum.SyntaxKind/README.md#symbolkeyword--155) | [SyntaxKind.UndefinedKeyword](../private.enum.SyntaxKind/README.md#undefinedkeyword--157) | [SyntaxKind.UnknownKeyword](../private.enum.SyntaxKind/README.md#unknownkeyword--159) | [SyntaxKind.VoidKeyword](../private.enum.SyntaxKind/README.md#voidkeyword--116)

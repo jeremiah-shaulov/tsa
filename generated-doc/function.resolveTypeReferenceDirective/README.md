@@ -1,0 +1,5 @@
+# `function` resolveTypeReferenceDirective
+
+[Documentation Index](../README.md)
+
+`function` resolveTypeReferenceDirective(typeReferenceDirectiveName: `string`, containingFile: `string` | `undefined`, options: [CompilerOptions](../private.interface.CompilerOptions/README.md), host: [ModuleResolutionHost](../private.interface.ModuleResolutionHost/README.md), redirectedReference?: [ResolvedProjectReference](../private.interface.ResolvedProjectReference/README.md), cache?: [TypeReferenceDirectiveResolutionCache](../private.interface.TypeReferenceDirectiveResolutionCache/README.md), resolutionMode?: [ResolutionMode](../private.type.ResolutionMode/README.md)): [ResolvedTypeReferenceDirectiveWithFailedLookupLocations](../private.interface.ResolvedTypeReferenceDirectiveWithFailedLookupLocations/README.md)

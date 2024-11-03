@@ -1,0 +1,5 @@
+# `type` TypeOnlyImportDeclaration
+
+[Documentation Index](../README.md)
+
+`type` TypeOnlyImportDeclaration = [ImportClause](../private.interface.ImportClause/README.md) \& \{`readonly` isTypeOnly: `true`, `readonly` name: [Identifier](../private.interface.Identifier/README.md)} | [ImportEqualsDeclaration](../private.interface.ImportEqualsDeclaration/README.md) \& \{`readonly` isTypeOnly: `true`} | [NamespaceImport](../private.interface.NamespaceImport/README.md) \& \{`readonly` parent: [ImportClause](../private.interface.ImportClause/README.md) \& \{`readonly` isTypeOnly: `true`}} | [ImportSpecifier](../private.interface.ImportSpecifier/README.md) \& (\{`readonly` isTypeOnly: `true`} | \{`readonly` parent: [NamedImports](../private.interface.NamedImports/README.md) \& \{`readonly` parent: [ImportClause](../private.interface.ImportClause/README.md) \& \{`readonly` isTypeOnly: `true`}}})

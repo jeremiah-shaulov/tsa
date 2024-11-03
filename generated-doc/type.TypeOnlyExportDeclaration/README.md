@@ -1,0 +1,5 @@
+# `type` TypeOnlyExportDeclaration
+
+[Documentation Index](../README.md)
+
+`type` TypeOnlyExportDeclaration = [ExportSpecifier](../private.interface.ExportSpecifier/README.md) \& (\{`readonly` isTypeOnly: `true`} | \{`readonly` parent: [NamedExports](../private.interface.NamedExports/README.md) \& \{`readonly` parent: [ExportDeclaration](../private.interface.ExportDeclaration/README.md) \& \{`readonly` isTypeOnly: `true`}}}) | [ExportDeclaration](../private.interface.ExportDeclaration/README.md) \& \{`readonly` isTypeOnly: `true`, `readonly` moduleSpecifier: [Expression](../private.interface.Expression/README.md)} | [NamespaceExport](../private.interface.NamespaceExport/README.md) \& \{`readonly` parent: [ExportDeclaration](../private.interface.ExportDeclaration/README.md) \& \{`readonly` isTypeOnly: `true`, `readonly` moduleSpecifier: [Expression](../private.interface.Expression/README.md)}}

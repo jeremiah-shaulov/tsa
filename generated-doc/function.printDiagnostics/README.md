@@ -1,0 +1,9 @@
+# `function` printDiagnostics
+
+[Documentation Index](../README.md)
+
+```ts
+import {printDiagnostics} from "https://deno.land/x/tsa@v0.0.24/mod.ts"
+```
+
+`function` printDiagnostics(diagnostics: readonly [tsa.Diagnostic](../private.interface.Diagnostic/README.md)\[]): `void`

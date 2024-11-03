@@ -1,0 +1,5 @@
+# `function` createSolutionBuilderHost
+
+[Documentation Index](../README.md)
+
+`function` createSolutionBuilderHost\<T `extends` [BuilderProgram](../private.interface.BuilderProgram/README.md)=[EmitAndSemanticDiagnosticsBuilderProgram](../private.interface.EmitAndSemanticDiagnosticsBuilderProgram/README.md)>(system?: [System](../private.interface.System/README.md), createProgram?: [CreateProgram](../private.type.CreateProgram/README.md)\<T>, reportDiagnostic?: [DiagnosticReporter](../private.type.DiagnosticReporter/README.md), reportSolutionBuilderStatus?: [DiagnosticReporter](../private.type.DiagnosticReporter/README.md), reportErrorSummary?: [ReportEmitErrorSummary](../private.type.ReportEmitErrorSummary/README.md)): [SolutionBuilderHost](../private.interface.SolutionBuilderHost/README.md)\<T>

@@ -1,0 +1,5 @@
+# `type` VariableLikeDeclaration
+
+[Documentation Index](../README.md)
+
+`type` VariableLikeDeclaration = [VariableDeclaration](../private.interface.VariableDeclaration/README.md) | [ParameterDeclaration](../private.interface.ParameterDeclaration/README.md) | [BindingElement](../private.interface.BindingElement/README.md) | [PropertyDeclaration](../private.interface.PropertyDeclaration/README.md) | [PropertyAssignment](../private.interface.PropertyAssignment/README.md) | [PropertySignature](../private.interface.PropertySignature/README.md) | [JsxAttribute](../private.interface.JsxAttribute/README.md) | [ShorthandPropertyAssignment](../private.interface.ShorthandPropertyAssignment/README.md) | [EnumMember](../private.interface.EnumMember/README.md) | [JSDocPropertyTag](../private.interface.JSDocPropertyTag/README.md) | [JSDocParameterTag](../private.interface.JSDocParameterTag/README.md)

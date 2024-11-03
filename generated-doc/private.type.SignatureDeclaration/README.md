@@ -1,0 +1,5 @@
+# `type` SignatureDeclaration
+
+[Documentation Index](../README.md)
+
+`type` SignatureDeclaration = [CallSignatureDeclaration](../private.interface.CallSignatureDeclaration/README.md) | [ConstructSignatureDeclaration](../private.interface.ConstructSignatureDeclaration/README.md) | [MethodSignature](../private.interface.MethodSignature/README.md) | [IndexSignatureDeclaration](../private.interface.IndexSignatureDeclaration/README.md) | [FunctionTypeNode](../private.interface.FunctionTypeNode/README.md) | [ConstructorTypeNode](../private.interface.ConstructorTypeNode/README.md) | [JSDocFunctionType](../private.interface.JSDocFunctionType/README.md) | [FunctionDeclaration](../private.interface.FunctionDeclaration/README.md) | [MethodDeclaration](../private.interface.MethodDeclaration/README.md) | [ConstructorDeclaration](../private.interface.ConstructorDeclaration/README.md) | [AccessorDeclaration](../private.type.AccessorDeclaration/README.md) | [FunctionExpression](../private.interface.FunctionExpression/README.md) | [ArrowFunction](../private.interface.ArrowFunction/README.md)

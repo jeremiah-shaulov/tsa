@@ -1,0 +1,5 @@
+# `type` ArrayBindingOrAssignmentElement
+
+[Documentation Index](../README.md)
+
+`type` ArrayBindingOrAssignmentElement = [BindingElement](../private.interface.BindingElement/README.md) | [OmittedExpression](../private.interface.OmittedExpression/README.md) | [SpreadElement](../private.interface.SpreadElement/README.md) | [ArrayLiteralExpression](../private.interface.ArrayLiteralExpression/README.md) | [ObjectLiteralExpression](../private.interface.ObjectLiteralExpression/README.md) | [AssignmentExpression](../private.interface.AssignmentExpression/README.md)\<[EqualsToken](../private.type.EqualsToken/README.md)> | [Identifier](../private.interface.Identifier/README.md) | [PropertyAccessExpression](../private.interface.PropertyAccessExpression/README.md) | [ElementAccessExpression](../private.interface.ElementAccessExpression/README.md)

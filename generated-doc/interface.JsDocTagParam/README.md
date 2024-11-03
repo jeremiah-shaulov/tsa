@@ -1,0 +1,49 @@
+# `interface` JsDocTagParam `extends` [JsDocTagBase](../interface.JsDocTagBase/README.md)
+
+[Documentation Index](../README.md)
+
+## This interface has
+
+- 8 properties:
+[kind](#-kind-param),
+[name](#-name-string),
+[type](#-type-string),
+[tsType](#-tstype-tstypedef),
+[optional](#-optional-true),
+[default](#-default-string),
+[doc](#-doc-string),
+[docTokens](#-doctokens-jsdoctoken)
+
+
+#### 📄 kind: <mark>"param"</mark>
+
+
+
+#### 📄 name: `string`
+
+
+
+#### 📄 type?: `string`
+
+
+
+#### 📄 tsType?: [TsTypeDef](../type.TsTypeDef/README.md)
+
+
+
+#### 📄 optional?: `true`
+
+
+
+#### 📄 default?: `string`
+
+
+
+#### 📄 doc?: `string`
+
+
+
+#### 📄 docTokens?: [JsDocToken](../interface.JsDocToken/README.md)\[]
+
+
+

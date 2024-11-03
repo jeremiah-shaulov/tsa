@@ -1,0 +1,37 @@
+# `interface` Printer
+
+[Documentation Index](../README.md)
+
+## This interface has
+
+- 4 methods:
+[printNode](#-printnodehint-emithint-node-node-sourcefile-sourcefile-string),
+[printList](#-printlistt-extends-nodeformat-listformat-list-nodearrayt-sourcefile-sourcefile-string),
+[printFile](#-printfilesourcefile-sourcefile-string),
+[printBundle](#-printbundlebundle-bundle-string)
+
+
+#### ⚙ printNode(hint: [EmitHint](../private.enum.EmitHint/README.md), node: [Node](../private.interface.Node/README.md), sourceFile: [SourceFile](../private.interface.SourceFile/README.md)): `string`
+
+> Print a node and its subtree as-is, without any emit transformations.
+
+
+
+#### ⚙ printList\<T `extends` [Node](../private.interface.Node/README.md)>(format: [ListFormat](../private.enum.ListFormat/README.md), list: [NodeArray](../private.interface.NodeArray/README.md)\<T>, sourceFile: [SourceFile](../private.interface.SourceFile/README.md)): `string`
+
+> Prints a list of nodes using the given format flags
+
+
+
+#### ⚙ printFile(sourceFile: [SourceFile](../private.interface.SourceFile/README.md)): `string`
+
+> Prints a source file as-is, without any emit transformations.
+
+
+
+#### ⚙ printBundle(bundle: [Bundle](../private.interface.Bundle/README.md)): `string`
+
+> Prints a bundle of source files as-is, without any emit transformations.
+
+
+

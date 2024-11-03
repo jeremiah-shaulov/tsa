@@ -1,0 +1,5 @@
+# `type` Modifier
+
+[Documentation Index](../README.md)
+
+`type` Modifier = [AbstractKeyword](../private.type.AbstractKeyword/README.md) | [AccessorKeyword](../private.type.AccessorKeyword/README.md) | [AsyncKeyword](../private.type.AsyncKeyword/README.md) | [ConstKeyword](../private.type.ConstKeyword/README.md) | [DeclareKeyword](../private.type.DeclareKeyword/README.md) | [DefaultKeyword](../private.type.DefaultKeyword/README.md) | [ExportKeyword](../private.type.ExportKeyword/README.md) | [InKeyword](../private.type.InKeyword/README.md) | [PrivateKeyword](../private.type.PrivateKeyword/README.md) | [ProtectedKeyword](../private.type.ProtectedKeyword/README.md) | [PublicKeyword](../private.type.PublicKeyword/README.md) | [OutKeyword](../private.type.OutKeyword/README.md) | [OverrideKeyword](../private.type.OverrideKeyword/README.md) | [ReadonlyKeyword](../private.type.ReadonlyKeyword/README.md) | [StaticKeyword](../private.type.StaticKeyword/README.md)
