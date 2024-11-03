@@ -217,9 +217,6 @@ export async function defaultResolve(specifier: string, referrer: string)
 		{	return result.specifier;
 		}
 	}
-	else if (specifier.startsWith('jsr:'))
-	{
-	}
 	return defaultResolveSync(specifier, referrer);
 }
 

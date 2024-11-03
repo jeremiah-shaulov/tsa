@@ -179,7 +179,7 @@ function getDocumentationComment(converter: Converter, symbol: tsa.Symbol, origS
 {	const parts = origSymbol.getDocumentationComment(converter.checker);
 	const parts2 = symbol.getDocumentationComment(converter.checker);
 	if (parts?.length)
-	{	if (parts2?.length)
+	{	if (parts2?.length && !parts.includes(parts2[0]))
 		{	return parts.concat([{kind: 'lineBreak', text: ''}]).concat(parts2);
 		}
 		return parts;
