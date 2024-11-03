@@ -26,7 +26,7 @@ type ClassConverter =
 	onEnumMember(m: EnumMemberDef): string;
 	onVariable(m: VariableDef): string;
 	onNamespace(m: NamespaceDef): string;
-	onJsDoc(m: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string): string;
+	onJsDoc(m: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number): string;
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor | EnumMemberDef;
@@ -233,7 +233,7 @@ export class NodeToMd
 		}
 	}
 
-	getCode(importUrls: string[], outUrl: string)
+	getCode(importUrls: string[])
 	{	const {onDecorators, onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
@@ -244,7 +244,7 @@ export class NodeToMd
 			{	case 'enum':
 					for (const m of other.enumDef.members)
 					{	const memberHeader = memberHeaders.get(m);
-						const code = mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0, outUrl));
+						const code = mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0));
 						sectionsCode += `#### ${memberHeader?.headerLine ?? ''}\n\n${code}\n\n`;
 					}
 					break;
@@ -268,13 +268,13 @@ export class NodeToMd
 			for (const m of this.#constructors)
 			{	const memberHeader = memberHeaders.get(m);
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Constructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0, outUrl)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1, outUrl));
+				sections.add(sectionIndex(m, deprecated), What.Constructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
 			}
 			// destructors
 			for (const m of this.#destructors)
 			{	const memberHeader = memberHeaders.get(m);
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Destructor, memberHeader, mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0, outUrl)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1, outUrl));
+				sections.add(sectionIndex(m, deprecated), What.Destructor, memberHeader, mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
@@ -285,8 +285,8 @@ export class NodeToMd
 			for (const m of this.#propertiesAndAccessors)
 			{	const memberHeader = memberHeaders.get(m);
 				let code = '';
-				const getCode = 'getter' in m && m.getter && 'jsDoc' in m.getter && m.getter.jsDoc && onJsDoc(m.getter.jsDoc, this.#node, memberHeader?.headerId ?? '', 0, outUrl);
-				const setCode = 'setter' in m && m.setter && 'jsDoc' in m.setter && m.setter.jsDoc && onJsDoc(m.setter.jsDoc, this.#node, memberHeader?.headerId ?? '', 1, outUrl);
+				const getCode = 'getter' in m && m.getter && 'jsDoc' in m.getter && m.getter.jsDoc && onJsDoc(m.getter.jsDoc, this.#node, memberHeader?.headerId ?? '', 0);
+				const setCode = 'setter' in m && m.setter && 'jsDoc' in m.setter && m.setter.jsDoc && onJsDoc(m.setter.jsDoc, this.#node, memberHeader?.headerId ?? '', 1);
 				if (getCode && setCode)
 				{	code += mdBlockquote('`get`\n\n'+getCode)+mdBlockquote('`set`\n\n'+setCode);
 				}
@@ -297,13 +297,13 @@ export class NodeToMd
 					}
 				}
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.PropertyOrAccessor, memberHeader, code, onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 3, outUrl));
+				sections.add(sectionIndex(m, deprecated), What.PropertyOrAccessor, memberHeader, code, onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 3));
 			}
 			// methods
 			for (const m of this.#methods)
 			{	const memberHeader = memberHeaders.get(m);
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Method, memberHeader,  mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0, outUrl)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1, outUrl));
+				sections.add(sectionIndex(m, deprecated), What.Method, memberHeader,  mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
 			}
 			// done
 			sectionsCode = sections+'';
@@ -312,7 +312,7 @@ export class NodeToMd
 		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
 		const topHeader = onTopHeader(this.#node);
 		const index = mdLink('Documentation Index', '../README.md')+'\n\n';
-		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0, outUrl);
+		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0);
 		const importCode = getImportCode(this.#node, importUrls);
 		return decorators + '# ' + topHeader + '\n\n' + index + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
 	}

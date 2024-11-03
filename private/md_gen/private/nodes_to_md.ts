@@ -12,20 +12,22 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*[\r\n]\s*\/\/([^\r\n]+)/y;
 
-export function nodesToMd(nodes: DocNode[], outFileBasename: string, outDir: string, moduleName='', importUrls=new Array<string>, outUrl='')
-{	return new NodesToMd(nodes, outFileBasename, outDir).genFiles(moduleName, importUrls, outUrl);
+export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, moduleName='', importUrls=new Array<string>, baseDirUrl='')
+{	return new NodesToMd(nodes, outFileBasename, docDirBasename, baseDirUrl).genFiles(moduleName, importUrls);
 }
 
 class NodesToMd
 {	#nodes;
 	#outFileBasename;
-	#outDir;
+	#docDirBasename;
+	#baseDirUrlWithTrailingSlash;
 	#collection: NodeToMdCollection;
 
-	constructor(nodes: DocNode[], outFileBasename: string, outDir: string)
+	constructor(nodes: DocNode[], outFileBasename: string, docDirBasename: string, baseDirUrl: string)
 	{	this.#nodes = nodes;
 		this.#outFileBasename = outFileBasename;
-		this.#outDir = outDir;
+		this.#docDirBasename = docDirBasename;
+		this.#baseDirUrlWithTrailingSlash = baseDirUrl.endsWith('/') ? baseDirUrl : baseDirUrl ? baseDirUrl+'/' : '';
 		this.#collection = new NodeToMdCollection
 		(	nodes,
 			node =>
@@ -149,8 +151,8 @@ class NodesToMd
 							onNamespace: m =>
 							{	return this.#convertNamespace(m.elements);
 							},
-							onJsDoc: (jsDoc, node, headerId, submemberNo, outUrl) =>
-							{	return this.#convertJsDoc(jsDoc, node, headerId, submemberNo, outUrl);
+							onJsDoc: (jsDoc, node, headerId, submemberNo) =>
+							{	return this.#convertJsDoc(jsDoc, node, headerId, submemberNo);
 							},
 						}
 					);
@@ -159,36 +161,36 @@ class NodesToMd
 		);
 	}
 
-	*genFiles(moduleName: string, importUrls: string[], outUrl: string)
+	*genFiles(moduleName: string, importUrls: string[])
 	{	// Module doc
 		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
 		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
-		code += mdLink('Documentation Index', this.#outDir+'/README.md')+'\n\n';
+		code += mdLink('Documentation Index', this.#docDirBasename+'/README.md')+'\n\n';
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		if (moduleDoc)
-		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, outUrl, this.#outDir+'/');
+		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, this.#docDirBasename+'/');
 		}
 		yield {dir: '', code};
 		// Index
 		code = '# Documentation index\n\n';
 		code += mdLink('Top', '../'+this.#outFileBasename)+'\n\n';
 		code += this.#convertNamespace(this.#nodes, '');
-		yield {dir: this.#outDir, code};
+		yield {dir: this.#docDirBasename, code};
 		// Symbols
-		yield *this.#genFilesForNodes(this.#nodes, importUrls, outUrl, new Set);
+		yield *this.#genFilesForNodes(this.#nodes, importUrls, new Set);
 	}
 
-	*#genFilesForNodes(nodes: DocNode[], importUrls: string[], outUrl: string, nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
+	*#genFilesForNodes(nodes: DocNode[], importUrls: string[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
 	{	for (const node of nodes)
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
 					const nodeToMd = this.#collection.getNodeToMd(node);
-					const code = nodeToMd?.getCode(importUrls, outUrl) ?? '';
-					const dir = path.join(this.#outDir, this.#collection.getDir(node));
+					const code = nodeToMd?.getCode(importUrls) ?? '';
+					const dir = path.join(this.#docDirBasename, this.#collection.getDir(node));
 					yield {dir, code};
 					if (node.kind == 'namespace')
-					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, importUrls, outUrl, nodesDone);
+					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, importUrls, nodesDone);
 					}
 				}
 			}
@@ -472,7 +474,7 @@ class NodesToMd
 		return !code ? '' : `\\<${code}>`;
 	}
 
-	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, outUrl: string, toDocDir='../')
+	#convertJsDoc(jsDoc: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number, toDocDir='../')
 	{	let doc = jsDoc?.doc ?? '';
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
@@ -547,7 +549,7 @@ class NodesToMd
 		}
 		doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
 		// Convert examples
-		if (!outUrl)
+		if (!this.#baseDirUrlWithTrailingSlash)
 		{	return doc;
 		}
 		let newDoc = '';
@@ -599,15 +601,17 @@ class NodesToMd
 							newDoc += ' To download and run this example:';
 							newDoc += start;
 							newDoc += " curl '";
-							newDoc += outUrl;
-							if (!outUrl.endsWith('/'))
-							{	newDoc += '/';
+							newDoc += this.#baseDirUrlWithTrailingSlash;
+							if (!dir)
+							{	newDoc += this.#outFileBasename;
 							}
-							if (dir)
-							{	newDoc += dir;
+							else
+							{	newDoc += this.#docDirBasename;
 								newDoc += '/';
+								newDoc += dir;
+								newDoc += '/README.md';
 							}
-							newDoc += "README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<";
+							newDoc += "' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<";
 							newDoc += exampleId;
 							newDoc += ">~)' > /tmp/";
 							newDoc += exampleId;

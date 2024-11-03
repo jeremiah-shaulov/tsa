@@ -2,6 +2,8 @@ import {path} from '../../deps.ts';
 import {tsa} from '../../tsa_ns.ts';
 import {NodeWithInfo} from './emit_bundle.ts';
 
+/**	This object represents bundle that contains all the source files, and can be converted to a Typescript or Javascript code (and saved to file).
+ **/
 export class TsaBundle
 {	#text: string | undefined;
 

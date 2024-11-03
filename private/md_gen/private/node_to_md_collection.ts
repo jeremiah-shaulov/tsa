@@ -34,17 +34,16 @@ export class NodeToMdCollection
 			{	return dir;
 			}
 			const {name, kind} = node;
-			if (kind == 'moduleDoc')
-			{	return '';
-			}
-			const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
-			const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
-			for (let i=1; true; i++)
-			{	const curName = i==1 ? fullName : fullName+'.'+i;
-				if (!this.#pathNames.has(curName))
-				{	this.#pathNames.add(curName);
-					this.#paths.set(node, curName);
-					return curName;
+			if (kind != 'moduleDoc')
+			{	const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
+				const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
+				for (let i=1; true; i++)
+				{	const curName = i==1 ? fullName : fullName+'.'+i;
+					if (!this.#pathNames.has(curName))
+					{	this.#pathNames.add(curName);
+						this.#paths.set(node, curName);
+						return curName;
+					}
 				}
 			}
 		}

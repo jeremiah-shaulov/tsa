@@ -50,9 +50,28 @@ declare module 'npm:typescript@5.6.2'
 		 **/
 		emitDoc(options?: EmitDocOptions): DocNodes;
 
+		/**	Produces sequence of statements taken from source files, that can be put to a single file.
+		 **/
 		emitTsaBundle(): TsaBundle;
 	}
 
+	/**	### Configuration options for the Typescript Compiler (tsa.CompilerOptions)
+
+		You can pass {@link tsa.CompilerOptions} to `tsa.createTsaProgram()`. It works in the same fashion as `typescript.CompilerOptions` for [typescript.createProgram()]{@link tsa.createProgram}, with the following differences:
+		- `lib` has 2 additional options that you can provide: `lib.deno.ns.d.ts` and `lib.deno.unstable.d.ts`. If you don't specify `lib` explicitly, the default is `lib.deno.ns.d.ts`.
+		- default value for {@link tsa.CompilerOptions.allowJs} is `true`.
+		- default value for {@link tsa.CompilerOptions.resolveJsonModule} is `true`.
+		- default value for {@link tsa.CompilerOptions.allowSyntheticDefaultImports} is `true`.
+		- default value for {@link tsa.CompilerOptions.target} is {@link tsa.ScriptTarget.ESNext}.
+		- default value for {@link tsa.CompilerOptions.module} is {@link tsa.ModuleKind.ESNext}.
+		- default value for {@link tsa.CompilerOptions.moduleResolution} is {@link tsa.ModuleResolutionKind.NodeNext}.
+		- regardless of {@link tsa.CompilerOptions.allowImportingTsExtensions} value, module specifiers must include `.ts` (or different) extension.
+
+		If the goal is to generate docs, you usually need to set {@link tsa.CompilerOptions.declaration} and {@link tsa.CompilerOptions.emitDeclarationOnly} to true.
+		Else the compiler will not know that you're not going to write Javascript files, and can complain.
+
+		To produce bundle no special options are needed, and you can leave the options blank.
+	 **/
 	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<TsaProgram>;
 }
 

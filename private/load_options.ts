@@ -7,40 +7,121 @@ type Resolve = (specifier: string, referrer: string) => string | Promise<string>
 type Load = (specifier: string, isDynamic: boolean) => LoadResponse | undefined | Promise<LoadResponse|undefined>;
 type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind) => tsa.SourceFile;
 
-export type LoadOptions =
-{	/** An optional URL or path to an import map to be loaded and used to resolve
-		module specifiers.
+/**	You can pass `LoadOptions`
+	to {@link tsa.createTsaProgram()} that allow to configure the way modules are resolved and loaded.
 
-		When a `resolve()` function is also specified, a warning will be issued
-		and the import map will be used instead of the `resolve()` function.
+	For example `LoadOptions` allow to substitute source code of a module during loading.
+
+	```ts
+	// To run this example:
+	// deno run --allow-env --allow-net --allow-read --allow-write example.ts
+
+	import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.23/mod.ts';
+
+	const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
+	const OUT_FILE = '/tmp/doc.json';
+
+	// Create typescript program
+	const program = await tsa.createTsaProgram
+	(	[DOCS_FOR],
+		{	declaration: true,
+			emitDeclarationOnly: true,
+		},
+		{	async load(specifier, isDynamic)
+			{	// Load the module contents
+				const result = await defaultLoad(specifier, isDynamic);
+				// If the module was found, substitute it's contents
+				if (result?.kind == 'module')
+				{	result.content =
+					`	/**	Example module.
+							@module
+						 **\/
+						${result.content}
+					`;
+				}
+				// Return the result
+				return result;
+			}
+		}
+	);
+
+	// Print errors and warnings (if any)
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+	// Generate the docs
+	const docNodes = program.emitDoc();
+
+	// Save the docs to file
+	await Deno.writeTextFile(OUT_FILE, JSON.stringify(docNodes, undefined, '\t'));
+
+	// Print the number of `docNodes` written
+	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', OUT_FILE);
+	```
+
+	In the following example i use fake input file:
+
+	```ts
+	import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.23/mod.ts';
+
+	const INPUT =
+	`	/**	The main function.
+		**\/
+		export function main()
+		{	return 0;
+		}
+	`;
+
+	// Create typescript program
+	const fakeInputFilename = 'main.ts';
+	const program = await tsa.createTsaProgram
+	(	[fakeInputFilename],
+		{	declaration: true,
+			emitDeclarationOnly: true,
+		},
+		{	resolve(specifier, referrer)
+			{	if (specifier == fakeInputFilename)
+				{	return specifier;
+				}
+				return defaultResolve(specifier, referrer);
+			},
+			async load(specifier, isDynamic)
+			{	if (specifier == fakeInputFilename)
+				{	return {kind: 'module', specifier, content: INPUT, headers: {'content-type': 'application/typescript'}};
+				}
+				return await defaultLoad(specifier, isDynamic);
+			}
+		}
+	);
+
+	// Print errors and warnings (if any)
+	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+
+	// Generate the docs
+	const docNodes = program.emitDoc();
+
+	// Print the docs
+	console.log(JSON.stringify(docNodes, undefined, '\t'));
+	```
+ **/
+export type LoadOptions =
+{	/** An optional URL or path to an import map to be loaded and used to resolve module specifiers.
+		If both `importMap` and `resolve()` are specified, the `importMap` will be preferred.
 	 **/
 	importMap?: string | URL;
 
-	/** An optional callback that allows the default resolution logic of the
-		module graph to be "overridden". This is intended to allow items like an
-		import map to be used with the module graph. The callback takes the string
-		of the module specifier from the referrer and the string URL of the
-		referrer. The callback then returns a resolved URL string specifier.
-
-		If an `importMap` is also specified, a warning will be issued and the
-		import map will be used.
+	/** An optional callback that allows the default resolution logic of the module graph to be "overridden".
+		This is intended to allow items like an import map to be used with the module graph.
+		The callback takes the string of the module specifier, as it appears in `import from` or `export from`, and the string URL of the module where this import is found.
+		The callback then returns a resolved URL to the module file.
 	 **/
 	resolve?: Resolve;
 
-	/**	An optional callback that is called with the URL string of the resource to
-		be loaded and a flag indicating if the module was required dynamically. The
-		callback should resolve with a `LoadResponse` or `undefined` if the module
-		is not found. If there are other errors encountered, a rejected promise
-		should be returned.
-
-		This defaults to a load function which will use `fetch()` and
-		`Deno.readFile()` to load modules, and requires the appropriate permissions
-		to function. If the permissions are note available at startup, the default
-		function will prompt for them.
+	/**	An optional callback that is called with the URL string of the resource to be loaded.
+		The callback should return a `LoadResponse` or `undefined` if the module is not found.
+		If there are other errors encountered, a rejected promise should be returned.
 
 		@param specifier The URL string of the resource to be loaded and resolved
-		@param isDynamic A flag that indicates if the module was being loaded
-		                 dynamically
+		@param isDynamic A flag that indicates if the module was being loaded dynamically
 	 **/
 	load?: Load;
 
@@ -135,6 +216,9 @@ export async function defaultResolve(specifier: string, referrer: string)
 		if (result)
 		{	return result.specifier;
 		}
+	}
+	else if (specifier.startsWith('jsr:'))
+	{
 	}
 	return defaultResolveSync(specifier, referrer);
 }

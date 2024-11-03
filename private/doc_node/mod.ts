@@ -18,6 +18,25 @@
 
 // Copyright 2020-2022 the Deno authors. All rights reserved. MIT license.
 
+/** This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
+
+    - {@link Location} has additional [entryPointNumber]{@link Location.entryPointNumber} field.
+    You can pass relative paths to [createTsaProgram()]{@link tsa.createTsaProgram} as entry points, but {@link Location.filename} always contains corresponding absolute URL.
+    If this filename is one of the entry points, the {@link Location.entryPointNumber} field will contain the index in `entryPoints` array provided to [createTsaProgram()]{@link tsa.createTsaProgram}.
+    - `DocNode` has additional [exports]{@link DocNode.exports} field. If a symbol is reexported from several places, those places will be recorded here (including current location).
+    - {@link ClassPropertyDef} has additional [init]{@link ClassPropertyDef.init} field that contains property initializer (if any).
+    - {@link EnumDef} has additional [isConst]{@link EnumDef.isConst} field for `const enum`s.
+    - Doc-comments are returned not only as [doc]{@link JsDoc.doc} string, but also [docTokens]{@link JsDoc.docTokens}, that have separate parts for comment text and `@link` tags.
+    - {@link JsDocTagTyped} (for `@enum`, `@extends`, `@this` and `@type` tags) and {@link JsDocTagParam} (for `@param`) have additional `tsType` field for the object type.
+    - {@link JsDocTagNamed} (for `@callback` and `@template` tags) has additional [tsType]{@link JsDocTagNamed.tsType} and [typeParams]{@link JsDocTagNamed.typeParams} fields.
+    - {@link DecoratorDef} has additional [nodeIndex]{@link DecoratorDef.nodeIndex} field that contains node index in the results where this decorator function is returned, if it's returned.
+    To include referenced symbols in the result, use {@link EmitDocOptions.includeReferenced} option.
+    - References to another named types are returned as {@link TsTypeRefDef} objects that contain not only [typeName]{@link TsTypeRefDef.typeName},
+    but also additional [nodeIndex]{@link TsTypeRefDef.nodeIndex} field, that contains index in the results for this type.
+    If the type is an enum member, also [nodeSubIndex]{@link TsTypeRefDef.nodeSubIndex} will be set to member number. See {@link EmitDocOptions.includeReferenced}.
+    - {@link ClassDef} has additional `superNodeIndex` field, that contains node index in the results for the super class. See {@link EmitDocOptions.includeReferenced}.
+    - {@link TsTypeDef.repr} field for string literals (`kind == 'string'`) contains quotes, for string template literals (`kind == 'template'`) contains backticks, and for bigint literals (`kind == 'bigInt'`) has trailing `n`.
+ **/
 export type DocNode =
   | DocNodeModuleDoc
   | DocNodeFunction
