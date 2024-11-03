@@ -5,4 +5,4 @@
 Returns the target config filename of a project reference.
 Note: The file might not exist.
 
-`function` resolveProjectReferencePath(ref: [ProjectReference](../private.interface.ProjectReference/README.md)): ResolvedConfigFileName
+`function` resolveProjectReferencePath(ref: [ProjectReference](../interface.ProjectReference/README.md)): ResolvedConfigFileName

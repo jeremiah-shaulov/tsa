@@ -18,7 +18,7 @@
 
 
 
-#### 📄 kind: [ScriptElementKind](../private.enum.ScriptElementKind/README.md)
+#### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
 
 
 
@@ -30,11 +30,11 @@
 
 
 
-#### 📄 span: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 span: [TextSpan](../interface.TextSpan/README.md)
 
 
 
-#### 📄 selectionSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 selectionSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 

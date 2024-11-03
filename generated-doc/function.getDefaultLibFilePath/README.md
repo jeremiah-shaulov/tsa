@@ -6,4 +6,4 @@ Get the path of the default library files (lib.d.ts) as distributed with the typ
 node package.
 The functionality is not supported if the ts module is consumed outside of a node module.
 
-`function` getDefaultLibFilePath(options: [CompilerOptions](../private.interface.CompilerOptions/README.md)): `string`
+`function` getDefaultLibFilePath(options: [CompilerOptions](../interface.CompilerOptions/README.md)): `string`

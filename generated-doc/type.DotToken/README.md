@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` DotToken = [PunctuationToken](../private.interface.PunctuationToken/README.md)\<[SyntaxKind.DotToken](../private.enum.SyntaxKind/README.md#dottoken--25)>
+`type` DotToken = [PunctuationToken](../interface.PunctuationToken/README.md)\<[SyntaxKind.DotToken](../enum.SyntaxKind/README.md#dottoken--25)>

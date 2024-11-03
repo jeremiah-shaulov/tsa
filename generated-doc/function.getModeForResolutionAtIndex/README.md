@@ -9,4 +9,4 @@ explicitly provided via import attributes, if present, or the syntax the usage w
 input syntax of the reference. In other `module` modes, when overriding import attributes are not provided, this function returns
 `undefined`, as the result would have no impact on module resolution, emit, or type checking.
 
-`function` getModeForResolutionAtIndex(file: [SourceFile](../private.interface.SourceFile/README.md), index: `number`, compilerOptions: [CompilerOptions](../private.interface.CompilerOptions/README.md)): ResolutionMode
+`function` getModeForResolutionAtIndex(file: [SourceFile](../interface.SourceFile/README.md), index: `number`, compilerOptions: [CompilerOptions](../interface.CompilerOptions/README.md)): ResolutionMode

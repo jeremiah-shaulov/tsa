@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`var` unchangedTextChangeRange: [TextChangeRange](../private.interface.TextChangeRange/README.md)
+`var` unchangedTextChangeRange: [TextChangeRange](../interface.TextChangeRange/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isLeftHandSideExpression(node: [Node](../private.interface.Node/README.md)): node `is` [LeftHandSideExpression](../private.interface.LeftHandSideExpression/README.md)
+`function` isLeftHandSideExpression(node: [Node](../interface.Node/README.md)): node `is` [LeftHandSideExpression](../interface.LeftHandSideExpression/README.md)

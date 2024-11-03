@@ -1,4 +1,4 @@
-# `interface` CodeFixAction `extends` [CodeAction](../private.interface.CodeAction/README.md)
+# `interface` CodeFixAction `extends` [CodeAction](../interface.CodeAction/README.md)
 
 [Documentation Index](../README.md)
 

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isCaseOrDefaultClause(node: [Node](../private.interface.Node/README.md)): node `is` CaseOrDefaultClause
+`function` isCaseOrDefaultClause(node: [Node](../interface.Node/README.md)): node `is` CaseOrDefaultClause

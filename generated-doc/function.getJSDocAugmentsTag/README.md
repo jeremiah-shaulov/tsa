@@ -4,4 +4,4 @@
 
 Gets the JSDoc augments tag for the node if present
 
-`function` getJSDocAugmentsTag(node: [Node](../private.interface.Node/README.md)): [JSDocAugmentsTag](../private.interface.JSDocAugmentsTag/README.md)
+`function` getJSDocAugmentsTag(node: [Node](../interface.Node/README.md)): [JSDocAugmentsTag](../interface.JSDocAugmentsTag/README.md)

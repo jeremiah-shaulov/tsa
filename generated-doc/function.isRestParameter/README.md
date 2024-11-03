@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isRestParameter(node: [ParameterDeclaration](../private.interface.ParameterDeclaration/README.md) | [JSDocParameterTag](../private.interface.JSDocParameterTag/README.md)): `boolean`
+`function` isRestParameter(node: [ParameterDeclaration](../interface.ParameterDeclaration/README.md) | [JSDocParameterTag](../interface.JSDocParameterTag/README.md)): `boolean`

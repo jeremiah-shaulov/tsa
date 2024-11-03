@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isSyntheticExpression(node: [Node](../private.interface.Node/README.md)): node `is` [SyntheticExpression](../private.interface.SyntheticExpression/README.md)
+`function` isSyntheticExpression(node: [Node](../interface.Node/README.md)): node `is` [SyntheticExpression](../interface.SyntheticExpression/README.md)

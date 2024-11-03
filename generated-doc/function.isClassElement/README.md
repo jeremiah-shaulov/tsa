@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isClassElement(node: [Node](../private.interface.Node/README.md)): node `is` [ClassElement](../private.interface.ClassElement/README.md)
+`function` isClassElement(node: [Node](../interface.Node/README.md)): node `is` [ClassElement](../interface.ClassElement/README.md)

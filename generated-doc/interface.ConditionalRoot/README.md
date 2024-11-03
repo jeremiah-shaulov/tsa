@@ -16,15 +16,15 @@
 [aliasTypeArguments](#-aliastypearguments-type)
 
 
-#### 📄 node: [ConditionalTypeNode](../private.interface.ConditionalTypeNode/README.md)
+#### 📄 node: [ConditionalTypeNode](../interface.ConditionalTypeNode/README.md)
 
 
 
-#### 📄 checkType: [Type](../private.interface.Type/README.md)
+#### 📄 checkType: [Type](../interface.Type/README.md)
 
 
 
-#### 📄 extendsType: [Type](../private.interface.Type/README.md)
+#### 📄 extendsType: [Type](../interface.Type/README.md)
 
 
 
@@ -32,23 +32,23 @@
 
 
 
-#### 📄 inferTypeParameters?: [TypeParameter](../private.interface.TypeParameter/README.md)\[]
+#### 📄 inferTypeParameters?: [TypeParameter](../interface.TypeParameter/README.md)\[]
 
 
 
-#### 📄 outerTypeParameters?: [TypeParameter](../private.interface.TypeParameter/README.md)\[]
+#### 📄 outerTypeParameters?: [TypeParameter](../interface.TypeParameter/README.md)\[]
 
 
 
-#### 📄 instantiations?: Map\<`string`, [Type](../private.interface.Type/README.md)>
+#### 📄 instantiations?: Map\<`string`, [Type](../interface.Type/README.md)>
 
 
 
-#### 📄 aliasSymbol?: [Symbol](../private.interface.Symbol/README.md)
+#### 📄 aliasSymbol?: [Symbol](../interface.Symbol/README.md)
 
 
 
-#### 📄 aliasTypeArguments?: [Type](../private.interface.Type/README.md)\[]
+#### 📄 aliasTypeArguments?: [Type](../interface.Type/README.md)\[]
 
 
 

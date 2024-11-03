@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isEmptyBindingPattern(node: [BindingName](../private.type.BindingName/README.md)): node `is` BindingPattern
+`function` isEmptyBindingPattern(node: [BindingName](../type.BindingName/README.md)): node `is` BindingPattern

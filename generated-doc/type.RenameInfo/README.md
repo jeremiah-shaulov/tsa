@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` RenameInfo = [RenameInfoSuccess](../private.interface.RenameInfoSuccess/README.md) | [RenameInfoFailure](../private.interface.RenameInfoFailure/README.md)
+`type` RenameInfo = [RenameInfoSuccess](../interface.RenameInfoSuccess/README.md) | [RenameInfoFailure](../interface.RenameInfoFailure/README.md)

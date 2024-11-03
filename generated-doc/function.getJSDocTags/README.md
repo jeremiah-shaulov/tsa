@@ -4,4 +4,4 @@
 
 Get all JSDoc tags related to a node, including those on parent nodes.
 
-`function` getJSDocTags(node: [Node](../private.interface.Node/README.md)): readonly JSDocTag\[]
+`function` getJSDocTags(node: [Node](../interface.Node/README.md)): readonly JSDocTag\[]

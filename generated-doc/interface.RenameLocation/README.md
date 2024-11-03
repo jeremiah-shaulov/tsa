@@ -1,4 +1,4 @@
-# `interface` RenameLocation `extends` [DocumentSpan](../private.interface.DocumentSpan/README.md)
+# `interface` RenameLocation `extends` [DocumentSpan](../interface.DocumentSpan/README.md)
 
 [Documentation Index](../README.md)
 

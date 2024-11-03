@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDoc(node: [Node](../private.interface.Node/README.md)): node `is` [JSDoc](../private.interface.JSDoc/README.md)
+`function` isJSDoc(node: [Node](../interface.Node/README.md)): node `is` [JSDoc](../interface.JSDoc/README.md)

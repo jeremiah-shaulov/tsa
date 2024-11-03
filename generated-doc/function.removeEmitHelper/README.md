@@ -4,4 +4,4 @@
 
 Removes an EmitHelper from a node.
 
-`function` removeEmitHelper(node: [Node](../private.interface.Node/README.md), helper: [EmitHelper](../private.type.EmitHelper/README.md)): `boolean`
+`function` removeEmitHelper(node: [Node](../interface.Node/README.md), helper: [EmitHelper](../type.EmitHelper/README.md)): `boolean`

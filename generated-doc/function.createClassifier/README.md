@@ -4,4 +4,4 @@
 
 The classifier is used for syntactic highlighting in editors via the TSServer
 
-`function` createClassifier(): [Classifier](../private.interface.Classifier/README.md)
+`function` createClassifier(): [Classifier](../interface.Classifier/README.md)

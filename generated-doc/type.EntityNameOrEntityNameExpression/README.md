@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` EntityNameOrEntityNameExpression = [EntityName](../private.type.EntityName/README.md) | [EntityNameExpression](../private.type.EntityNameExpression/README.md)
+`type` EntityNameOrEntityNameExpression = [EntityName](../type.EntityName/README.md) | [EntityNameExpression](../type.EntityNameExpression/README.md)

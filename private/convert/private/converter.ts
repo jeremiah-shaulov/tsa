@@ -346,8 +346,13 @@ export class Converter
 				this.#doRefs();
 			}
 		}
-		else if (exports?.length)
-		{	node.exports = exports;
+		else
+		{	if (exports?.length)
+			{	node.exports = exports;
+			}
+			if (isDeclarationFile && node.declarationKind=='private')
+			{	node.declarationKind = 'export';
+			}
 		}
 	}
 

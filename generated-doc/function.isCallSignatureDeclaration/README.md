@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isCallSignatureDeclaration(node: [Node](../private.interface.Node/README.md)): node `is` [CallSignatureDeclaration](../private.interface.CallSignatureDeclaration/README.md)
+`function` isCallSignatureDeclaration(node: [Node](../interface.Node/README.md)): node `is` [CallSignatureDeclaration](../interface.CallSignatureDeclaration/README.md)

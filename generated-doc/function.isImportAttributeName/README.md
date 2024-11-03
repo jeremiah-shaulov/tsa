@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isImportAttributeName(node: [Node](../private.interface.Node/README.md)): node `is` ImportAttributeName
+`function` isImportAttributeName(node: [Node](../interface.Node/README.md)): node `is` ImportAttributeName

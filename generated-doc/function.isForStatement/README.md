@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isForStatement(node: [Node](../private.interface.Node/README.md)): node `is` [ForStatement](../private.interface.ForStatement/README.md)
+`function` isForStatement(node: [Node](../interface.Node/README.md)): node `is` [ForStatement](../interface.ForStatement/README.md)

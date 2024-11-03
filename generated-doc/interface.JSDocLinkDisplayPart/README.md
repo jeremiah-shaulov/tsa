@@ -1,4 +1,4 @@
-# `interface` JSDocLinkDisplayPart `extends` [SymbolDisplayPart](../private.interface.SymbolDisplayPart/README.md)
+# `interface` JSDocLinkDisplayPart `extends` [SymbolDisplayPart](../interface.SymbolDisplayPart/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [target](#-target-documentspan)
 
 
-#### 📄 target: [DocumentSpan](../private.interface.DocumentSpan/README.md)
+#### 📄 target: [DocumentSpan](../interface.DocumentSpan/README.md)
 
 
 

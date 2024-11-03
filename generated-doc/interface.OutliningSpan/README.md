@@ -12,11 +12,11 @@
 [kind](#-kind-outliningspankind)
 
 
-#### 📄 textSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 textSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 
-#### 📄 hintSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 hintSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 
@@ -28,7 +28,7 @@
 
 
 
-#### 📄 kind: [OutliningSpanKind](../private.enum.OutliningSpanKind/README.md)
+#### 📄 kind: [OutliningSpanKind](../enum.OutliningSpanKind/README.md)
 
 
 

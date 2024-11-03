@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isModuleReference(node: [Node](../private.interface.Node/README.md)): node `is` ModuleReference
+`function` isModuleReference(node: [Node](../interface.Node/README.md)): node `is` ModuleReference

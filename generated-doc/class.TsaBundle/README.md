@@ -39,7 +39,7 @@ This object represents bundle that contains all the source files, and can be con
 
 
 
-#### ⚙ toProgram(compilerOptions: [tsa.CompilerOptions](../private.interface.CompilerOptions/README.md), logToConsole: `boolean`=false): Promise\<TsaProgram>
+#### ⚙ toProgram(compilerOptions: [tsa.CompilerOptions](../interface.CompilerOptions/README.md), logToConsole: `boolean`=false): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>
 
 > Convert this bundle to another
 > [tsa.TsaProgram](../interface.TsaProgram/README.md), on which you can call tsa.TsaProgram.emit() to convert it to single Javascript file.

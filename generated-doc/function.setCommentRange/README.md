@@ -4,4 +4,4 @@
 
 Sets a custom text range to use when emitting comments.
 
-`function` setCommentRange\<T `extends` [Node](../private.interface.Node/README.md)>(node: T, range: [TextRange](../private.interface.TextRange/README.md)): T
+`function` setCommentRange\<T `extends` [Node](../interface.Node/README.md)>(node: T, range: [TextRange](../interface.TextRange/README.md)): T

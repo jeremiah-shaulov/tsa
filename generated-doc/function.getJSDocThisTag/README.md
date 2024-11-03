@@ -4,4 +4,4 @@
 
 Gets the JSDoc this tag for the node if present
 
-`function` getJSDocThisTag(node: [Node](../private.interface.Node/README.md)): [JSDocThisTag](../private.interface.JSDocThisTag/README.md)
+`function` getJSDocThisTag(node: [Node](../interface.Node/README.md)): [JSDocThisTag](../interface.JSDocThisTag/README.md)

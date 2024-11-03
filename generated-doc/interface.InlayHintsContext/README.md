@@ -13,27 +13,27 @@
 [preferences](#-preferences-userpreferences)
 
 
-#### 📄 file: [SourceFile](../private.interface.SourceFile/README.md)
+#### 📄 file: [SourceFile](../interface.SourceFile/README.md)
 
 
 
-#### 📄 program: [Program](../private.interface.Program/README.md)
+#### 📄 program: [Program](../interface.Program/README.md)
 
 
 
-#### 📄 cancellationToken: [CancellationToken](../private.interface.CancellationToken/README.md)
+#### 📄 cancellationToken: [CancellationToken](../interface.CancellationToken/README.md)
 
 
 
-#### 📄 host: [LanguageServiceHost](../private.interface.LanguageServiceHost/README.md)
+#### 📄 host: [LanguageServiceHost](../interface.LanguageServiceHost/README.md)
 
 
 
-#### 📄 span: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 span: [TextSpan](../interface.TextSpan/README.md)
 
 
 
-#### 📄 preferences: [UserPreferences](../private.interface.UserPreferences/README.md)
+#### 📄 preferences: [UserPreferences](../interface.UserPreferences/README.md)
 
 
 

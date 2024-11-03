@@ -9,7 +9,7 @@
 [classificationType](#-classificationtype-number)
 
 
-#### 📄 textSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 textSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 

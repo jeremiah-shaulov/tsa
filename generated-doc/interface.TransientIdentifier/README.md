@@ -1,4 +1,4 @@
-# `interface` TransientIdentifier `extends` [Identifier](../private.interface.Identifier/README.md)
+# `interface` TransientIdentifier `extends` [Identifier](../interface.Identifier/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [resolvedSymbol](#-resolvedsymbol-symbol)
 
 
-#### 📄 resolvedSymbol: [Symbol](../private.interface.Symbol/README.md)
+#### 📄 resolvedSymbol: [Symbol](../interface.Symbol/README.md)
 
 
 

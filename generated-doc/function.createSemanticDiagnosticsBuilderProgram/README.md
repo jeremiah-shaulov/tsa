@@ -4,4 +4,4 @@
 
 Create the builder to manage semantic diagnostics and cache them
 
-`function` createSemanticDiagnosticsBuilderProgram(newProgram: [Program](../private.interface.Program/README.md), host: [BuilderProgramHost](../private.interface.BuilderProgramHost/README.md), oldProgram?: [SemanticDiagnosticsBuilderProgram](../private.interface.SemanticDiagnosticsBuilderProgram/README.md), configFileParsingDiagnostics?: readonly [Diagnostic](../private.interface.Diagnostic/README.md)\[]): [SemanticDiagnosticsBuilderProgram](../private.interface.SemanticDiagnosticsBuilderProgram/README.md)
+`function` createSemanticDiagnosticsBuilderProgram(newProgram: [Program](../interface.Program/README.md), host: [BuilderProgramHost](../interface.BuilderProgramHost/README.md), oldProgram?: [SemanticDiagnosticsBuilderProgram](../interface.SemanticDiagnosticsBuilderProgram/README.md), configFileParsingDiagnostics?: readonly [Diagnostic](../interface.Diagnostic/README.md)\[]): [SemanticDiagnosticsBuilderProgram](../interface.SemanticDiagnosticsBuilderProgram/README.md)

@@ -10,11 +10,11 @@
 [clear](#-clear-void)
 
 
-#### ⚙ get(): [CompletionInfo](../private.interface.CompletionInfo/README.md)
+#### ⚙ get(): [CompletionInfo](../interface.CompletionInfo/README.md)
 
 
 
-#### ⚙ set(response: [CompletionInfo](../private.interface.CompletionInfo/README.md)): `void`
+#### ⚙ set(response: [CompletionInfo](../interface.CompletionInfo/README.md)): `void`
 
 
 

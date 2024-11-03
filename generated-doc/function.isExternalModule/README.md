@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isExternalModule(file: [SourceFile](../private.interface.SourceFile/README.md)): `boolean`
+`function` isExternalModule(file: [SourceFile](../interface.SourceFile/README.md)): `boolean`

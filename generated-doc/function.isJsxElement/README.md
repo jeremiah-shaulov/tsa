@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJsxElement(node: [Node](../private.interface.Node/README.md)): node `is` [JsxElement](../private.interface.JsxElement/README.md)
+`function` isJsxElement(node: [Node](../interface.Node/README.md)): node `is` [JsxElement](../interface.JsxElement/README.md)

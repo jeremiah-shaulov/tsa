@@ -17,23 +17,23 @@ import {NodeWithInfo} from "https://deno.land/x/tsa@v0.0.24/mod.ts"
 [nodeExportType](#-nodeexporttype-nodeexporttype)
 
 
-#### 📄 sourceFile: [tsa.SourceFile](../private.interface.SourceFile/README.md)
+#### 📄 sourceFile: [tsa.SourceFile](../interface.SourceFile/README.md)
 
 
 
-#### 📄 node: [tsa.Node](../private.interface.Node/README.md)
+#### 📄 node: [tsa.Node](../interface.Node/README.md)
 
 
 
-#### 📄 refs: Set\<[tsa.Symbol](../private.interface.Symbol/README.md)>
+#### 📄 refs: Set\<[tsa.Symbol](../interface.Symbol/README.md)>
 
 
 
-#### 📄 bodyRefs: Set\<[tsa.Symbol](../private.interface.Symbol/README.md)>
+#### 📄 bodyRefs: Set\<[tsa.Symbol](../interface.Symbol/README.md)>
 
 
 
-#### 📄 introduces: [tsa.Symbol](../private.interface.Symbol/README.md)\[]
+#### 📄 introduces: [tsa.Symbol](../interface.Symbol/README.md)\[]
 
 
 

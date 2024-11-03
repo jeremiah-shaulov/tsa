@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` formatDiagnostic(diagnostic: [Diagnostic](../private.interface.Diagnostic/README.md), host: [FormatDiagnosticsHost](../private.interface.FormatDiagnosticsHost/README.md)): `string`
+`function` formatDiagnostic(diagnostic: [Diagnostic](../interface.Diagnostic/README.md), host: [FormatDiagnosticsHost](../interface.FormatDiagnosticsHost/README.md)): `string`

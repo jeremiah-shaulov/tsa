@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` createScanner(languageVersion: [ScriptTarget](../private.enum.ScriptTarget/README.md), skipTrivia: `boolean`, languageVariant?: [LanguageVariant](../private.enum.LanguageVariant/README.md), textInitial?: `string`, onError?: [ErrorCallback](../private.type.ErrorCallback/README.md), start?: `number`, length?: `number`): [Scanner](../private.interface.Scanner/README.md)
+`function` createScanner(languageVersion: [ScriptTarget](../enum.ScriptTarget/README.md), skipTrivia: `boolean`, languageVariant?: [LanguageVariant](../enum.LanguageVariant/README.md), textInitial?: `string`, onError?: [ErrorCallback](../type.ErrorCallback/README.md), start?: `number`, length?: `number`): [Scanner](../interface.Scanner/README.md)

@@ -4,4 +4,4 @@
 
 Gets the JSDoc parameter tags for the node if present.
 
-`function` getJSDocParameterTags(param: [ParameterDeclaration](../private.interface.ParameterDeclaration/README.md)): readonly JSDocParameterTag\[]
+`function` getJSDocParameterTags(param: [ParameterDeclaration](../interface.ParameterDeclaration/README.md)): readonly JSDocParameterTag\[]

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` createIncrementalCompilerHost(options: [CompilerOptions](../private.interface.CompilerOptions/README.md), system?: [System](../private.interface.System/README.md)): [CompilerHost](../private.interface.CompilerHost/README.md)
+`function` createIncrementalCompilerHost(options: [CompilerOptions](../interface.CompilerOptions/README.md), system?: [System](../interface.System/README.md)): [CompilerHost](../interface.CompilerHost/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getDefaultLibFileName(options: [CompilerOptions](../private.interface.CompilerOptions/README.md)): `string`
+`function` getDefaultLibFileName(options: [CompilerOptions](../interface.CompilerOptions/README.md)): `string`

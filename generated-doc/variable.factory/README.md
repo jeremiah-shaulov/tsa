@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`var` factory: [NodeFactory](../private.interface.NodeFactory/README.md)
+`var` factory: [NodeFactory](../interface.NodeFactory/README.md)

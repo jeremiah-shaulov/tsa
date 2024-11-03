@@ -13,7 +13,7 @@
 
 
 
-#### 📄 fromSpans: [TextSpan](../private.interface.TextSpan/README.md)\[]
+#### 📄 fromSpans: [TextSpan](../interface.TextSpan/README.md)\[]
 
 
 

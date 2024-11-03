@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isArrayLiteralExpression(node: [Node](../private.interface.Node/README.md)): node `is` [ArrayLiteralExpression](../private.interface.ArrayLiteralExpression/README.md)
+`function` isArrayLiteralExpression(node: [Node](../interface.Node/README.md)): node `is` [ArrayLiteralExpression](../interface.ArrayLiteralExpression/README.md)

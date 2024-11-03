@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJsxOpeningFragment(node: [Node](../private.interface.Node/README.md)): node `is` [JsxOpeningFragment](../private.interface.JsxOpeningFragment/README.md)
+`function` isJsxOpeningFragment(node: [Node](../interface.Node/README.md)): node `is` [JsxOpeningFragment](../interface.JsxOpeningFragment/README.md)

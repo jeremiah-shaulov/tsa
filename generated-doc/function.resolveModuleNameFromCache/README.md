@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` resolveModuleNameFromCache(moduleName: `string`, containingFile: `string`, cache: [ModuleResolutionCache](../private.interface.ModuleResolutionCache/README.md), mode?: [ResolutionMode](../private.type.ResolutionMode/README.md)): [ResolvedModuleWithFailedLookupLocations](../private.interface.ResolvedModuleWithFailedLookupLocations/README.md)
+`function` resolveModuleNameFromCache(moduleName: `string`, containingFile: `string`, cache: [ModuleResolutionCache](../interface.ModuleResolutionCache/README.md), mode?: [ResolutionMode](../type.ResolutionMode/README.md)): [ResolvedModuleWithFailedLookupLocations](../interface.ResolvedModuleWithFailedLookupLocations/README.md)

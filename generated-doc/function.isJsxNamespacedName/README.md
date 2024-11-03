@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJsxNamespacedName(node: [Node](../private.interface.Node/README.md)): node `is` [JsxNamespacedName](../private.interface.JsxNamespacedName/README.md)
+`function` isJsxNamespacedName(node: [Node](../interface.Node/README.md)): node `is` [JsxNamespacedName](../interface.JsxNamespacedName/README.md)

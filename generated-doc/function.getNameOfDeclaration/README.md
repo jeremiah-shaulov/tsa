@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getNameOfDeclaration(declaration: [Declaration](../private.interface.Declaration/README.md) | [Expression](../private.interface.Expression/README.md) | `undefined`): DeclarationName
+`function` getNameOfDeclaration(declaration: [Declaration](../interface.Declaration/README.md) | [Expression](../interface.Expression/README.md) | `undefined`): DeclarationName

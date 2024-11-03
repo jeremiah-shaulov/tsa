@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocTypeLiteral(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocTypeLiteral](../private.interface.JSDocTypeLiteral/README.md)
+`function` isJSDocTypeLiteral(node: [Node](../interface.Node/README.md)): node `is` [JSDocTypeLiteral](../interface.JSDocTypeLiteral/README.md)

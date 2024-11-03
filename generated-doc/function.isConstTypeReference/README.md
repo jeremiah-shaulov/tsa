@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isConstTypeReference(node: [Node](../private.interface.Node/README.md)): `boolean`
+`function` isConstTypeReference(node: [Node](../interface.Node/README.md)): `boolean`

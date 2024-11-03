@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isTypeOperatorNode(node: [Node](../private.interface.Node/README.md)): node `is` [TypeOperatorNode](../private.interface.TypeOperatorNode/README.md)
+`function` isTypeOperatorNode(node: [Node](../interface.Node/README.md)): node `is` [TypeOperatorNode](../interface.TypeOperatorNode/README.md)

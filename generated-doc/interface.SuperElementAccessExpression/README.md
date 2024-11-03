@@ -1,4 +1,4 @@
-# `interface` SuperElementAccessExpression `extends` [ElementAccessExpression](../private.interface.ElementAccessExpression/README.md)
+# `interface` SuperElementAccessExpression `extends` [ElementAccessExpression](../interface.ElementAccessExpression/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [expression](#-readonly-expression-superexpression)
 
 
-#### 📄 `readonly` expression: [SuperExpression](../private.interface.SuperExpression/README.md)
+#### 📄 `readonly` expression: [SuperExpression](../interface.SuperExpression/README.md)
 
 
 

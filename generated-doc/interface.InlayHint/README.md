@@ -33,7 +33,7 @@
 
 
 
-#### 📄 displayParts?: [InlayHintDisplayPart](../private.interface.InlayHintDisplayPart/README.md)\[]
+#### 📄 displayParts?: [InlayHintDisplayPart](../interface.InlayHintDisplayPart/README.md)\[]
 
 
 

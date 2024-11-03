@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJsxExpression(node: [Node](../private.interface.Node/README.md)): node `is` [JsxExpression](../private.interface.JsxExpression/README.md)
+`function` isJsxExpression(node: [Node](../interface.Node/README.md)): node `is` [JsxExpression](../interface.JsxExpression/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getNameOfJSDocTypedef(declaration: [JSDocTypedefTag](../private.interface.JSDocTypedefTag/README.md)): Identifier | PrivateIdentifier
+`function` getNameOfJSDocTypedef(declaration: [JSDocTypedefTag](../interface.JSDocTypedefTag/README.md)): Identifier | PrivateIdentifier

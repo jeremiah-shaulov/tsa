@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isNamedExports(node: [Node](../private.interface.Node/README.md)): node `is` [NamedExports](../private.interface.NamedExports/README.md)
+`function` isNamedExports(node: [Node](../interface.Node/README.md)): node `is` [NamedExports](../interface.NamedExports/README.md)

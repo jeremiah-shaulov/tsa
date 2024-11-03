@@ -4,4 +4,4 @@
 
 Gets the JSDoc implements tags for the node if present
 
-`function` getJSDocImplementsTags(node: [Node](../private.interface.Node/README.md)): readonly JSDocImplementsTag\[]
+`function` getJSDocImplementsTags(node: [Node](../interface.Node/README.md)): readonly JSDocImplementsTag\[]

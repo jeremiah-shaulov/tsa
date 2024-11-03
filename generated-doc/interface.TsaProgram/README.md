@@ -1,4 +1,4 @@
-# `interface` TsaProgram `extends` [Program](../private.interface.Program/README.md)
+# `interface` TsaProgram `extends` [Program](../interface.Program/README.md)
 
 [Documentation Index](../README.md)
 

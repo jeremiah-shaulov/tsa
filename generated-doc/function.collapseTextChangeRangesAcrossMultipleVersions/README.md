@@ -9,4 +9,4 @@ have a text change from V1 to V2, V2 to V3, ..., Vn.
 This function will then merge those changes into a single change range valid between V1 and
 Vn.
 
-`function` collapseTextChangeRangesAcrossMultipleVersions(changes: readonly [TextChangeRange](../private.interface.TextChangeRange/README.md)\[]): [TextChangeRange](../private.interface.TextChangeRange/README.md)
+`function` collapseTextChangeRangesAcrossMultipleVersions(changes: readonly [TextChangeRange](../interface.TextChangeRange/README.md)\[]): [TextChangeRange](../interface.TextChangeRange/README.md)

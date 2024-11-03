@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isTypeOnlyImportOrExportDeclaration(node: [Node](../private.interface.Node/README.md)): node `is` TypeOnlyAliasDeclaration
+`function` isTypeOnlyImportOrExportDeclaration(node: [Node](../interface.Node/README.md)): node `is` TypeOnlyAliasDeclaration

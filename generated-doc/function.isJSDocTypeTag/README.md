@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocTypeTag(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocTypeTag](../private.interface.JSDocTypeTag/README.md)
+`function` isJSDocTypeTag(node: [Node](../interface.Node/README.md)): node `is` [JSDocTypeTag](../interface.JSDocTypeTag/README.md)

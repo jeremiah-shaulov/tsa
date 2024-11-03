@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isPartOfTypeNode(node: [Node](../private.interface.Node/README.md)): `boolean`
+`function` isPartOfTypeNode(node: [Node](../interface.Node/README.md)): `boolean`

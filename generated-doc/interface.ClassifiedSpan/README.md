@@ -9,11 +9,11 @@
 [classificationType](#-classificationtype-classificationtypenames)
 
 
-#### 📄 textSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 textSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 
-#### 📄 classificationType: [ClassificationTypeNames](../private.enum.ClassificationTypeNames/README.md)
+#### 📄 classificationType: [ClassificationTypeNames](../enum.ClassificationTypeNames/README.md)
 
 
 

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` parseIsolatedEntityName(text: `string`, languageVersion: [ScriptTarget](../private.enum.ScriptTarget/README.md)): EntityName
+`function` parseIsolatedEntityName(text: `string`, languageVersion: [ScriptTarget](../enum.ScriptTarget/README.md)): EntityName

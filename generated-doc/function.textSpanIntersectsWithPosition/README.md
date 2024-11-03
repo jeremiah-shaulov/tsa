@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` textSpanIntersectsWithPosition(span: [TextSpan](../private.interface.TextSpan/README.md), position: `number`): `boolean`
+`function` textSpanIntersectsWithPosition(span: [TextSpan](../interface.TextSpan/README.md), position: `number`): `boolean`

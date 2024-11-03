@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` FunctionLike = [SignatureDeclaration](../private.type.SignatureDeclaration/README.md)
+`type` FunctionLike = [SignatureDeclaration](../type.SignatureDeclaration/README.md)

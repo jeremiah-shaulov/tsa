@@ -4,4 +4,4 @@
 
 Gets a value indicating whether a node originated in the parse tree.
 
-`function` isParseTreeNode(node: [Node](../private.interface.Node/README.md)): `boolean`
+`function` isParseTreeNode(node: [Node](../interface.Node/README.md)): `boolean`

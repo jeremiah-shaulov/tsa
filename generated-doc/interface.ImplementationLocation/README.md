@@ -1,4 +1,4 @@
-# `interface` ImplementationLocation `extends` [DocumentSpan](../private.interface.DocumentSpan/README.md)
+# `interface` ImplementationLocation `extends` [DocumentSpan](../interface.DocumentSpan/README.md)
 
 [Documentation Index](../README.md)
 
@@ -9,11 +9,11 @@
 [displayParts](#-displayparts-symboldisplaypart)
 
 
-#### 📄 kind: [ScriptElementKind](../private.enum.ScriptElementKind/README.md)
+#### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
 
 
 
-#### 📄 displayParts: [SymbolDisplayPart](../private.interface.SymbolDisplayPart/README.md)\[]
+#### 📄 displayParts: [SymbolDisplayPart](../interface.SymbolDisplayPart/README.md)\[]
 
 
 

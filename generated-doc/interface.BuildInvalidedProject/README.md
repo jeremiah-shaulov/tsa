@@ -1,4 +1,4 @@
-# `interface` BuildInvalidedProject\<T `extends` [BuilderProgram](../private.interface.BuilderProgram/README.md)> `extends` [InvalidatedProjectBase](../interface.InvalidatedProjectBase/README.md)
+# `interface` BuildInvalidedProject\<T `extends` [BuilderProgram](../interface.BuilderProgram/README.md)> `extends` [InvalidatedProjectBase](../interface.InvalidatedProjectBase/README.md)
 
 [Documentation Index](../README.md)
 
@@ -28,11 +28,11 @@
 
 
 
-#### ⚙ getProgram(): [Program](../private.interface.Program/README.md)
+#### ⚙ getProgram(): [Program](../interface.Program/README.md)
 
 
 
-#### ⚙ getSourceFile(fileName: `string`): [SourceFile](../private.interface.SourceFile/README.md)
+#### ⚙ getSourceFile(fileName: `string`): [SourceFile](../interface.SourceFile/README.md)
 
 
 
@@ -40,11 +40,11 @@
 
 
 
-#### ⚙ getOptionsDiagnostics(cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md)): readonly Diagnostic\[]
+#### ⚙ getOptionsDiagnostics(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): readonly Diagnostic\[]
 
 
 
-#### ⚙ getGlobalDiagnostics(cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md)): readonly Diagnostic\[]
+#### ⚙ getGlobalDiagnostics(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): readonly Diagnostic\[]
 
 
 
@@ -52,23 +52,23 @@
 
 
 
-#### ⚙ getSyntacticDiagnostics(sourceFile?: [SourceFile](../private.interface.SourceFile/README.md), cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md)): readonly Diagnostic\[]
+#### ⚙ getSyntacticDiagnostics(sourceFile?: [SourceFile](../interface.SourceFile/README.md), cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): readonly Diagnostic\[]
 
 
 
-#### ⚙ getAllDependencies(sourceFile: [SourceFile](../private.interface.SourceFile/README.md)): readonly `string`\[]
+#### ⚙ getAllDependencies(sourceFile: [SourceFile](../interface.SourceFile/README.md)): readonly `string`\[]
 
 
 
-#### ⚙ getSemanticDiagnostics(sourceFile?: [SourceFile](../private.interface.SourceFile/README.md), cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md)): readonly Diagnostic\[]
+#### ⚙ getSemanticDiagnostics(sourceFile?: [SourceFile](../interface.SourceFile/README.md), cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): readonly Diagnostic\[]
 
 
 
-#### ⚙ getSemanticDiagnosticsOfNextAffectedFile(cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md), ignoreSourceFile?: (sourceFile: [SourceFile](../private.interface.SourceFile/README.md)) => `boolean`): \{result: readonly Diagnostic\[], affected: SourceFile | Program}
+#### ⚙ getSemanticDiagnosticsOfNextAffectedFile(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), ignoreSourceFile?: (sourceFile: [SourceFile](../interface.SourceFile/README.md)) => `boolean`): \{result: readonly Diagnostic\[], affected: SourceFile | Program}
 
 
 
-#### ⚙ emit(targetSourceFile?: [SourceFile](../private.interface.SourceFile/README.md), writeFile?: [WriteFileCallback](../private.type.WriteFileCallback/README.md), cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md), emitOnlyDtsFiles?: `boolean`, customTransformers?: [CustomTransformers](../private.interface.CustomTransformers/README.md)): [EmitResult](../private.interface.EmitResult/README.md)
+#### ⚙ emit(targetSourceFile?: [SourceFile](../interface.SourceFile/README.md), writeFile?: [WriteFileCallback](../type.WriteFileCallback/README.md), cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), emitOnlyDtsFiles?: `boolean`, customTransformers?: [CustomTransformers](../interface.CustomTransformers/README.md)): [EmitResult](../interface.EmitResult/README.md)
 
 
 

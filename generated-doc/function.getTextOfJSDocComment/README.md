@@ -4,4 +4,4 @@
 
 Gets the text of a jsdoc comment, flattening links to their text.
 
-`function` getTextOfJSDocComment(comment?: `string` | [NodeArray](../private.interface.NodeArray/README.md)\<[JSDocComment](../private.type.JSDocComment/README.md)>): `string`
+`function` getTextOfJSDocComment(comment?: `string` | [NodeArray](../interface.NodeArray/README.md)\<[JSDocComment](../type.JSDocComment/README.md)>): `string`

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` walkUpBindingElementsAndPatterns(binding: [BindingElement](../private.interface.BindingElement/README.md)): ParameterDeclaration | VariableDeclaration
+`function` walkUpBindingElementsAndPatterns(binding: [BindingElement](../interface.BindingElement/README.md)): ParameterDeclaration | VariableDeclaration

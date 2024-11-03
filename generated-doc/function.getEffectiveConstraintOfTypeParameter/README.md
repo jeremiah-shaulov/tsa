@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getEffectiveConstraintOfTypeParameter(node: [TypeParameterDeclaration](../private.interface.TypeParameterDeclaration/README.md)): [TypeNode](../private.interface.TypeNode/README.md)
+`function` getEffectiveConstraintOfTypeParameter(node: [TypeParameterDeclaration](../interface.TypeParameterDeclaration/README.md)): [TypeNode](../interface.TypeNode/README.md)

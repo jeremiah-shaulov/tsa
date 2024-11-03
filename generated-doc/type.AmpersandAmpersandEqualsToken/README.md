@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` AmpersandAmpersandEqualsToken = [PunctuationToken](../private.interface.PunctuationToken/README.md)\<[SyntaxKind.AmpersandAmpersandEqualsToken](../private.enum.SyntaxKind/README.md#ampersandampersandequalstoken--77)>
+`type` AmpersandAmpersandEqualsToken = [PunctuationToken](../interface.PunctuationToken/README.md)\<[SyntaxKind.AmpersandAmpersandEqualsToken](../enum.SyntaxKind/README.md#ampersandampersandequalstoken--77)>

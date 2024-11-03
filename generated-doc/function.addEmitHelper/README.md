@@ -4,4 +4,4 @@
 
 Adds an EmitHelper to a node.
 
-`function` addEmitHelper\<T `extends` [Node](../private.interface.Node/README.md)>(node: T, helper: [EmitHelper](../private.type.EmitHelper/README.md)): T
+`function` addEmitHelper\<T `extends` [Node](../interface.Node/README.md)>(node: T, helper: [EmitHelper](../type.EmitHelper/README.md)): T

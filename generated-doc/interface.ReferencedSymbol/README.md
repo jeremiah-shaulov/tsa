@@ -13,7 +13,7 @@
 
 
 
-#### 📄 references: [ReferencedSymbolEntry](../private.interface.ReferencedSymbolEntry/README.md)\[]
+#### 📄 references: [ReferencedSymbolEntry](../interface.ReferencedSymbolEntry/README.md)\[]
 
 
 

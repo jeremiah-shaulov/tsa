@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` canHaveModifiers(node: [Node](../private.interface.Node/README.md)): node `is` HasModifiers
+`function` canHaveModifiers(node: [Node](../interface.Node/README.md)): node `is` HasModifiers

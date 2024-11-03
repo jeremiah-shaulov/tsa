@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` tokenToString(t: [SyntaxKind](../private.enum.SyntaxKind/README.md)): `string`
+`function` tokenToString(t: [SyntaxKind](../enum.SyntaxKind/README.md)): `string`

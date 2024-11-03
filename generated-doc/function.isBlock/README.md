@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isBlock(node: [Node](../private.interface.Node/README.md)): node `is` [Block](../private.interface.Block/README.md)
+`function` isBlock(node: [Node](../interface.Node/README.md)): node `is` [Block](../interface.Block/README.md)

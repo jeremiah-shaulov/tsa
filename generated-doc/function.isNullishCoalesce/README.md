@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isNullishCoalesce(node: [Node](../private.interface.Node/README.md)): `boolean`
+`function` isNullishCoalesce(node: [Node](../interface.Node/README.md)): `boolean`

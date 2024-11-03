@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJsxTagNameExpression(node: [Node](../private.interface.Node/README.md)): node `is` JsxTagNameExpression
+`function` isJsxTagNameExpression(node: [Node](../interface.Node/README.md)): node `is` JsxTagNameExpression

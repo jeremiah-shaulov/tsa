@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` BindingOrAssignmentElementRestIndicator = [DotDotDotToken](../private.type.DotDotDotToken/README.md) | [SpreadElement](../private.interface.SpreadElement/README.md) | [SpreadAssignment](../private.interface.SpreadAssignment/README.md)
+`type` BindingOrAssignmentElementRestIndicator = [DotDotDotToken](../type.DotDotDotToken/README.md) | [SpreadElement](../interface.SpreadElement/README.md) | [SpreadAssignment](../interface.SpreadAssignment/README.md)

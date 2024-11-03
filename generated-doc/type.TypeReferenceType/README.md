@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` TypeReferenceType = [TypeReferenceNode](../private.interface.TypeReferenceNode/README.md) | [ExpressionWithTypeArguments](../private.interface.ExpressionWithTypeArguments/README.md)
+`type` TypeReferenceType = [TypeReferenceNode](../interface.TypeReferenceNode/README.md) | [ExpressionWithTypeArguments](../interface.ExpressionWithTypeArguments/README.md)

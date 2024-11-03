@@ -1,4 +1,4 @@
-# `interface` TemplateLiteralType `extends` [InstantiableType](../private.interface.InstantiableType/README.md)
+# `interface` TemplateLiteralType `extends` [InstantiableType](../interface.InstantiableType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -13,7 +13,7 @@
 
 
 
-#### 📄 types: readonly [Type](../private.interface.Type/README.md)\[]
+#### 📄 types: readonly [Type](../interface.Type/README.md)\[]
 
 
 

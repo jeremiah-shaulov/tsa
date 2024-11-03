@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` TemplateLiteralToken = [NoSubstitutionTemplateLiteral](../private.interface.NoSubstitutionTemplateLiteral/README.md) | [PseudoLiteralToken](../type.PseudoLiteralToken/README.md)
+`type` TemplateLiteralToken = [NoSubstitutionTemplateLiteral](../interface.NoSubstitutionTemplateLiteral/README.md) | [PseudoLiteralToken](../type.PseudoLiteralToken/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` skipPartiallyEmittedExpressions(node: [Expression](../private.interface.Expression/README.md)): [Expression](../private.interface.Expression/README.md)
+`function` skipPartiallyEmittedExpressions(node: [Expression](../interface.Expression/README.md)): [Expression](../interface.Expression/README.md)

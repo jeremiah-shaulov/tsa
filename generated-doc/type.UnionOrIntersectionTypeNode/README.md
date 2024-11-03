@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` UnionOrIntersectionTypeNode = [UnionTypeNode](../private.interface.UnionTypeNode/README.md) | [IntersectionTypeNode](../private.interface.IntersectionTypeNode/README.md)
+`type` UnionOrIntersectionTypeNode = [UnionTypeNode](../interface.UnionTypeNode/README.md) | [IntersectionTypeNode](../interface.IntersectionTypeNode/README.md)

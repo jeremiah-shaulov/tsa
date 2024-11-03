@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isBindingName(node: [Node](../private.interface.Node/README.md)): node `is` BindingName
+`function` isBindingName(node: [Node](../interface.Node/README.md)): node `is` BindingName

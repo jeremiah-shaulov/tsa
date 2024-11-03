@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` symbolName(symbol: [Symbol](../private.interface.Symbol/README.md)): `string`
+`function` symbolName(symbol: [Symbol](../interface.Symbol/README.md)): `string`

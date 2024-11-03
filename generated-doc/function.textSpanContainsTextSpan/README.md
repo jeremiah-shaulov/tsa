@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` textSpanContainsTextSpan(span: [TextSpan](../private.interface.TextSpan/README.md), other: [TextSpan](../private.interface.TextSpan/README.md)): `boolean`
+`function` textSpanContainsTextSpan(span: [TextSpan](../interface.TextSpan/README.md), other: [TextSpan](../interface.TextSpan/README.md)): `boolean`

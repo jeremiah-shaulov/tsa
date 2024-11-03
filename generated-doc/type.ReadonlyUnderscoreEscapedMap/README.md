@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` ReadonlyUnderscoreEscapedMap\<T> = ReadonlyMap\<[\_\_String](../private.type.__String/README.md), T>
+`type` ReadonlyUnderscoreEscapedMap\<T> = ReadonlyMap\<[\_\_String](../type.__String/README.md), T>

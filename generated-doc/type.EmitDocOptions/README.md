@@ -40,7 +40,7 @@ to [tsa.TsaProgram.emitDoc](../interface.TsaProgram/README.md#-emitdocoptions-em
 
 
 
-#### ⚙ includeSymbol?(symbol: [tsa.Symbol](../private.interface.Symbol/README.md), isExported: `boolean`, checker: [tsa.TypeChecker](../private.interface.TypeChecker/README.md)): `boolean`
+#### ⚙ includeSymbol?(symbol: [tsa.Symbol](../interface.Symbol/README.md), isExported: `boolean`, checker: [tsa.TypeChecker](../interface.TypeChecker/README.md)): `boolean`
 
 
 

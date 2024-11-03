@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isIdentifierPart(ch: `number`, languageVersion: [ScriptTarget](../private.enum.ScriptTarget/README.md) | `undefined`, identifierVariant?: [LanguageVariant](../private.enum.LanguageVariant/README.md)): `boolean`
+`function` isIdentifierPart(ch: `number`, languageVersion: [ScriptTarget](../enum.ScriptTarget/README.md) | `undefined`, identifierVariant?: [LanguageVariant](../enum.LanguageVariant/README.md)): `boolean`

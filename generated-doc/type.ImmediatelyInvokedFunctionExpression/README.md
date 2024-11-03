@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` ImmediatelyInvokedFunctionExpression = [CallExpression](../private.interface.CallExpression/README.md) \& \{`readonly` expression: [FunctionExpression](../private.interface.FunctionExpression/README.md)}
+`type` ImmediatelyInvokedFunctionExpression = [CallExpression](../interface.CallExpression/README.md) \& \{`readonly` expression: [FunctionExpression](../interface.FunctionExpression/README.md)}

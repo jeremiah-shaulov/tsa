@@ -10,4 +10,4 @@ This does *not* return type parameters from a jsdoc reference to a generic type,
 type Id = <T>(x: T) => T
 /**
 
-`function` getEffectiveTypeParameterDeclarations(node: [DeclarationWithTypeParameters](../private.type.DeclarationWithTypeParameters/README.md)): readonly TypeParameterDeclaration\[]
+`function` getEffectiveTypeParameterDeclarations(node: [DeclarationWithTypeParameters](../type.DeclarationWithTypeParameters/README.md)): readonly TypeParameterDeclaration\[]

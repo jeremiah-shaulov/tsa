@@ -4,4 +4,4 @@
 
 Deprecated, please use UpdateExpression
 
-`type` IncrementExpression = [UpdateExpression](../private.interface.UpdateExpression/README.md)
+`type` IncrementExpression = [UpdateExpression](../interface.UpdateExpression/README.md)

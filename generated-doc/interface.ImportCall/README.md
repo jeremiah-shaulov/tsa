@@ -1,4 +1,4 @@
-# `interface` ImportCall `extends` [CallExpression](../private.interface.CallExpression/README.md)
+# `interface` ImportCall `extends` [CallExpression](../interface.CallExpression/README.md)
 
 [Documentation Index](../README.md)
 

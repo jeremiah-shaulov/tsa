@@ -1,4 +1,4 @@
-# `interface` WatchOfConfigFile\<T> `extends` [Watch](../private.interface.Watch/README.md)\<T>
+# `interface` WatchOfConfigFile\<T> `extends` [Watch](../interface.Watch/README.md)\<T>
 
 [Documentation Index](../README.md)
 

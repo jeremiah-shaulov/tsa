@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isObjectLiteralElement(node: [Node](../private.interface.Node/README.md)): node `is` [ObjectLiteralElement](../private.interface.ObjectLiteralElement/README.md)
+`function` isObjectLiteralElement(node: [Node](../interface.Node/README.md)): node `is` [ObjectLiteralElement](../interface.ObjectLiteralElement/README.md)

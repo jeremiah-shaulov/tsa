@@ -1,4 +1,4 @@
-# `interface` SuperCall `extends` [CallExpression](../private.interface.CallExpression/README.md)
+# `interface` SuperCall `extends` [CallExpression](../interface.CallExpression/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [expression](#-readonly-expression-superexpression)
 
 
-#### 📄 `readonly` expression: [SuperExpression](../private.interface.SuperExpression/README.md)
+#### 📄 `readonly` expression: [SuperExpression](../interface.SuperExpression/README.md)
 
 
 

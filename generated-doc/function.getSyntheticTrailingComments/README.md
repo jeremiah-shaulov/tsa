@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getSyntheticTrailingComments(node: [Node](../private.interface.Node/README.md)): SynthesizedComment\[]
+`function` getSyntheticTrailingComments(node: [Node](../interface.Node/README.md)): SynthesizedComment\[]

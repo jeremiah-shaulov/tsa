@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isClassLike(node: [Node](../private.interface.Node/README.md)): node `is` ClassLikeDeclaration
+`function` isClassLike(node: [Node](../interface.Node/README.md)): node `is` ClassLikeDeclaration

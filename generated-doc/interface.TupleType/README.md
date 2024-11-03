@@ -1,4 +1,4 @@
-# `interface` TupleType `extends` [GenericType](../private.interface.GenericType/README.md)
+# `interface` TupleType `extends` [GenericType](../interface.GenericType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -34,7 +34,7 @@
 
 
 
-#### 📄 labeledElementDeclarations?: readonly ([NamedTupleMember](../private.interface.NamedTupleMember/README.md) | [ParameterDeclaration](../private.interface.ParameterDeclaration/README.md) | `undefined`)\[]
+#### 📄 labeledElementDeclarations?: readonly ([NamedTupleMember](../interface.NamedTupleMember/README.md) | [ParameterDeclaration](../interface.ParameterDeclaration/README.md) | `undefined`)\[]
 
 
 

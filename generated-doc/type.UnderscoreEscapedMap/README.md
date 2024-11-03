@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` UnderscoreEscapedMap\<T> = Map\<[\_\_String](../private.type.__String/README.md), T>
+`type` UnderscoreEscapedMap\<T> = Map\<[\_\_String](../type.__String/README.md), T>

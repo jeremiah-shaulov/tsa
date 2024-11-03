@@ -1,4 +1,4 @@
-# `interface` TupleTypeReference `extends` [TypeReference](../private.interface.TypeReference/README.md)
+# `interface` TupleTypeReference `extends` [TypeReference](../interface.TypeReference/README.md)
 
 [Documentation Index](../README.md)
 

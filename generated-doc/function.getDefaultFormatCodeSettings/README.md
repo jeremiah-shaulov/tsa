@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getDefaultFormatCodeSettings(newLineCharacter?: `string`): [FormatCodeSettings](../private.interface.FormatCodeSettings/README.md)
+`function` getDefaultFormatCodeSettings(newLineCharacter?: `string`): [FormatCodeSettings](../interface.FormatCodeSettings/README.md)

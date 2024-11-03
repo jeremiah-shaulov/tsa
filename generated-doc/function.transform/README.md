@@ -4,4 +4,4 @@
 
 Transform one or more nodes using the supplied transformers.
 
-`function` transform\<T `extends` [Node](../private.interface.Node/README.md)>(source: T | T\[], transformers: [TransformerFactory](../private.type.TransformerFactory/README.md)\<T>\[], compilerOptions?: [CompilerOptions](../private.interface.CompilerOptions/README.md)): [TransformationResult](../private.interface.TransformationResult/README.md)\<T>
+`function` transform\<T `extends` [Node](../interface.Node/README.md)>(source: T | T\[], transformers: [TransformerFactory](../type.TransformerFactory/README.md)\<T>\[], compilerOptions?: [CompilerOptions](../interface.CompilerOptions/README.md)): [TransformationResult](../interface.TransformationResult/README.md)\<T>

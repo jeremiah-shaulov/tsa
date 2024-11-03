@@ -21,13 +21,13 @@
 
 
 
-#### ⚙ done(cancellationToken?: [CancellationToken](../private.interface.CancellationToken/README.md), writeFile?: [WriteFileCallback](../private.type.WriteFileCallback/README.md), customTransformers?: [CustomTransformers](../private.interface.CustomTransformers/README.md)): [ExitStatus](../private.enum.ExitStatus/README.md)
+#### ⚙ done(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), writeFile?: [WriteFileCallback](../type.WriteFileCallback/README.md), customTransformers?: [CustomTransformers](../interface.CustomTransformers/README.md)): [ExitStatus](../enum.ExitStatus/README.md)
 
 > To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
 
 
 
-#### ⚙ getCompilerOptions(): [CompilerOptions](../private.interface.CompilerOptions/README.md)
+#### ⚙ getCompilerOptions(): [CompilerOptions](../interface.CompilerOptions/README.md)
 
 
 

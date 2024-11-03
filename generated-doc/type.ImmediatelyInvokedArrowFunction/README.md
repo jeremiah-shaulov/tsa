@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` ImmediatelyInvokedArrowFunction = [CallExpression](../private.interface.CallExpression/README.md) \& \{`readonly` expression: [ParenthesizedExpression](../private.interface.ParenthesizedExpression/README.md) \& \{`readonly` expression: [ArrowFunction](../private.interface.ArrowFunction/README.md)}}
+`type` ImmediatelyInvokedArrowFunction = [CallExpression](../interface.CallExpression/README.md) \& \{`readonly` expression: [ParenthesizedExpression](../interface.ParenthesizedExpression/README.md) \& \{`readonly` expression: [ArrowFunction](../interface.ArrowFunction/README.md)}}

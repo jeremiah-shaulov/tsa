@@ -33,4 +33,4 @@ import type {} from "mod" with { "resolution-mode": "import" };
 // Result: ESNext - conditional imports/exports always supported with "resolution-mode" attribute
 ```
 
-`function` getModeForUsageLocation(file: [SourceFile](../private.interface.SourceFile/README.md), usage: [StringLiteralLike](../private.type.StringLiteralLike/README.md), compilerOptions: [CompilerOptions](../private.interface.CompilerOptions/README.md)): ResolutionMode
+`function` getModeForUsageLocation(file: [SourceFile](../interface.SourceFile/README.md), usage: [StringLiteralLike](../type.StringLiteralLike/README.md), compilerOptions: [CompilerOptions](../interface.CompilerOptions/README.md)): ResolutionMode

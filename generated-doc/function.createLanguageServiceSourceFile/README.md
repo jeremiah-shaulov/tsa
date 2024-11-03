@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` createLanguageServiceSourceFile(fileName: `string`, scriptSnapshot: [IScriptSnapshot](../private.interface.IScriptSnapshot/README.md), scriptTargetOrOptions: [ScriptTarget](../private.enum.ScriptTarget/README.md) | [CreateSourceFileOptions](../private.interface.CreateSourceFileOptions/README.md), version: `string`, setNodeParents: `boolean`, scriptKind?: [ScriptKind](../private.enum.ScriptKind/README.md)): [SourceFile](../private.interface.SourceFile/README.md)
+`function` createLanguageServiceSourceFile(fileName: `string`, scriptSnapshot: [IScriptSnapshot](../interface.IScriptSnapshot/README.md), scriptTargetOrOptions: [ScriptTarget](../enum.ScriptTarget/README.md) | [CreateSourceFileOptions](../interface.CreateSourceFileOptions/README.md), version: `string`, setNodeParents: `boolean`, scriptKind?: [ScriptKind](../enum.ScriptKind/README.md)): [SourceFile](../interface.SourceFile/README.md)

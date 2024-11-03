@@ -1,4 +1,4 @@
-# `interface` StringMappingType `extends` [InstantiableType](../private.interface.InstantiableType/README.md)
+# `interface` StringMappingType `extends` [InstantiableType](../interface.InstantiableType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -9,11 +9,11 @@
 [type](#-type-type)
 
 
-#### 📄 symbol: [Symbol](../private.interface.Symbol/README.md)
+#### 📄 symbol: [Symbol](../interface.Symbol/README.md)
 
 
 
-#### 📄 type: [Type](../private.interface.Type/README.md)
+#### 📄 type: [Type](../interface.Type/README.md)
 
 
 

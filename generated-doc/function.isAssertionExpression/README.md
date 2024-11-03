@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isAssertionExpression(node: [Node](../private.interface.Node/README.md)): node `is` AssertionExpression
+`function` isAssertionExpression(node: [Node](../interface.Node/README.md)): node `is` AssertionExpression

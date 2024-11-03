@@ -4,4 +4,4 @@
 
 Read tsconfig.json file
 
-`function` readJsonConfigFile(fileName: `string`, readFile: (path: `string`) => `string` | `undefined`): [TsConfigSourceFile](../private.interface.TsConfigSourceFile/README.md)
+`function` readJsonConfigFile(fileName: `string`, readFile: (path: `string`) => `string` | `undefined`): [TsConfigSourceFile](../interface.TsConfigSourceFile/README.md)

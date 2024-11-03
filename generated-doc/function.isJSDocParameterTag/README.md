@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocParameterTag(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocParameterTag](../private.interface.JSDocParameterTag/README.md)
+`function` isJSDocParameterTag(node: [Node](../interface.Node/README.md)): node `is` [JSDocParameterTag](../interface.JSDocParameterTag/README.md)

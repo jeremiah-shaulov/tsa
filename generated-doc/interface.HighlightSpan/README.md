@@ -20,11 +20,11 @@
 
 
 
-#### 📄 textSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 textSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 
-#### 📄 contextSpan?: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 contextSpan?: [TextSpan](../interface.TextSpan/README.md)
 
 
 

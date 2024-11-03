@@ -10,7 +10,7 @@
 [position](#-position-number)
 
 
-#### 📄 descriptor: [TodoCommentDescriptor](../private.interface.TodoCommentDescriptor/README.md)
+#### 📄 descriptor: [TodoCommentDescriptor](../interface.TodoCommentDescriptor/README.md)
 
 
 

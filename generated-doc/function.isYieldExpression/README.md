@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isYieldExpression(node: [Node](../private.interface.Node/README.md)): node `is` [YieldExpression](../private.interface.YieldExpression/README.md)
+`function` isYieldExpression(node: [Node](../interface.Node/README.md)): node `is` [YieldExpression](../interface.YieldExpression/README.md)

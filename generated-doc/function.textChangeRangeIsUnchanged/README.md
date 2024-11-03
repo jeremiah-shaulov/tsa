@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` textChangeRangeIsUnchanged(range: [TextChangeRange](../private.interface.TextChangeRange/README.md)): `boolean`
+`function` textChangeRangeIsUnchanged(range: [TextChangeRange](../interface.TextChangeRange/README.md)): `boolean`

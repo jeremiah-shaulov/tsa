@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isDeclarationStatement(node: [Node](../private.interface.Node/README.md)): node `is` [DeclarationStatement](../private.interface.DeclarationStatement/README.md)
+`function` isDeclarationStatement(node: [Node](../interface.Node/README.md)): node `is` [DeclarationStatement](../interface.DeclarationStatement/README.md)

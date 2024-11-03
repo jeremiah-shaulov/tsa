@@ -4,4 +4,4 @@
 
 Gets the EmitHelpers of a node.
 
-`function` getEmitHelpers(node: [Node](../private.interface.Node/README.md)): EmitHelper\[]
+`function` getEmitHelpers(node: [Node](../interface.Node/README.md)): EmitHelper\[]

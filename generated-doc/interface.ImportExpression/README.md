@@ -1,4 +1,4 @@
-# `interface` ImportExpression `extends` [PrimaryExpression](../private.interface.PrimaryExpression/README.md)
+# `interface` ImportExpression `extends` [PrimaryExpression](../interface.PrimaryExpression/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [kind](#-readonly-kind-syntaxkindimportkeyword)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ImportKeyword](../private.enum.SyntaxKind/README.md#importkeyword--102)
+#### 📄 `readonly` kind: [SyntaxKind.ImportKeyword](../enum.SyntaxKind/README.md#importkeyword--102)
 
 
 

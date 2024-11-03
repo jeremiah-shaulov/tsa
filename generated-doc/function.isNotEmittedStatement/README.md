@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isNotEmittedStatement(node: [Node](../private.interface.Node/README.md)): node `is` [NotEmittedStatement](../private.interface.NotEmittedStatement/README.md)
+`function` isNotEmittedStatement(node: [Node](../interface.Node/README.md)): node `is` [NotEmittedStatement](../interface.NotEmittedStatement/README.md)

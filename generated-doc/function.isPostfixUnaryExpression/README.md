@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isPostfixUnaryExpression(node: [Node](../private.interface.Node/README.md)): node `is` [PostfixUnaryExpression](../private.interface.PostfixUnaryExpression/README.md)
+`function` isPostfixUnaryExpression(node: [Node](../interface.Node/README.md)): node `is` [PostfixUnaryExpression](../interface.PostfixUnaryExpression/README.md)

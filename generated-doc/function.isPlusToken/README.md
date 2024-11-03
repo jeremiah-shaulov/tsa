@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isPlusToken(node: [Node](../private.interface.Node/README.md)): node `is` [PlusToken](../private.interface.PunctuationToken/README.md)
+`function` isPlusToken(node: [Node](../interface.Node/README.md)): node `is` [PlusToken](../interface.PunctuationToken/README.md)\<[SyntaxKind.PlusToken](../enum.SyntaxKind/README.md#plustoken--40)>

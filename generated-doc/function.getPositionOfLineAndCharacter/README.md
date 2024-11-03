@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getPositionOfLineAndCharacter(sourceFile: [SourceFileLike](../private.interface.SourceFileLike/README.md), line: `number`, character: `number`): `number`
+`function` getPositionOfLineAndCharacter(sourceFile: [SourceFileLike](../interface.SourceFileLike/README.md), line: `number`, character: `number`): `number`

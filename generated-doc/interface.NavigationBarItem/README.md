@@ -24,7 +24,7 @@ Child items always have an empty array for their `childItems`.
 
 
 
-#### 📄 kind: [ScriptElementKind](../private.enum.ScriptElementKind/README.md)
+#### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
 
 
 
@@ -32,7 +32,7 @@ Child items always have an empty array for their `childItems`.
 
 
 
-#### 📄 spans: [TextSpan](../private.interface.TextSpan/README.md)\[]
+#### 📄 spans: [TextSpan](../interface.TextSpan/README.md)\[]
 
 
 

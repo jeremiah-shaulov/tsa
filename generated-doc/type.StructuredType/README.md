@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` StructuredType = [ObjectType](../private.interface.ObjectType/README.md) | [UnionType](../private.interface.UnionType/README.md) | [IntersectionType](../private.interface.IntersectionType/README.md)
+`type` StructuredType = [ObjectType](../interface.ObjectType/README.md) | [UnionType](../interface.UnionType/README.md) | [IntersectionType](../interface.IntersectionType/README.md)

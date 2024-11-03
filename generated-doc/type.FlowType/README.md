@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` FlowType = [Type](../private.interface.Type/README.md) | [IncompleteType](../private.interface.IncompleteType/README.md)
+`type` FlowType = [Type](../interface.Type/README.md) | [IncompleteType](../interface.IncompleteType/README.md)

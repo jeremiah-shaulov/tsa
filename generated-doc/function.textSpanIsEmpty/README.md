@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` textSpanIsEmpty(span: [TextSpan](../private.interface.TextSpan/README.md)): `boolean`
+`function` textSpanIsEmpty(span: [TextSpan](../interface.TextSpan/README.md)): `boolean`

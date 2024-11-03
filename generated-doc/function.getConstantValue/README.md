@@ -4,4 +4,4 @@
 
 Gets the constant value to emit for an expression representing an enum.
 
-`function` getConstantValue(node: [AccessExpression](../private.type.AccessExpression/README.md)): `string` | `number`
+`function` getConstantValue(node: [AccessExpression](../type.AccessExpression/README.md)): `string` | `number`

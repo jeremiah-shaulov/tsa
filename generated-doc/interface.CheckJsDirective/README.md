@@ -1,4 +1,4 @@
-# `interface` CheckJsDirective `extends` [TextRange](../private.interface.TextRange/README.md)
+# `interface` CheckJsDirective `extends` [TextRange](../interface.TextRange/README.md)
 
 [Documentation Index](../README.md)
 

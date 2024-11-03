@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getJSDocSatisfiesTag(node: [Node](../private.interface.Node/README.md)): [JSDocSatisfiesTag](../private.interface.JSDocSatisfiesTag/README.md)
+`function` getJSDocSatisfiesTag(node: [Node](../interface.Node/README.md)): [JSDocSatisfiesTag](../interface.JSDocSatisfiesTag/README.md)

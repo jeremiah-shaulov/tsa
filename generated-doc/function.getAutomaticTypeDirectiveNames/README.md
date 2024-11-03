@@ -9,4 +9,4 @@ This list could either come from the config file,
 More type directives might appear in the program later as a result of loading actual source files;
   this list is only the set of defaults that are implicitly included.
 
-`function` getAutomaticTypeDirectiveNames(options: [CompilerOptions](../private.interface.CompilerOptions/README.md), host: [ModuleResolutionHost](../private.interface.ModuleResolutionHost/README.md)): `string`\[]
+`function` getAutomaticTypeDirectiveNames(options: [CompilerOptions](../interface.CompilerOptions/README.md), host: [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)): `string`\[]

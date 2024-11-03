@@ -4,4 +4,4 @@
 
 Gets the JSDoc return tag for the node if present
 
-`function` getJSDocReturnTag(node: [Node](../private.interface.Node/README.md)): [JSDocReturnTag](../private.interface.JSDocReturnTag/README.md)
+`function` getJSDocReturnTag(node: [Node](../interface.Node/README.md)): [JSDocReturnTag](../interface.JSDocReturnTag/README.md)

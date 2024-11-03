@@ -96,7 +96,7 @@ and reexports it's namespace as [tsa](generated-doc/namespace.tsa/README.md) sym
 plus this library extends it by defining [createTsaProgram](generated-doc/function.createTsaProgram/README.md) function within this namespace.
 
 When using [Typescript Compiler](https://www.npmjs.com/package/typescript),
-the first step is to create [ts.Program](generated-doc/private.interface.Program/README.md) by calling [ts.createProgram()](generated-doc/function.createProgram/README.md) function.
+the first step is to create [ts.Program](generated-doc/interface.Program/README.md) by calling [ts.createProgram()](generated-doc/function.createProgram/README.md) function.
 Similarly when using this library, the first step is to create [tsa.TsaProgram](generated-doc/interface.TsaProgram/README.md) object by calling [tsa.createTsaProgram()](generated-doc/function.createTsaProgram/README.md).
 
 ```ts
@@ -130,7 +130,7 @@ printDiagnostics(tsa.getPreEmitDiagnostics(program));
 // Now use the `program` object...
 ```
 
-[tsa.TsaProgram](generated-doc/interface.TsaProgram/README.md) extends [ts.Program](generated-doc/private.interface.Program/README.md) by adding 2 methods:
+[tsa.TsaProgram](generated-doc/interface.TsaProgram/README.md) extends [ts.Program](generated-doc/interface.Program/README.md) by adding 2 methods:
 - [tsa.TsaProgram.emitDoc()](generated-doc/interface.TsaProgram/README.md#-emitdocoptions-emitdocoptions-docnodes)
 - [tsa.TsaProgram.emitTsaBundle()](generated-doc/interface.TsaProgram/README.md#-emittsabundle-tsabundle)
 

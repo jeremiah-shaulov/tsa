@@ -1,4 +1,4 @@
-# `interface` ReferencedSymbolDefinitionInfo `extends` [DefinitionInfo](../private.interface.DefinitionInfo/README.md)
+# `interface` ReferencedSymbolDefinitionInfo `extends` [DefinitionInfo](../interface.DefinitionInfo/README.md)
 
 [Documentation Index](../README.md)
 
@@ -7,7 +7,7 @@
 - property [displayParts](#-displayparts-symboldisplaypart)
 
 
-#### 📄 displayParts: [SymbolDisplayPart](../private.interface.SymbolDisplayPart/README.md)\[]
+#### 📄 displayParts: [SymbolDisplayPart](../interface.SymbolDisplayPart/README.md)\[]
 
 
 

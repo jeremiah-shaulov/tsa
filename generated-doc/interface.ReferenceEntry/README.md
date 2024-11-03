@@ -1,4 +1,4 @@
-# `interface` ReferenceEntry `extends` [DocumentSpan](../private.interface.DocumentSpan/README.md)
+# `interface` ReferenceEntry `extends` [DocumentSpan](../interface.DocumentSpan/README.md)
 
 [Documentation Index](../README.md)
 

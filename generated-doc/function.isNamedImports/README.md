@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isNamedImports(node: [Node](../private.interface.Node/README.md)): node `is` [NamedImports](../private.interface.NamedImports/README.md)
+`function` isNamedImports(node: [Node](../interface.Node/README.md)): node `is` [NamedImports](../interface.NamedImports/README.md)

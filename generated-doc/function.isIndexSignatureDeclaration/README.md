@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isIndexSignatureDeclaration(node: [Node](../private.interface.Node/README.md)): node `is` [IndexSignatureDeclaration](../private.interface.IndexSignatureDeclaration/README.md)
+`function` isIndexSignatureDeclaration(node: [Node](../interface.Node/README.md)): node `is` [IndexSignatureDeclaration](../interface.IndexSignatureDeclaration/README.md)

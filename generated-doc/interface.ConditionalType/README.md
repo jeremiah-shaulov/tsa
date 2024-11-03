@@ -1,4 +1,4 @@
-# `interface` ConditionalType `extends` [InstantiableType](../private.interface.InstantiableType/README.md)
+# `interface` ConditionalType `extends` [InstantiableType](../interface.InstantiableType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -16,19 +16,19 @@
 
 
 
-#### 📄 checkType: [Type](../private.interface.Type/README.md)
+#### 📄 checkType: [Type](../interface.Type/README.md)
 
 
 
-#### 📄 extendsType: [Type](../private.interface.Type/README.md)
+#### 📄 extendsType: [Type](../interface.Type/README.md)
 
 
 
-#### 📄 resolvedTrueType?: [Type](../private.interface.Type/README.md)
+#### 📄 resolvedTrueType?: [Type](../interface.Type/README.md)
 
 
 
-#### 📄 resolvedFalseType?: [Type](../private.interface.Type/README.md)
+#### 📄 resolvedFalseType?: [Type](../interface.Type/README.md)
 
 
 

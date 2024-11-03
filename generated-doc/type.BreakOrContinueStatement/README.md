@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` BreakOrContinueStatement = [BreakStatement](../private.interface.BreakStatement/README.md) | [ContinueStatement](../private.interface.ContinueStatement/README.md)
+`type` BreakOrContinueStatement = [BreakStatement](../interface.BreakStatement/README.md) | [ContinueStatement](../interface.ContinueStatement/README.md)

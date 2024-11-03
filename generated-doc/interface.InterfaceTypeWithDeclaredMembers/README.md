@@ -1,4 +1,4 @@
-# `interface` InterfaceTypeWithDeclaredMembers `extends` [InterfaceType](../private.interface.InterfaceType/README.md)
+# `interface` InterfaceTypeWithDeclaredMembers `extends` [InterfaceType](../interface.InterfaceType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -11,19 +11,19 @@
 [declaredIndexInfos](#-declaredindexinfos-indexinfo)
 
 
-#### 📄 declaredProperties: [Symbol](../private.interface.Symbol/README.md)\[]
+#### 📄 declaredProperties: [Symbol](../interface.Symbol/README.md)\[]
 
 
 
-#### 📄 declaredCallSignatures: [Signature](../private.interface.Signature/README.md)\[]
+#### 📄 declaredCallSignatures: [Signature](../interface.Signature/README.md)\[]
 
 
 
-#### 📄 declaredConstructSignatures: [Signature](../private.interface.Signature/README.md)\[]
+#### 📄 declaredConstructSignatures: [Signature](../interface.Signature/README.md)\[]
 
 
 
-#### 📄 declaredIndexInfos: [IndexInfo](../private.interface.IndexInfo/README.md)\[]
+#### 📄 declaredIndexInfos: [IndexInfo](../interface.IndexInfo/README.md)\[]
 
 
 

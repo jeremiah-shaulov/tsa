@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` AccessibilityModifier = [PublicKeyword](../private.type.PublicKeyword/README.md) | [PrivateKeyword](../private.type.PrivateKeyword/README.md) | [ProtectedKeyword](../private.type.ProtectedKeyword/README.md)
+`type` AccessibilityModifier = [PublicKeyword](../type.PublicKeyword/README.md) | [PrivateKeyword](../type.PrivateKeyword/README.md) | [ProtectedKeyword](../type.ProtectedKeyword/README.md)

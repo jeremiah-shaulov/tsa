@@ -25,7 +25,7 @@ A set of one or more available refactoring actions, grouped under a parent refac
 
 
 
-#### 📄 actions: [RefactorActionInfo](../private.interface.RefactorActionInfo/README.md)\[]
+#### 📄 actions: [RefactorActionInfo](../interface.RefactorActionInfo/README.md)\[]
 
 
 

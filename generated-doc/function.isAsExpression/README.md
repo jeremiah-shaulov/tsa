@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isAsExpression(node: [Node](../private.interface.Node/README.md)): node `is` [AsExpression](../private.interface.AsExpression/README.md)
+`function` isAsExpression(node: [Node](../interface.Node/README.md)): node `is` [AsExpression](../interface.AsExpression/README.md)

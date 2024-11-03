@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocSignature(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocSignature](../private.interface.JSDocSignature/README.md)
+`function` isJSDocSignature(node: [Node](../interface.Node/README.md)): node `is` [JSDocSignature](../interface.JSDocSignature/README.md)

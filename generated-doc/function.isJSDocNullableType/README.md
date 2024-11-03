@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocNullableType(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocNullableType](../private.interface.JSDocNullableType/README.md)
+`function` isJSDocNullableType(node: [Node](../interface.Node/README.md)): node `is` [JSDocNullableType](../interface.JSDocNullableType/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isExportAssignment(node: [Node](../private.interface.Node/README.md)): node `is` [ExportAssignment](../private.interface.ExportAssignment/README.md)
+`function` isExportAssignment(node: [Node](../interface.Node/README.md)): node `is` [ExportAssignment](../interface.ExportAssignment/README.md)

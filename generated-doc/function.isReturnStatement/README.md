@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isReturnStatement(node: [Node](../private.interface.Node/README.md)): node `is` [ReturnStatement](../private.interface.ReturnStatement/README.md)
+`function` isReturnStatement(node: [Node](../interface.Node/README.md)): node `is` [ReturnStatement](../interface.ReturnStatement/README.md)

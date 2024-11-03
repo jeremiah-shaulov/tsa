@@ -4,4 +4,4 @@
 
 True if has initializer node attached to it.
 
-`function` hasOnlyExpressionInitializer(node: [Node](../private.interface.Node/README.md)): node `is` HasExpressionInitializer
+`function` hasOnlyExpressionInitializer(node: [Node](../interface.Node/README.md)): node `is` HasExpressionInitializer

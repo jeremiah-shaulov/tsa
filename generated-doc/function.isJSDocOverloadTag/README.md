@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isJSDocOverloadTag(node: [Node](../private.interface.Node/README.md)): node `is` [JSDocOverloadTag](../private.interface.JSDocOverloadTag/README.md)
+`function` isJSDocOverloadTag(node: [Node](../interface.Node/README.md)): node `is` [JSDocOverloadTag](../interface.JSDocOverloadTag/README.md)

@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` setTextRange\<T `extends` [TextRange](../private.interface.TextRange/README.md)>(range: T, location: [TextRange](../private.interface.TextRange/README.md) | `undefined`): T
+`function` setTextRange\<T `extends` [TextRange](../interface.TextRange/README.md)>(range: T, location: [TextRange](../interface.TextRange/README.md) | `undefined`): T

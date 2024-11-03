@@ -1,4 +1,4 @@
-# `interface` SubstitutionType `extends` [InstantiableType](../private.interface.InstantiableType/README.md)
+# `interface` SubstitutionType `extends` [InstantiableType](../interface.InstantiableType/README.md)
 
 [Documentation Index](../README.md)
 
@@ -10,15 +10,15 @@
 [constraint](#-constraint-type)
 
 
-#### 📄 objectFlags: [ObjectFlags](../private.enum.ObjectFlags/README.md)
+#### 📄 objectFlags: [ObjectFlags](../enum.ObjectFlags/README.md)
 
 
 
-#### 📄 baseType: [Type](../private.interface.Type/README.md)
+#### 📄 baseType: [Type](../interface.Type/README.md)
 
 
 
-#### 📄 constraint: [Type](../private.interface.Type/README.md)
+#### 📄 constraint: [Type](../interface.Type/README.md)
 
 
 

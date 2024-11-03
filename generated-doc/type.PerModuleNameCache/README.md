@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`type` PerModuleNameCache = [PerNonRelativeNameCache](../private.interface.PerNonRelativeNameCache/README.md)\<[ResolvedModuleWithFailedLookupLocations](../private.interface.ResolvedModuleWithFailedLookupLocations/README.md)>
+`type` PerModuleNameCache = [PerNonRelativeNameCache](../interface.PerNonRelativeNameCache/README.md)\<[ResolvedModuleWithFailedLookupLocations](../interface.ResolvedModuleWithFailedLookupLocations/README.md)>

@@ -20,7 +20,7 @@
 
 
 
-#### 📄 kind: [ScriptElementKind](../private.enum.ScriptElementKind/README.md)
+#### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
 
 
 
@@ -40,7 +40,7 @@
 
 
 
-#### 📄 textSpan: [TextSpan](../private.interface.TextSpan/README.md)
+#### 📄 textSpan: [TextSpan](../interface.TextSpan/README.md)
 
 
 
@@ -48,7 +48,7 @@
 
 
 
-#### 📄 containerKind: [ScriptElementKind](../private.enum.ScriptElementKind/README.md)
+#### 📄 containerKind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
 
 
 

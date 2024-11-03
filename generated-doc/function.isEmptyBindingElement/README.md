@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isEmptyBindingElement(node: [BindingElement](../private.interface.BindingElement/README.md) | [ArrayBindingElement](../private.type.ArrayBindingElement/README.md)): `boolean`
+`function` isEmptyBindingElement(node: [BindingElement](../interface.BindingElement/README.md) | [ArrayBindingElement](../type.ArrayBindingElement/README.md)): `boolean`

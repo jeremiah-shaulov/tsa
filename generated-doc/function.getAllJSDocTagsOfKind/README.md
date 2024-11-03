@@ -4,4 +4,4 @@
 
 Gets all JSDoc tags of a specified kind
 
-`function` getAllJSDocTagsOfKind(node: [Node](../private.interface.Node/README.md), kind: [SyntaxKind](../private.enum.SyntaxKind/README.md)): readonly JSDocTag\[]
+`function` getAllJSDocTagsOfKind(node: [Node](../interface.Node/README.md), kind: [SyntaxKind](../enum.SyntaxKind/README.md)): readonly JSDocTag\[]

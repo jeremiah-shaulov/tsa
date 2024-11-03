@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` isImportOrExportSpecifier(node: [Node](../private.interface.Node/README.md)): node `is` ExportSpecifier | ImportSpecifier
+`function` isImportOrExportSpecifier(node: [Node](../interface.Node/README.md)): node `is` ExportSpecifier | ImportSpecifier

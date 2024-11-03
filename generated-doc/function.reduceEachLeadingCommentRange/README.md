@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` reduceEachLeadingCommentRange\<T, U>(text: `string`, pos: `number`, cb: (pos: `number`, end: `number`, kind: [CommentKind](../private.type.CommentKind/README.md), hasTrailingNewLine: `boolean`, state: T) => U, state: T, initial: U): U
+`function` reduceEachLeadingCommentRange\<T, U>(text: `string`, pos: `number`, cb: (pos: `number`, end: `number`, kind: [CommentKind](../type.CommentKind/README.md), hasTrailingNewLine: `boolean`, state: T) => U, state: T, initial: U): U

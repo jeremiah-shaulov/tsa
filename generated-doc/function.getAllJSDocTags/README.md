@@ -4,4 +4,4 @@
 
 Gets all JSDoc tags that match a specified predicate
 
-`function` getAllJSDocTags\<T `extends` [JSDocTag](../private.interface.JSDocTag/README.md)>(node: [Node](../private.interface.Node/README.md), predicate: (tag: [JSDocTag](../private.interface.JSDocTag/README.md)) => tag `is` T): readonly T\[]
+`function` getAllJSDocTags\<T `extends` [JSDocTag](../interface.JSDocTag/README.md)>(node: [Node](../interface.Node/README.md), predicate: (tag: [JSDocTag](../interface.JSDocTag/README.md)) => tag `is` T): readonly T\[]

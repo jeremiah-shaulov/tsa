@@ -2,4 +2,4 @@
 
 [Documentation Index](../README.md)
 
-`function` getConfigFileParsingDiagnostics(configFileParseResult: [ParsedCommandLine](../private.interface.ParsedCommandLine/README.md)): readonly Diagnostic\[]
+`function` getConfigFileParsingDiagnostics(configFileParseResult: [ParsedCommandLine](../interface.ParsedCommandLine/README.md)): readonly Diagnostic\[]
