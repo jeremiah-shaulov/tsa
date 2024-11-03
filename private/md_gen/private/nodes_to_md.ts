@@ -10,7 +10,7 @@ const RE_NO_NL = /[\r\n]/;
 const EXAMPLE = 'example.ts';
 
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
-const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*[\r\n]\s*\/\/([^\r\n]+)/y;
+const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 
 export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, moduleName='', importUrls=new Array<string>, baseDirUrl='')
 {	return new NodesToMd(nodes, outFileBasename, docDirBasename, baseDirUrl).genFiles(moduleName, importUrls);
@@ -588,37 +588,43 @@ class NodesToMd
 				{	RE_MD_CODEBLOCK_EXAMPLE.lastIndex = codeFrom;
 					const m2 = RE_MD_CODEBLOCK_EXAMPLE.exec(doc);
 					if (m2)
-					{	const line = m2[1];
-						const pos = line.indexOf(EXAMPLE);
-						if (pos != -1)
-						{	if (dir == undefined)
-							{	dir = this.#collection.getDir(node);
+					{	const nextComments = m2[1];
+						const pos = nextComments.indexOf(EXAMPLE);
+						if (pos!=-1 && nextComments.indexOf('\n', pos+EXAMPLE.length)==-1)
+						{	let lastCommentPos = nextComments.lastIndexOf('\n');
+							if (lastCommentPos != -1)
+							{	if (lastCommentPos>0 && nextComments.charAt(lastCommentPos-1)=='\r')
+								{	lastCommentPos--;
+								}
+								if (dir == undefined)
+								{	dir = this.#collection.getDir(node);
+								}
+								const start = doc.slice(codeFrom, doc.indexOf('//', codeFrom)+2);
+								const exampleId = 'example-' + ((crc32(dir+'#'+headerId) + submemberNo) % (36**4)).toString(36);
+								newDoc += doc.slice(from, codeFrom);
+								newDoc += start;
+								newDoc += ' To download and run this example:';
+								newDoc += nextComments.slice(0, lastCommentPos);
+								newDoc += start;
+								newDoc += " curl '";
+								newDoc += this.#baseDirUrlWithTrailingSlash;
+								if (!dir)
+								{	newDoc += this.#outFileBasename;
+								}
+								else
+								{	newDoc += this.#docDirBasename;
+									newDoc += '/';
+									newDoc += dir;
+									newDoc += '/README.md';
+								}
+								newDoc += "' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<";
+								newDoc += exampleId;
+								newDoc += ">~)' > /tmp/";
+								newDoc += exampleId;
+								newDoc += ".ts";
+								newDoc += nextComments.slice(lastCommentPos).replaceAll(EXAMPLE, `/tmp/${exampleId}.ts`);
+								from = RE_MD_CODEBLOCK_EXAMPLE.lastIndex;
 							}
-							const start = doc.slice(codeFrom, doc.indexOf('//', codeFrom)+2);
-							const exampleId = 'example-' + ((crc32(dir+'#'+headerId) + submemberNo) % (36**4)).toString(36);
-							newDoc += doc.slice(from, codeFrom);
-							newDoc += start;
-							newDoc += ' To download and run this example:';
-							newDoc += start;
-							newDoc += " curl '";
-							newDoc += this.#baseDirUrlWithTrailingSlash;
-							if (!dir)
-							{	newDoc += this.#outFileBasename;
-							}
-							else
-							{	newDoc += this.#docDirBasename;
-								newDoc += '/';
-								newDoc += dir;
-								newDoc += '/README.md';
-							}
-							newDoc += "' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<";
-							newDoc += exampleId;
-							newDoc += ">~)' > /tmp/";
-							newDoc += exampleId;
-							newDoc += ".ts";
-							newDoc += start;
-							newDoc += line.replaceAll(EXAMPLE, `/tmp/${exampleId}.ts`);
-							from = RE_MD_CODEBLOCK_EXAMPLE.lastIndex;
 						}
 					}
 				}
