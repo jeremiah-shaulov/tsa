@@ -11,9 +11,13 @@
 
 #### 📄 text: `string`
 
+> Text of an item describing the symbol.
+
 
 
 #### 📄 kind: `string`
+
+> The symbol's kind (such as 'className' or 'parameterName' or plain 'text').
 
 
 

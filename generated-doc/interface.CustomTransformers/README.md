@@ -12,13 +12,19 @@
 
 #### 📄 before?: ([TransformerFactory](../type.TransformerFactory/README.md)\<[SourceFile](../interface.SourceFile/README.md)> | [CustomTransformerFactory](../type.CustomTransformerFactory/README.md))\[]
 
+> Custom transformers to evaluate before built-in .js transformations.
+
 
 
 #### 📄 after?: ([TransformerFactory](../type.TransformerFactory/README.md)\<[SourceFile](../interface.SourceFile/README.md)> | [CustomTransformerFactory](../type.CustomTransformerFactory/README.md))\[]
 
+> Custom transformers to evaluate after built-in .js transformations.
+
 
 
 #### 📄 afterDeclarations?: ([TransformerFactory](../type.TransformerFactory/README.md)\<[Bundle](../interface.Bundle/README.md) | [SourceFile](../interface.SourceFile/README.md)> | [CustomTransformerFactory](../type.CustomTransformerFactory/README.md))\[]
+
+> Custom transformers to evaluate after built-in .d.ts transformations.
 
 
 

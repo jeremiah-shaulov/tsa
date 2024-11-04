@@ -7,5 +7,6 @@ export {resolveImportMap, resolveModuleSpecifier, type ImportMap} from 'https://
 export {Command} from 'https://deno.land/x/cmd@v1.2.0/mod.ts';
 export {indentAndWrap} from 'https://deno.land/x/indent_and_wrap@v0.0.17/mod.ts';
 export {crc32} from 'https://deno.land/x/crc32hash@v1.0.0/mod.ts';
+export {jstok, TokenType as JstokTokenType} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
 
 // Also the 'npm:typescript' dependency is linked from tsa_ns.ts

@@ -32,6 +32,8 @@
 
 #### 📄 `readonly` constraint?: [TypeNode](../interface.TypeNode/README.md)
 
+> Note: Consider calling `getEffectiveConstraintOfTypeParameter`
+
 
 
 #### 📄 `readonly` default?: [TypeNode](../interface.TypeNode/README.md)

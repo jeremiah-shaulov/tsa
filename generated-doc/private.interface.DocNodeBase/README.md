@@ -35,5 +35,8 @@
 
 #### 📄 exports?: [Export](../interface.Export/README.md)\[]
 
+> All the places from where this symbol is exported.
+> Will not be set if this declaration is `declarationKind == 'export'`, and no other places are found.
+
 
 

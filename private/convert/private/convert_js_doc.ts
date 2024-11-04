@@ -4,6 +4,7 @@ import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertTypeParamNode} from './convert_type_parameter.ts';
 import {Converter} from './converter.ts';
 import {indentAndWrap} from '../../deps.ts';
+import {undoCommentPreprocessing} from '../../create_deno_program.ts';
 
 const C_BRACE_OPEN = '{'.charCodeAt(0);
 const C_BRACE_CLOSE = '}'.charCodeAt(0);
@@ -35,11 +36,12 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 	}
 	if (symbolDisplayParts?.length || docTags?.length)
 	{	const extracted = extractJsDocComment(node);
-		let doc = extracted;
+		let doc = undoCommentPreprocessing(extracted);
 		const docTokens = new Array<JsDocToken>();
 		if (symbolDisplayParts)
-		{	for (const {text, kind} of symbolDisplayParts)
-			{	if (!extracted)
+		{	for (let {text, kind} of symbolDisplayParts)
+			{	text = undoCommentPreprocessing(text);
+				if (!extracted)
 				{	doc += text;
 				}
 				docTokens.push({text, kind: kind=='link' || kind=='linkText' || kind=='lineBreak' || kind=='linkName' ? kind : 'text'});
@@ -103,13 +105,14 @@ export function convertJsDocComment(ts: typeof tsa, comment?: string|tsa.NodeArr
 							text = '{@linkplain ';
 							break;
 						default:
-							return [{text: comment.text, kind: 'text'}];
+							return [{text: undoCommentPreprocessing(comment.text), kind: 'text'}];
 					}
 					return [{text, kind: 'link'}, {text: comment.getText().slice(text.length, -1), kind: 'linkText'}, {text: '}', kind: 'link'}];
 				}
 			);
 			if (commentText)
 			{	commentText = commentText.replace(RE_PARSE_DOC_COMMENT, '').replace(RE_PARSE_DOC_COMMENT_2, '');
+				commentText = undoCommentPreprocessing(commentText);
 				commentText = indentAndWrap(commentText, {indent: '', ignoreFirstIndent: true});
 				correctIndentInTokensAccordingToText(docTokens, commentText);
 			}
@@ -334,6 +337,8 @@ function convertJsDocTag(ts: typeof tsa, converter: Converter, tag: tsa.JSDocTag
 		case 'category':
 		case 'example':
 			return {kind, ...convertJsDocComment(ts, tag.comment)};
+		case 'default':
+			return {kind, value: convertJsDocComment(ts, tag.comment)?.doc ?? ''};
 	}
 	return {kind: 'unsupported', value: tagToString(tag)};
 }

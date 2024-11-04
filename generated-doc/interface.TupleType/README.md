@@ -20,9 +20,13 @@
 
 #### 📄 minLength: `number`
 
+> Number of required or variadic elements
+
 
 
 #### 📄 fixedLength: `number`
+
+> Number of initial required or optional elements
 
 
 
@@ -41,6 +45,8 @@
 <div style="opacity:0.6">
 
 #### 📄 `deprecated` hasRestElement: `boolean`
+
+> True if tuple has any rest or variadic elements
 
 > `deprecated`
 > 

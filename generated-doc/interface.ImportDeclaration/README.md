@@ -32,6 +32,8 @@
 
 #### 📄 `readonly` moduleSpecifier: [Expression](../interface.Expression/README.md)
 
+> If this is not a StringLiteral it will be a grammar error.
+
 
 
 #### 📄 `readonly` attributes?: [ImportAttributes](../interface.ImportAttributes/README.md)

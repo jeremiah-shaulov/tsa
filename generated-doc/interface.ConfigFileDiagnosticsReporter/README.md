@@ -11,5 +11,7 @@ Reports config file diagnostics
 
 #### 📄 onUnRecoverableConfigFileDiagnostic: [DiagnosticReporter](../type.DiagnosticReporter/README.md)
 
+> Reports unrecoverable error when parsing config file
+
 
 

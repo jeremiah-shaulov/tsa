@@ -26,6 +26,8 @@
 
 #### 📄 `readonly` isNameFirst: `boolean`
 
+> Whether the property name came before the type -- non-standard for JSDoc, but Typescript-like
+
 
 
 #### 📄 `readonly` isBracketed: `boolean`

@@ -18,9 +18,21 @@
 
 #### 📄 onSubstituteNode: (hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md)) => [Node](../interface.Node/README.md)
 
+> Hook used by transformers to substitute expressions just before they
+> are emitted by the pretty printer.
+> 
+> NOTE: Transformation hooks should only be modified during `Transformer` initialization,
+> before returning the `NodeTransformer` callback.
+
 
 
 #### 📄 onEmitNode: (hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md), emitCallback: (hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md)) => `void`) => `void`
+
+> Hook used to allow transformers to capture state before or after
+> the printer emits a node.
+> 
+> NOTE: Transformation hooks should only be modified during `Transformer` initialization,
+> before returning the `NodeTransformer` callback.
 
 
 

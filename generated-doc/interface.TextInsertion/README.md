@@ -15,5 +15,7 @@
 
 #### 📄 caretOffset: `number`
 
+> The position in newText the caret should point to after the insertion.
+
 
 

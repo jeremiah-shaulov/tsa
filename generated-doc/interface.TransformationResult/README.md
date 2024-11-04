@@ -16,9 +16,13 @@
 
 #### 📄 transformed: T\[]
 
+> Gets the transformed source files.
+
 
 
 #### 📄 diagnostics?: [DiagnosticWithLocation](../interface.DiagnosticWithLocation/README.md)\[]
+
+> Gets diagnostics for the transformation.
 
 
 

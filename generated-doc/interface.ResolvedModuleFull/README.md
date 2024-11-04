@@ -15,6 +15,9 @@ If changing this, remember to change `moduleResolutionIsEqualTo`.
 
 #### 📄 extension: `string`
 
+> Extension of resolvedFileName. This must match what's at the end of resolvedFileName.
+> This is optional for backwards-compatibility, but will be added if not provided.
+
 
 
 #### 📄 packageId?: [PackageId](../interface.PackageId/README.md)

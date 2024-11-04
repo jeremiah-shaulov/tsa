@@ -33,9 +33,13 @@
 
 #### 📄 `readonly` exportClause?: [NamedExportBindings](../type.NamedExportBindings/README.md)
 
+> Will not be assigned in the case of `export * from "foo";`
+
 
 
 #### 📄 `readonly` moduleSpecifier?: [Expression](../interface.Expression/README.md)
+
+> If this is not a StringLiteral it will be a grammar error.
 
 
 

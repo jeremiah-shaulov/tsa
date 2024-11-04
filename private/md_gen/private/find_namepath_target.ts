@@ -60,7 +60,10 @@ L:	while (pos < namepath.length)
 			while (true)
 			{	switch (node.kind)
 				{	case 'class':
-						if (!isStatic)
+						if (name == 'constructor')
+						{	member = node.classDef.constructors[0];
+						}
+						else if (!isStatic)
 						{	member =
 							(	node.classDef.properties.find(p => p.name==name && !p.isStatic) ??
 								node.classDef.methods.find(p => p.name==name && !p.isStatic)

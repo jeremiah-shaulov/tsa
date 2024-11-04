@@ -20,5 +20,7 @@
 
 #### 📄 `readonly` isArrayType: `boolean`
 
+> If true, then this type literal represents an *array* of its type.
+
 
 

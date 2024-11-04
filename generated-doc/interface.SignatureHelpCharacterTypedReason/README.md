@@ -18,5 +18,7 @@ Depending on the character and the syntactic context, the request may or may not
 
 #### 📄 triggerCharacter: [SignatureHelpTriggerCharacter](../type.SignatureHelpTriggerCharacter/README.md)
 
+> Character that was responsible for triggering signature help.
+
 
 

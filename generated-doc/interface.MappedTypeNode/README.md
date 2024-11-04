@@ -40,5 +40,7 @@
 
 #### 📄 `readonly` members?: [NodeArray](../interface.NodeArray/README.md)\<[TypeElement](../interface.TypeElement/README.md)>
 
+> Used only to produce grammar errors
+
 
 

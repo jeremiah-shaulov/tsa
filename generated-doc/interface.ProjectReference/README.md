@@ -13,13 +13,19 @@
 
 #### 📄 path: `string`
 
+> A normalized path on disk
+
 
 
 #### 📄 originalPath?: `string`
 
+> The path as the user originally wrote it
+
 
 
 #### 📄 circular?: `boolean`
+
+> True if it is intended that this reference form a circularity
 
 
 

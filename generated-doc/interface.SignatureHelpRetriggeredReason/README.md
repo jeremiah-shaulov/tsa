@@ -20,5 +20,7 @@ The language service will unconditionally attempt to provide a result.
 
 #### 📄 triggerCharacter?: [SignatureHelpRetriggerCharacter](../type.SignatureHelpRetriggerCharacter/README.md)
 
+> Character that was responsible for triggering signature help.
+
 
 

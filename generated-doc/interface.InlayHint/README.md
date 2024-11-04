@@ -15,6 +15,8 @@
 
 #### 📄 text: `string`
 
+> This property will be the empty string when displayParts is set.
+
 
 
 #### 📄 position: `number`

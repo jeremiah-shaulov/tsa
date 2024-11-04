@@ -41,6 +41,8 @@
 
 #### 📄 init?: `string`
 
+> Property initializer expression.
+
 
 
 #### 📄 isAbstract: `boolean`

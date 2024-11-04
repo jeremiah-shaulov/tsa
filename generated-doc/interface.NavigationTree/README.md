@@ -18,6 +18,8 @@ The top node is always a script or module node.
 
 #### 📄 text: `string`
 
+> Name of the declaration, or a short description, e.g. "<class>".
+
 
 
 #### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
@@ -26,9 +28,14 @@ The top node is always a script or module node.
 
 #### 📄 kindModifiers: `string`
 
+> ScriptElementKindModifier separated by commas, e.g. "public,abstract"
+
 
 
 #### 📄 spans: [TextSpan](../interface.TextSpan/README.md)\[]
+
+> Spans of the nodes that generated this declaration.
+> There will be more than one if this is the result of merging.
 
 
 
@@ -37,6 +44,8 @@ The top node is always a script or module node.
 
 
 #### 📄 childItems?: [NavigationTree](../interface.NavigationTree/README.md)\[]
+
+> Present if non-empty
 
 
 

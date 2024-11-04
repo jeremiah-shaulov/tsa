@@ -31,6 +31,8 @@
 
 #### 📄 createProgram: [CreateProgram](../type.CreateProgram/README.md)\<T>
 
+> Used to create the program when need for program creation or recreation detected
+
 
 
 #### 📄 jsDocParsingMode?: [JSDocParsingMode](../enum.JSDocParsingMode/README.md)

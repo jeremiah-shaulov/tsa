@@ -16,9 +16,13 @@ Host to create watch with config file
 
 #### 📄 configFileName: `string`
 
+> Name of the config file to compile
+
 
 
 #### 📄 optionsToExtend?: [CompilerOptions](../interface.CompilerOptions/README.md)
+
+> Options to extend
 
 
 

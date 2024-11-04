@@ -16,6 +16,8 @@
 
 #### 📄 diagnostics: readonly [Diagnostic](../interface.Diagnostic/README.md)\[]
 
+> Contains declaration emit diagnostics
+
 
 
 #### 📄 emittedFiles?: `string`\[]

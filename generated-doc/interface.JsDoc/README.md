@@ -16,6 +16,8 @@
 
 #### 📄 docTokens?: [JsDocToken](../interface.JsDocToken/README.md)\[]
 
+> Doc-comment string split to tokens.
+
 
 
 #### 📄 tags?: [JsDocTag](../type.JsDocTag/README.md)\[]

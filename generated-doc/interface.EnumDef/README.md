@@ -15,5 +15,7 @@
 
 #### 📄 isConst?: `boolean`
 
+> Is `const enum`?
+
 
 

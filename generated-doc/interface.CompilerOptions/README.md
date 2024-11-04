@@ -479,6 +479,8 @@
 
 #### 📄 typeRoots?: `string`\[]
 
+> Paths used to compute primary types search locations
+
 
 
 #### 📄 verbatimModuleSyntax?: `boolean`

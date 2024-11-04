@@ -2,6 +2,7 @@ import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassC
 import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
 const RE_REMAP_LINKS = /\\.|`[^`]*`|``.*``|```.*```|(\[[^\]\\]*(?:\\.[^\]\\]*)*\]\()\.\.\/([^)]*\))/sg;
+const RE_ICON = /^[\s\uD800-\uDFFF]+/g;
 
 /**	Getter and/or setter for a given property - both in single object.
  **/
@@ -131,6 +132,11 @@ export class NodeToMd
 		if (memberName)
 		{	// Asked declaration of object member
 			code = this.#getMemberHeader(memberName, isStatic)?.headerLine ?? '';
+			if (code)
+			{	RE_ICON.lastIndex = 0;
+				RE_ICON.test(code);
+				code = code.slice(0, RE_ICON.lastIndex) + this.#node.name + '.' + code.slice(RE_ICON.lastIndex);
+			}
 		}
 		else
 		{	// Asked declaration of the whole object
@@ -291,7 +297,10 @@ export class NodeToMd
 				{	code += mdBlockquote('`get`\n\n'+getCode)+mdBlockquote('`set`\n\n'+setCode);
 				}
 				else
-				{	const getOrSetCode = getCode || setCode;
+				{	let getOrSetCode = getCode || setCode;
+					if (!getOrSetCode && 'jsDoc' in m)
+					{	getOrSetCode = onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0);
+					}
 					if (getOrSetCode)
 					{	code +=  mdBlockquote(getOrSetCode);
 					}

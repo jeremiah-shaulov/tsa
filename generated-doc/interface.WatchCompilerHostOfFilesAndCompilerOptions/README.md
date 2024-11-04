@@ -15,9 +15,13 @@ Host to create watch with root files and options
 
 #### 📄 rootFiles: `string`\[]
 
+> root files to use to generate program
+
 
 
 #### 📄 options: [CompilerOptions](../interface.CompilerOptions/README.md)
+
+> Compiler options
 
 
 
@@ -26,6 +30,8 @@ Host to create watch with root files and options
 
 
 #### 📄 projectReferences?: readonly [ProjectReference](../interface.ProjectReference/README.md)\[]
+
+> Project References
 
 
 

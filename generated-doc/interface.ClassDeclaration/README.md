@@ -20,5 +20,7 @@
 
 #### 📄 `readonly` name?: [Identifier](../interface.Identifier/README.md)
 
+> May be undefined in `export default class { ... }`.
+
 
 

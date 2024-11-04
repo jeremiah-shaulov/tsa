@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-this-alias
 
 import {tsa} from './tsa_ns.ts';
-import {path} from './deps.ts';
+import {jstok, JstokTokenType, path} from './deps.ts';
 import {Converter, EmitDocOptions} from './convert/mod.ts';
 import {getExtendedLibs} from './dts/mod.ts';
 import {existsSync, isUrl} from './util.ts';
@@ -9,6 +9,13 @@ import {LoadOptions, Loader} from './load_options.ts';
 import {getNpmFilename} from './npm.ts';
 import {emitTsaBundle} from './emit_bundle/mod.ts';
 import {DocNodes} from './md_gen/mod.ts';
+
+const UNICODE_LEFT_TO_RIGHT_MARK = '\u200E';
+const RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START = /^[ \t]*\*?[ \t]*([^@\r\n]*)(@[^\r\n]+)/mg;
+const ATSIGN_AFTER_SPACE_FOLLOWED_BY_WORD = /\s@\w/g;
+const RE_UNDO_COMMENT_PREPROCESSING = /[ \t]\u200E@\w/g;
+
+const C_TIMES = '*'.charCodeAt(0);
 
 type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
@@ -34,7 +41,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	const extendedLibs = await getExtendedLibs(this, libLocation);
 	const cwdHref = path.toFileUrl(Deno.cwd()).href;
 
-	if (parseFloat(this.versionMajorMinor) >= 5.0) // in case of substituted `this`
+	if (parseFloat(this.versionMajorMinor) >= 5.0)
 	{	host.resolveModuleNameLiterals = function(moduleLiterals, containingFile)
 		{	if (!isUrl(containingFile))
 			{	containingFile = path.toFileUrl(containingFile).href;
@@ -64,7 +71,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 			return resolvedModules;
 		};
 	}
-	else
+	else // in case of substituted `this`
 	{	host.resolveModuleNames = function(moduleLiterals, containingFile)
 		{	const resolvedModules = new Array<tsa.ResolvedModule | undefined>();
 			for (const text of moduleLiterals)
@@ -162,7 +169,7 @@ async function forFile(ts: typeof tsa, modHref: string, sourceFilesAndKinds: Map
 		sourceFilesAndKinds.set(modHref, record);
 		const loadResponse = await loader.load(modHref, false);
 		if (loadResponse?.kind == 'module')
-		{	const {sourceFile, scriptKind} = createSourceFile(ts, loader, loadResponse.content, modHref, loadResponse.specifier, loadResponse.headers?.['content-type']);
+		{	const {sourceFile, scriptKind} = createSourceFile(ts, loader, preprocessJavascript(loadResponse.content), modHref, loadResponse.specifier, loadResponse.headers?.['content-type']);
 			record.scriptKind = scriptKind;
 			record.sourceFile = sourceFile;
 			// Find `import from` and `export from`
@@ -203,4 +210,46 @@ function createSourceFile(ts: typeof tsa, loader: Loader, content: string, origS
 	);
 	const sourceFile = loader.createSourceFile(ts, origSpecifier, content, scriptKind);
 	return {sourceFile, scriptKind};
+}
+
+/**	Minimal manipulation needed to workaround `tsc` bugs or features.
+	`tsc` considers end of comment before first occurance of `@`-char preceded by a space char,
+	even if the `@` is in the middle of text line, and even if it's quoted in backticks or in markdown tripple-backtick codeblock.
+	This function finds all doc-comments, and places `UNICODE_LEFT_TO_RIGHT_MARK` before `@` in such situations.
+	Then use `undoCommentPreprocessing()` to revert.
+ **/
+function preprocessJavascript(content: string)
+{	let newContent = '';
+	let from = 0;
+	let offset = 0;
+	for (const token of jstok(content))
+	{	if (token.type==JstokTokenType.COMMENT && token.text.charCodeAt(2)==C_TIMES) // if is doc-comment
+		{	RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex = 3; // after '/**'
+			while (true)
+			{	const m = RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.exec(token.text);
+				if (!m)
+				{	break;
+				}
+				if (m[1]) // if there's text preceding `@`
+				{	const lineEnd = RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex;
+					const substFrom = lineEnd - m[2].length - 1; // 1 char before first `@` (which is not at line start)
+					const before = token.text.slice(substFrom, lineEnd);
+					const after = before.replace(ATSIGN_AFTER_SPACE_FOLLOWED_BY_WORD, m => m.charAt(0) + UNICODE_LEFT_TO_RIGHT_MARK + m.slice(1));
+					if (after.length > before.length)
+					{	newContent += content.slice(from, offset+substFrom) + after;
+						from = offset + lineEnd;
+					}
+				}
+			}
+		}
+		offset += token.text.length;
+	}
+	if (from > 0)
+	{	content = newContent + content.slice(from);
+	}
+	return content;
+}
+
+export function undoCommentPreprocessing(content: string)
+{	return content.replace(RE_UNDO_COMMENT_PREPROCESSING, m => m.charAt(0) + m.slice(2));
 }

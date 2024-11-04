@@ -15,6 +15,9 @@ For example, a JSDoc comment before a parameter adds the entire [JSDoc](../inter
 const a = 0
 /**
  * Entire JSDoc will be returned for `b`
- *
+ * @param c JSDocTag will be returned for `c`
+ *\/
+function b(/** JSDoc will be returned for `c` *\/ c) {}
+```
 
 `function` getJSDocCommentsAndTags(hostNode: [Node](../interface.Node/README.md)): readonly (JSDocTag | JSDoc)\[]

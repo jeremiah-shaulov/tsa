@@ -479,7 +479,7 @@ class NodesToMd
 		const docTokens = jsDoc?.docTokens;
 		if (docTokens)
 		{	doc = '';
-			let curLinkIsMonospace = false;
+			let curLinkIsCode = false;
 			let curNamepath = '';
 			for (const {kind, text} of docTokens)
 			{	switch (kind)
@@ -500,7 +500,7 @@ class NodesToMd
 						if (text != '}')
 						{	// Link open
 							curNamepath = '';
-							curLinkIsMonospace = text.startsWith('{@linkcode');
+							curLinkIsCode = text.startsWith('{@linkcode');
 						}
 						else
 						{	// Link close
@@ -527,7 +527,7 @@ class NodesToMd
 									}
 								}
 								if (!linkText)
-								{	if (curLinkIsMonospace)
+								{	if (curLinkIsCode)
 									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir);
 										if (tsDecl)
 										{	doc += tsDecl;
@@ -537,19 +537,25 @@ class NodesToMd
 									linkText = curNamepath;
 								}
 								const link = this.#collection.getLinkByNamepath(curNamepath, toDocDir);
-								doc += link ? mdLink(linkText, link, curLinkIsMonospace) : linkText;
+								doc += link ? mdLink(linkText, link, curLinkIsCode) : linkText;
 							}
 						}
 				}
 			}
 		}
 		doc = doc.trim();
-		if (!doc)
-		{	return '';
+		if (doc)
+		{	doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
 		}
-		doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
+		// Add tags
+		if (jsDoc?.tags)
+		{	const tagDefault = jsDoc.tags.find(t => t.kind == 'default');
+			if (tagDefault)
+			{	doc = `Default value: \`${tagDefault.value}\`\n\n${doc}`;
+			}
+		}
 		// Convert examples
-		if (!this.#baseDirUrlWithTrailingSlash)
+		if (!this.#baseDirUrlWithTrailingSlash || !doc)
 		{	return doc;
 		}
 		let newDoc = '';

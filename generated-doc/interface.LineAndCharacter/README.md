@@ -11,6 +11,8 @@
 
 #### 📄 line: `number`
 
+> 0-based.
+
 
 
 #### 📄 character: `number`

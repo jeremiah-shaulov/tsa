@@ -25,5 +25,7 @@
 
 #### 📄 isExternalLibraryImport?: `boolean`
 
+> True if `resolvedFileName` comes from `node_modules`.
+
 
 

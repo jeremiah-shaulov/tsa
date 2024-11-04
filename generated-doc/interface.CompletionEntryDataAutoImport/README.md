@@ -15,6 +15,9 @@
 
 #### 📄 exportName: `string`
 
+> The name of the property or export in the module's symbol table. Differs from the completion name
+> in the case of InternalSymbolName.ExportEquals and InternalSymbolName.Default.
+
 
 
 #### 📄 exportMapKey?: [ExportMapInfoKey](../type.ExportMapInfoKey/README.md)
@@ -27,13 +30,19 @@
 
 #### 📄 fileName?: `string`
 
+> The file name declaring the export's module symbol, if it was an external module
+
 
 
 #### 📄 ambientModuleName?: `string`
 
+> The module name (with quotes stripped) of the export's module symbol, if it was an ambient module
+
 
 
 #### 📄 isPackageJsonImport?: `true`
+
+> True if the export was found in the package.json AutoImportProvider
 
 
 

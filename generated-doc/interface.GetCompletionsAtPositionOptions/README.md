@@ -13,6 +13,9 @@
 
 #### 📄 triggerCharacter?: [CompletionsTriggerCharacter](../type.CompletionsTriggerCharacter/README.md)
 
+> If the editor is asking for completions because a certain character was typed
+> (as opposed to when the user explicitly requested them) this should be set.
+
 
 
 #### 📄 triggerKind?: [CompletionTriggerKind](../enum.CompletionTriggerKind/README.md)
@@ -20,6 +23,12 @@
 
 
 #### 📄 includeSymbol?: `boolean`
+
+> Default value: `false`
+> 
+> Include a `symbol` property on each completion entry object.
+> Symbols reference cyclic data structures and sometimes an entire TypeChecker instance,
+> so use caution when serializing or retaining completion entries retrieved with this option.
 
 
 
