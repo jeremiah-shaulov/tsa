@@ -4,6 +4,8 @@
 
 #### NONE = <mark>0</mark>
 
+> Like `function f() {}`.
+
 
 
 #### EXPORT = <mark>1</mark>

@@ -15,6 +15,13 @@ const RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START = /^[ \t]*\*?[ \t]*([^@\r\n]*)(@
 const ATSIGN_AFTER_SPACE_FOLLOWED_BY_WORD = /\s@\w/g;
 const RE_UNDO_COMMENT_PREPROCESSING = /[ \t]\u200E@\w/g;
 
+const C_CR = '\r'.charCodeAt(0);
+const C_LF = '\n'.charCodeAt(0);
+const C_TAB = '\t'.charCodeAt(0);
+const C_SPACE = ' '.charCodeAt(0);
+const C_PAREN_OPEN = '('.charCodeAt(0);
+const C_SQUARE_OPEN = '['.charCodeAt(0);
+const C_BRACE_OPEN = '{'.charCodeAt(0);
 const C_TIMES = '*'.charCodeAt(0);
 
 type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
@@ -213,10 +220,15 @@ function createSourceFile(ts: typeof tsa, loader: Loader, content: string, origS
 }
 
 /**	Minimal manipulation needed to workaround `tsc` bugs or features.
-	`tsc` considers end of comment before first occurance of `@`-char preceded by a space char,
+
+	1. `tsc` considers end of comment before first occurance of `@`-char preceded by a space char,
 	even if the `@` is in the middle of text line, and even if it's quoted in backticks or in markdown tripple-backtick codeblock.
 	This function finds all doc-comments, and places `UNICODE_LEFT_TO_RIGHT_MARK` before `@` in such situations.
 	Then use `undoCommentPreprocessing()` to revert.
+	2. `tsc` doesn't consider a comment that starts with `/**` to be a doc-comment if it follows nonblank characters after the beginning of it's line.
+	For example `\n{/**`.
+	I want to allow `(`, `[` amd `{` chars to precede doc comments.
+	This function replaces the ENDLINE chars, so the code looks like `{\n/**`.
  **/
 function preprocessJavascript(content: string)
 {	let newContent = '';
@@ -224,7 +236,34 @@ function preprocessJavascript(content: string)
 	let offset = 0;
 	for (const token of jstok(content))
 	{	if (token.type==JstokTokenType.COMMENT && token.text.charCodeAt(2)==C_TIMES) // if is doc-comment
-		{	RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex = 3; // after '/**'
+		{	// 1. Take care of doc-comment that begins not on line start
+			let nonblank = false;
+L:			for (let i=offset-1; i>=0; i--)
+			{	switch (content.charCodeAt(i))
+				{	case C_PAREN_OPEN:
+					case C_SQUARE_OPEN:
+					case C_BRACE_OPEN:
+						nonblank = true;
+						// fallthrough
+					case C_TAB:
+					case C_SPACE:
+						break;
+					case C_LF:
+						if (nonblank)
+						{	const pos = i + 1;
+							if (content.charCodeAt(i-1) == C_CR)
+							{	i--;
+							}
+							newContent += content.slice(from, i) + content.slice(pos, offset) + content.slice(i, pos);
+							from = offset;
+						}
+						// fallthrough
+					default:
+						break L;
+				}
+			}
+			// 2. Take care of `@` in doc-comment
+			RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex = 3; // after '/**'
 			while (true)
 			{	const m = RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.exec(token.text);
 				if (!m)
