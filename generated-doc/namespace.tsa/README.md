@@ -29,8 +29,8 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.26/generated-doc/namespace.tsa/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-w9uo>~)' > /tmp/example-w9uo.ts
-// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-w9uo.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.26/generated-doc/namespace.tsa/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-nclx>~)' > /tmp/example-nclx.ts
+// deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-nclx.ts
 
 import {tsa} from 'https://deno.land/x/tsa@v0.0.26/mod.ts';
 

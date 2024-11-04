@@ -2,7 +2,6 @@ import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassC
 import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
 const RE_REMAP_LINKS = /\\.|`[^`]*`|``.*``|```.*```|(\[[^\]\\]*(?:\\.[^\]\\]*)*\]\()\.\.\/([^)]*\))/sg;
-const RE_ICON = /^[\s\u2699-\uDFFF]+/g;
 
 /**	Getter and/or setter for a given property - both in single object.
  **/
@@ -16,22 +15,29 @@ export type Accessor =
 	jsDoc: JsDoc|undefined;
 };
 
+type HeaderLine =
+{	text: string;
+	beforeNamePos: number;
+	afterNamePos: number;
+};
+
 type ClassConverter =
 {	onDecorators(m: DecoratorDef[]): string;
 	onTopHeader(): string;
-	onConstructor(m: ClassConstructorDef): string;
-	onIndexSignature(m: ClassIndexSignatureDef): string;
-	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
-	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction, isDestructor: boolean): string;
+	onConstructor(m: ClassConstructorDef): HeaderLine;
+	onIndexSignature(m: ClassIndexSignatureDef): HeaderLine;
+	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): HeaderLine;
+	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction, isDestructor: boolean): HeaderLine;
+	onEnumMember(m: EnumMemberDef): HeaderLine;
 	onTypeAlias(m: TypeAliasDef): string;
-	onEnumMember(m: EnumMemberDef): string;
 	onVariable(m: VariableDef): string;
 	onNamespace(m: NamespaceDef): string;
 	onJsDoc(m: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number): string;
+	onLink(node: DocNode, memberName: string, isStatic: boolean): string;
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor | EnumMemberDef;
-type MemberHeader = {name: string, headerLine: string, headerId: string};
+type MemberHeader = {name: string, headerLine: string, beforeNamePos: number, afterNamePos: number, headerId: string};
 
 const enum What
 {	Constructor,
@@ -116,8 +122,9 @@ export class NodeToMd
 		}
 	}
 
-	#addHeader(m: Member, name: string, isStatic: boolean, headerLine: string)
-	{	const memberHeader = {name, headerLine, headerId: parseHeaderId(headerLine)};
+	#addHeader(m: Member, name: string, isStatic: boolean, headerLine: HeaderLine)
+	{	const {text, beforeNamePos, afterNamePos} = headerLine;
+		const memberHeader = {name, headerLine: text, beforeNamePos, afterNamePos, headerId: parseHeaderId(text)};
 		this.#memberHeaders.set(m, memberHeader);
 		const key = getMemberKey(name, isStatic);
 		this.#memberHeadersByKey.set(key, memberHeader);
@@ -131,15 +138,12 @@ export class NodeToMd
 	{	let code = '';
 		if (memberName)
 		{	// Asked declaration of object member
-			code = this.#getMemberHeader(memberName, isStatic)?.headerLine ?? '';
-			if (code)
-			{	RE_ICON.lastIndex = 0;
-				RE_ICON.test(code);
-				code = code.slice(0, RE_ICON.lastIndex) + this.#node.name + '.' + code.slice(RE_ICON.lastIndex);
-			}
+			const header = this.#getMemberHeader(memberName, isStatic);
+			code = this.#getMemberHeaderAsLink(header, memberName, isStatic);
 		}
 		else
 		{	// Asked declaration of the whole object
+			const memberHeaders = this.#memberHeaders;
 			const other = this.#other[0];
 			if (other)
 			{	switch (other.kind)
@@ -149,16 +153,16 @@ export class NodeToMd
 						code += mdEscape(other.name);
 						code += '<br>\n{<br>\n';
 						for (const m of other.enumDef.members)
-						{	const headerLine = this.#memberHeaders.get(m)?.headerLine;
-							if (headerLine)
-							{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+						{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+							if (memberCode)
+							{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 							}
 						}
 						code += '}';
 						break;
 					}
 					case 'function':
-						code = this.#converter.onMethod(other, false);
+						code = this.#converter.onMethod(other, false).text;
 						break;
 					case 'variable':
 						code = this.#converter.onVariable(other.variableDef);
@@ -172,24 +176,23 @@ export class NodeToMd
 			{	code = this.#converter.onTypeAlias(this.#typeAlias[0]);
 			}
 			else
-			{	const memberHeaders = this.#memberHeaders;
-				code = this.#converter.onTopHeader();
+			{	code = this.#converter.onTopHeader();
 				code += '<br>\n{<br>\n';
 				// constructors
 				for (const m of this.#constructors)
 				{	if (!isDeprecated(m))
-					{	const headerLine = memberHeaders.get(m)?.headerLine;
-						if (headerLine)
-						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+						if (memberCode)
+						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
 					}
 				}
 				// destructors
 				for (const m of this.#destructors)
 				{	if (!isDeprecated(m))
-					{	const headerLine = memberHeaders.get(m)?.headerLine;
-						if (headerLine)
-						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+						if (memberCode)
+						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
 					}
 				}
@@ -203,18 +206,18 @@ export class NodeToMd
 				// properties
 				for (const m of this.#propertiesAndAccessors)
 				{	if (!isDeprecated(m))
-					{	const headerLine = memberHeaders.get(m)?.headerLine;
-						if (headerLine)
-						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+						if (memberCode)
+						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
 					}
 				}
 				// methods
 				for (const m of this.#methods)
 				{	if (!isDeprecated(m))
-					{	const headerLine = memberHeaders.get(m)?.headerLine;
-						if (headerLine)
-						{	code += `&nbsp; &nbsp; ${headerLine}<br>\n`;
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+						if (memberCode)
+						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
 					}
 				}
@@ -224,6 +227,30 @@ export class NodeToMd
 		code = mdBlockquote(code);
 		code = remapLinks(code, toDocDir);
 		return code;
+	}
+
+	#getMemberHeaderAsLink(header: MemberHeader|undefined, memberName: string, isStatic: boolean)
+	{	if (header)
+		{	const {name, headerLine, beforeNamePos, afterNamePos} = header;
+			if (headerLine)
+			{	if (afterNamePos == beforeNamePos)
+				{	return headerLine;
+				}
+				const memberLink = this.#converter.onLink(this.#node, memberName, isStatic);
+				let code = headerLine.slice(0, beforeNamePos);
+				code += this.#node.name;
+				code += '.';
+				if (memberLink)
+				{	code += mdLink(name, memberLink);
+					code += headerLine.slice(afterNamePos);
+				}
+				else
+				{	code += headerLine.slice(beforeNamePos);
+				}
+				return code;
+			}
+		}
+		return '';
 	}
 
 	#getMemberHeader(memberName?: string, isStatic=false)
@@ -255,7 +282,7 @@ export class NodeToMd
 					}
 					break;
 				case 'function':
-					sectionsCode = onMethod(other, false);
+					sectionsCode = onMethod(other, false).text;
 					break;
 				case 'variable':
 					sectionsCode = onVariable(other.variableDef);

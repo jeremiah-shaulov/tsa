@@ -94,44 +94,45 @@ class NodesToMd
 								return code;
 							},
 							onConstructor: m =>
-							{	let codeCur = '🔧 ';
+							{	let text = '🔧 ';
 								if (isDeprecated(m))
-								{	codeCur += '`deprecated` ';
+								{	text += '`deprecated` ';
 								}
 								if (m.accessibility === 'protected')
-								{	codeCur += '`protected` ';
+								{	text += '`protected` ';
 								}
-								codeCur += '`constructor`';
-								codeCur += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
-								return codeCur;
+								const beforeNamePos = text.length;
+								text += '`constructor`';
+								const afterNamePos = text.length;
+								text += `(${m.params.map(a => this.#convertArg(a)).join(', ')})`;
+								return {text, beforeNamePos, afterNamePos};
 							},
 							onIndexSignature: m =>
-							{	let codeCur = '🔍 ';
+							{	let text = '🔍 ';
 								if (m.readonly)
-								{	codeCur += '`readonly` ';
+								{	text += '`readonly` ';
 								}
-								codeCur += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
-								codeCur += this.#convertTsTypeColon(m.tsType);
-								return codeCur;
+								text += '[' + m.params.map(a => this.#convertArg(a)).join(', ') + ']';
+								text += this.#convertTsTypeColon(m.tsType);
+								return {text, beforeNamePos: 0, afterNamePos: 0};
 							},
 							onProperty: m =>
-							{	let codeCur = '📄 ';
-								if (isDeprecated(m))
-								{	codeCur += '`deprecated` ';
-								}
-								codeCur += this.#convertPropertyOrAccessor(m);
-								return codeCur;
+							{	return this.#convertPropertyOrAccessor('📄 ', m, !!isDeprecated(m));
 							},
 							onMethod: (m, isDestructor) =>
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
-								let codeCur = isDestructor ? '🔨 ' : m.kind!='function' ? '⚙ ' : '';
-								if (isDeprecated(m))
-								{	codeCur += '`deprecated` ';
+								const icon = isDestructor ? '🔨 ' : m.kind!='function' ? '⚙ ' : '';
+								return this.#convertFunction(icon, m.kind, m.name, !!isDeprecated(m), accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
+							},
+							onEnumMember: m =>
+							{	let text = mdEscape(m.name);
+								const afterNamePos = text.length;
+								if (m.init)
+								{	text += ' = '+this.#convertTsType(m.init);
 								}
-								codeCur += this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
-								return codeCur;
+								return {text, beforeNamePos: 0, afterNamePos};
 							},
 							onTypeAlias: m =>
 							{	let codeCur = '`type` ';
@@ -142,19 +143,15 @@ class NodesToMd
 							{	const introducer = m.kind == 'const' ? '`const` ' : '`var` ';
 								return introducer + mdEscape(node.name) + this.#convertTsTypeColon(m.tsType);
 							},
-							onEnumMember: m =>
-							{	let codeCur = mdEscape(m.name);
-								if (m.init)
-								{	codeCur += ' = '+this.#convertTsType(m.init);
-								}
-								return codeCur;
-							},
 							onNamespace: m =>
 							{	return this.#convertNamespace(m.elements);
 							},
 							onJsDoc: (jsDoc, node, headerId, submemberNo) =>
 							{	return this.#convertJsDoc(jsDoc, node, headerId, submemberNo);
 							},
+							onLink: (node, memberName, isStatic) =>
+							{	return this.#collection.getLinkByMemberName(node, memberName, isStatic);
+							}
 						}
 					);
 				}
@@ -244,20 +241,19 @@ class NodesToMd
 		return code;
 	}
 
-	#convertPropertyOrAccessor(p: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor)
-	{	let code = '';
-		if (!('getter' in p))
+	#convertPropertyOrAccessor(icon: string, p: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor, isDeprecated: boolean)
+	{	if (!('getter' in p))
 		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
 			const isAbstract = 'isAbstract' in p && p.isAbstract;
 			const isStatic = 'isStatic' in p && p.isStatic;
-			code = this.#convertProperty(p.name, accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
+			return this.#convertProperty(icon, p.name, isDeprecated, accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
 		{	const m = p.getter;
 			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 			const isAbstract = 'isAbstract' in m && m.isAbstract;
 			const isStatic = 'isStatic' in m && m.isStatic;
-			code = this.#convertProperty(m.name, accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
+			return this.#convertProperty(icon, m.name, isDeprecated, accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
 		}
 		else
 		{	const m = p.getter ?? p.setter;
@@ -265,68 +261,84 @@ class NodesToMd
 			{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 				const isAbstract = 'isAbstract' in m && m.isAbstract;
 				const isStatic = 'isStatic' in m && m.isStatic;
-				code = this.#convertFunction(m.kind, m.name, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+				return this.#convertFunction(icon, m.kind, m.name, isDeprecated, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
 			}
 		}
-		return code;
+		return {text: '', beforeNamePos: 0, afterNamePos: 0};
 	}
 
-	#convertProperty(name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
-	{	let code = accessibility==='protected' ? '`protected` ' : '';
+	#convertProperty(icon: string, name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
+	{	let text = icon;
+		if (isDeprecated)
+		{	text += '`deprecated` ';
+		}
+		if (accessibility === 'protected')
+		{	text += '`protected` ';
+		}
 		if (isAbstract)
-		{	code += '`abstract` ';
+		{	text += '`abstract` ';
 		}
 		if (isStatic)
-		{	code += '`static` ';
+		{	text += '`static` ';
 		}
 		if (readonly)
-		{	code += '`readonly` ';
+		{	text += '`readonly` ';
 		}
 		else if (isAccessor)
-		{	code += '`accessor` ';
+		{	text += '`accessor` ';
 		}
-		code += mdEscape(name);
+		const beforeNamePos = text.length;
+		text += mdEscape(name);
+		const afterNamePos = text.length;
 		if (optional)
-		{	code += '?';
+		{	text += '?';
 		}
-		code += this.#convertTsTypeColon(tsType);
-		return code;
+		text += this.#convertTsTypeColon(tsType);
+		return {text, beforeNamePos, afterNamePos};
 	}
 
-	#convertFunction(isMethod: 'function'|'method'|'getter'|'setter', name: string, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
-	{	let code = accessibility==='protected' ? '`protected` ' : '';
+	#convertFunction(icon: string, isMethod: 'function'|'method'|'getter'|'setter', name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
+	{	let text = icon;
+		if (isDeprecated)
+		{	text += '`deprecated` ';
+		}
+		if (accessibility === 'protected')
+		{	text += '`protected` ';
+		}
 		if (isAbstract)
-		{	code += '`abstract` ';
+		{	text += '`abstract` ';
 		}
 		if (isStatic)
-		{	code += '`static` ';
+		{	text += '`static` ';
 		}
 		if (isMethod != 'method')
-		{	code += isMethod=='getter' ? '`get` ' : isMethod=='setter' ? '`set` ' : '`function` ';
+		{	text += isMethod=='getter' ? '`get` ' : isMethod=='setter' ? '`set` ' : '`function` ';
 		}
-		code += mdEscape(name);
+		const beforeNamePos = text.length;
+		text += mdEscape(name);
+		const afterNamePos = text.length;
 		if (optional)
-		{	code += '?';
+		{	text += '?';
 		}
-		code += this.#convertTypeParams(functionDef.typeParams);
-		code += '(' + functionDef.params.map(a => this.#convertArg(a)).join(', ') + ')';
+		text += this.#convertTypeParams(functionDef.typeParams);
+		text += '(' + functionDef.params.map(a => this.#convertArg(a)).join(', ') + ')';
 		if (functionDef.returnType)
-		{	code += this.#convertTsTypeColon(functionDef.returnType);
+		{	text += this.#convertTsTypeColon(functionDef.returnType);
 		}
 		else
 		{	const isAsync = 'isAsync' in functionDef && functionDef.isAsync;
 			const isGenerator = 'isGenerator' in functionDef && functionDef.isGenerator;
 			if (isAsync && isGenerator)
-			{	code += ': AsyncGenerator<`unknown`>';
+			{	text += ': AsyncGenerator<`unknown`>';
 			}
 			else if (isAsync)
-			{	code += ': Promise<`unknown`>';
+			{	text += ': Promise<`unknown`>';
 			}
 			else if (isGenerator)
-			{	code += ': Generator<`unknown`>';
+			{	text += ': Generator<`unknown`>';
 			}
 		}
-		return code;
+		return {text, beforeNamePos, afterNamePos};
 	}
 
 	#convertArg(arg: ClassConstructorParamDef)
@@ -450,12 +462,12 @@ class NodesToMd
 		}
 		for (const p of properties)
 		{	code += separ;
-			code += this.#convertProperty(p.name, undefined, false, false, p.readonly, false, p.optional, p.tsType);
+			code += this.#convertProperty('', p.name, false, undefined, false, false, p.readonly, false, p.optional, p.tsType).text;
 			separ = ', ';
 		}
 		for (const p of methods)
 		{	code += separ;
-			code += this.#convertFunction(p.kind, p.name, undefined, false, false, p.optional, p);
+			code += this.#convertFunction('', p.kind, p.name, false, undefined, false, false, p.optional, p).text;
 			separ = ', ';
 		}
 		return code;

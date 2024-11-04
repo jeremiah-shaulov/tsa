@@ -67,6 +67,12 @@ export class NodeToMdCollection
 		return headerId ? '#'+headerId : '';
 	}
 
+	getLinkByMemberName(node: DocNode, memberName: string, isStatic: boolean, toDocDir='../')
+	{	const hashHeaderId = this.#getHashHeaderId(node, memberName, isStatic);
+		const dir = this.getDir(node);
+		return `${toDocDir}${dir}/README.md${hashHeaderId}`;
+	}
+
 	getLinkByNamepath(namepath: string, toDocDir='../')
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
