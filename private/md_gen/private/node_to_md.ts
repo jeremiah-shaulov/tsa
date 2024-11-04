@@ -18,7 +18,7 @@ export type Accessor =
 
 type ClassConverter =
 {	onDecorators(m: DecoratorDef[]): string;
-	onTopHeader(node: DocNode): string;
+	onTopHeader(): string;
 	onConstructor(m: ClassConstructorDef): string;
 	onIndexSignature(m: ClassIndexSignatureDef): string;
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): string;
@@ -173,7 +173,7 @@ export class NodeToMd
 			}
 			else
 			{	const memberHeaders = this.#memberHeaders;
-				code = this.#converter.onTopHeader(this.#node);
+				code = this.#converter.onTopHeader();
 				code += '<br>\n{<br>\n';
 				// constructors
 				for (const m of this.#constructors)
@@ -319,7 +319,7 @@ export class NodeToMd
 			outline = sections.getOutline();
 		}
 		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
-		const topHeader = onTopHeader(this.#node);
+		const topHeader = onTopHeader();
 		const index = mdLink('Documentation Index', '../README.md')+'\n\n';
 		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0);
 		const importCode = getImportCode(this.#node, importUrls);

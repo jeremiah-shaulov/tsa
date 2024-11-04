@@ -22,6 +22,7 @@ class NodesToMd
 	#docDirBasename;
 	#baseDirUrlWithTrailingSlash;
 	#collection: NodeToMdCollection;
+	#examplesUsed = new Set<number>;
 
 	constructor(nodes: DocNode[], outFileBasename: string, docDirBasename: string, baseDirUrl: string)
 	{	this.#nodes = nodes;
@@ -43,7 +44,7 @@ class NodesToMd
 								}
 								return code;
 							},
-							onTopHeader: node =>
+							onTopHeader: () =>
 							{	let code = '';
 								if (node.kind == 'class')
 								{	const {classDef} = node;
@@ -606,7 +607,7 @@ class NodesToMd
 								{	dir = this.#collection.getDir(node);
 								}
 								const start = doc.slice(codeFrom, doc.indexOf('//', codeFrom)+2);
-								const exampleId = 'example-' + ((crc32(dir+'#'+headerId) + submemberNo) % (36**4)).toString(36);
+								const exampleId = this.#getExampleId(dir, headerId, submemberNo);
 								newDoc += doc.slice(from, codeFrom);
 								newDoc += start;
 								newDoc += ' To download and run this example:';
@@ -635,6 +636,16 @@ class NodesToMd
 					}
 				}
 				codeFrom = -1;
+			}
+		}
+	}
+
+	#getExampleId(dir: string, headerId: string, submemberNo: number)
+	{	for (let i=1; true; i++)
+		{	const hash = (crc32((i==1 ? dir : `${dir}-${i}`)+'#'+headerId) + submemberNo) % (36**4);
+			if (!this.#examplesUsed.has(hash))
+			{	this.#examplesUsed.add(hash);
+				return 'example-' + hash.toString(36);
 			}
 		}
 	}
