@@ -1,4 +1,4 @@
-export const APP_GIT_TAG = 'v0.0.24';
+export const APP_GIT_TAG = 'v0.0.25';
 
 export * as path from 'https://deno.land/std@0.224.0/path/mod.ts';
 export {type LoadResponse} from 'https://deno.land/x/deno_graph@0.63.3/mod.ts';

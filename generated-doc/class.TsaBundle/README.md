@@ -50,7 +50,7 @@ This object represents bundle that contains all the source files, and can be con
 > // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.24/generated-doc/class.TsaBundle/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-n53o>~)' > /tmp/example-n53o.ts
 > // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-n53o.ts
 > 
-> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.24/mod.ts';
+> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.25/mod.ts';
 > 
 > const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 > const OUT_FILE = '/tmp/dist.js';
