@@ -2,7 +2,7 @@ import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassC
 import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
 const RE_REMAP_LINKS = /\\.|`[^`]*`|``.*``|```.*```|(\[[^\]\\]*(?:\\.[^\]\\]*)*\]\()\.\.\/([^)]*\))/sg;
-const RE_ICON = /^[\s\uD800-\uDFFF]+/g;
+const RE_ICON = /^[\s\u2699-\uDFFF]+/g;
 
 /**	Getter and/or setter for a given property - both in single object.
  **/
@@ -453,32 +453,6 @@ function getClassMembers
 		{	for (const c of node.classDef.constructors)
 			{	if (isPublicOrProtected(c))
 				{	constructors.push(c);
-				}
-				for (const p of c.params)
-				{	if (p.readonly || p.accessibility==='public' || p.accessibility==='protected')
-					{	let param = p;
-						let init: string|undefined;
-						if (p.kind == 'assign')
-						{	param = p.left;
-							init = p.right;
-						}
-						if (param.kind == 'identifier')
-						{	propertiesAndAccessors.push
-							(	{	tsType: param.tsType,
-									readonly: param.readonly ?? false,
-									accessibility: param.accessibility,
-									optional: param.optional,
-									isAbstract: false,
-									isStatic: false,
-									isOverride: param.isOverride,
-									name: param.name,
-									decorators: param.decorators,
-									location: c.location,
-									init,
-								}
-							);
-						}
-					}
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {ClassDef, ClassConstructorDef, ClassPropertyDef, ClassMethodDef} from '../../doc_node/mod.ts';
+import {ClassDef, ClassConstructorDef, ClassPropertyDef, ClassMethodDef, ClassConstructorParamDef} from '../../doc_node/mod.ts';
 import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertDecorators} from './convert_decorators.ts';
@@ -18,18 +18,54 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 	if (instanceType.isClass())
 	{	const implementsTypes = getHeritageTypes(ts, symbol.getDeclarations(), ts.SyntaxKind.ImplementsKeyword).map(t => convertType(ts, converter, t));
 		const indexSignatures = converter.checker.getIndexInfosOfType?.(instanceType).map(index => convertIndexSignature(ts, converter, index)) ?? []; // getIndexInfosOfType is since typescript 4.4
-
 		const constructors = new Array<ClassConstructorDef>;
+		const properties = new Array<ClassPropertyDef>;
+		const methods = new Array<ClassMethodDef>;
+
 		for (const sig of staticType.getConstructSignatures())
 		{	const declaration = sig.getDeclaration();
 			if (declaration && !converter.ignoreDeclaration(declaration))
 			{	const modifiers = ts.getCombinedModifierFlags(declaration);
 				const accessibility = modifiers & ts.ModifierFlags.Private ? 'private' : modifiers & ts.ModifierFlags.Protected ? 'protected' : modifiers & ts.ModifierFlags.Public ? 'public' : undefined;
+				const params = new Array<ClassConstructorParamDef>;
+				const {parameters} = sig;
+				for (let i=0, iEnd=parameters.length; i<iEnd; i++)
+				{	const paramDecl = declaration.parameters[i];
+					const param = convertParameter(ts, converter, parameters[i], paramDecl, true);
+					if (param.accessibility || param.readonly)
+					{	let init: string|undefined;
+						let param2 = param;
+						if (param.kind == 'assign')
+						{	param2 = param.left;
+							init = param.right;
+						}
+						if (param2.kind == 'identifier')
+						{	properties.push
+							(	{	tsType: param2.tsType,
+									readonly: param2.readonly ?? false,
+									accessibility: param2.accessibility,
+									optional: param2.optional,
+									isAbstract: false,
+									isStatic: false,
+									isOverride: param2.isOverride,
+									name: param2.name,
+									decorators: param2.decorators,
+									location: convertLocation(ts, converter, paramDecl),
+									init,
+									...convertJsDoc(ts, converter, parameters[i].getDocumentationComment(converter.checker), declaration),
+								}
+							);
+						}
+						param.accessibility = undefined;
+						param.readonly = false;
+					}
+					params.push(param);
+				}
 				constructors.push
 				(	{	...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration),
 						hasBody: true,
 						name: 'constructor',
-						params: sig.parameters.map((p, i) => convertParameter(ts, converter, p, declaration.parameters[i], true)),
+						params,
 						...(accessibility && {accessibility}),
 						location: convertLocation(ts, converter, declaration),
 					}
@@ -37,8 +73,6 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 			}
 		}
 
-		const properties = new Array<ClassPropertyDef>;
-		const methods = new Array<ClassMethodDef>;
 		for (const type of [staticType, instanceType])
 		{	for (const symbol of converter.checker.getPropertiesOfType(type))
 			{	if (symbol.valueDeclaration?.parent == classDeclaration) // filter out inherited properties
