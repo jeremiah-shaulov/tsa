@@ -499,10 +499,10 @@ export async function testDoc(subjUrl: URL, compilerOptions?: tsa.CompilerOption
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	console.time('tsa');
-	const dataFullDoc: DenoDocNode[] = program.emitDoc({includeReferenced: true});
+	const dataFullDoc: DenoDocNode[] = program.emitDoc({includeReferenced: true}).nodes;
 	console.timeEnd('tsa');
 
-	const dataDoc: DenoDocNode[] = program.emitDoc();
+	const dataDoc: DenoDocNode[] = program.emitDoc().nodes;
 
 	console.time('deno');
 	const dataDenoDoc: DenoDocNode[] = await denoDoc(subjUrl.href, docOptions);

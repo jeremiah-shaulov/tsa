@@ -52,10 +52,10 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 	const docNodes = program.emitDoc();
 
 	// Save the docs to file
-	await Deno.writeTextFile(OUT_FILE, JSON.stringify(docNodes, undefined, '\t'));
+	await Deno.writeTextFile(OUT_FILE, JSON.stringify(docNodes.nodes, undefined, '\t'));
 
 	// Print the number of `docNodes` written
-	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.length, '', OUT_FILE);
+	console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.nodes.length, '', OUT_FILE);
 	```
 
 	In the following example i use fake input file:
@@ -100,7 +100,7 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 	const docNodes = program.emitDoc();
 
 	// Print the docs
-	console.log(JSON.stringify(docNodes, undefined, '\t'));
+	console.log(JSON.stringify(docNodes.nodes, undefined, '\t'));
 	```
  **/
 export type LoadOptions =

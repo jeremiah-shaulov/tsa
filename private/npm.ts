@@ -42,7 +42,7 @@ async function findNpmFilename(specifier: string)
 		await import(specifier);
 	}
 	catch (e)
-	{	console.error(e.message);
+	{	console.error(e instanceof Error ? e.message : e+'');
 	}
 	try
 	{	// Can detect npm directory?
@@ -95,6 +95,6 @@ async function findNpmFilename(specifier: string)
 		}
 	}
 	catch (e)
-	{	console.error(e.message);
+	{	console.error(e instanceof Error ? e.message : e+'');
 	}
 }

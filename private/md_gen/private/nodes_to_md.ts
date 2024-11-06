@@ -162,7 +162,9 @@ class NodesToMd
 	*genFiles(moduleName: string, importUrls: string[])
 	{	// Module doc
 		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
-		code += `# ${mdEscape(moduleName) || 'Module'}\n\n`;
+		if (moduleName)
+		{	code += `# ${mdEscape(moduleName)}\n\n`;
+		}
 		code += mdLink('Documentation Index', this.#docDirBasename+'/README.md')+'\n\n';
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		if (moduleDoc)

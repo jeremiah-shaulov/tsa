@@ -165,7 +165,7 @@ export
 		const program = await tsa.createTsaProgram.call(tsaSubstitute, [entryPoint]);
 
 		const docNodes = program.emitDoc();
-		await Deno.writeTextFile('/tmp/doc.json', JSON.stringify(docNodes, undefined, '\t'));
+		await Deno.writeTextFile('/tmp/doc.json', JSON.stringify(docNodes.nodes, undefined, '\t'));
 		```
 	 **/
 	tsa

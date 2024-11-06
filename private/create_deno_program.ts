@@ -128,7 +128,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 			return createSourceFile(ts, loader, content, origSpecifier, filename).sourceFile;
 		}
 		catch (e)
-		{	onError?.(e.message);
+		{	onError?.(e instanceof Error ? e.message : e+'');
 		}
 	};
 

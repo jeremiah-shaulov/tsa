@@ -139,7 +139,7 @@ export class NodeToMd
 		if (memberName)
 		{	// Asked declaration of object member
 			const header = this.#getMemberHeader(memberName, isStatic);
-			code = this.#getMemberHeaderAsLink(header, memberName, isStatic);
+			code = this.#getMemberHeaderAsLink(header, memberName, isStatic, true);
 		}
 		else
 		{	// Asked declaration of the whole object
@@ -229,7 +229,7 @@ export class NodeToMd
 		return code;
 	}
 
-	#getMemberHeaderAsLink(header: MemberHeader|undefined, memberName: string, isStatic: boolean)
+	#getMemberHeaderAsLink(header: MemberHeader|undefined, memberName: string, isStatic: boolean, withNodeNamePrefix=false)
 	{	if (header)
 		{	const {name, headerLine, beforeNamePos, afterNamePos} = header;
 			if (headerLine)
@@ -238,8 +238,10 @@ export class NodeToMd
 				}
 				const memberLink = this.#converter.onLink(this.#node, memberName, isStatic);
 				let code = headerLine.slice(0, beforeNamePos);
-				code += this.#node.name;
-				code += '.';
+				if (withNodeNamePrefix)
+				{	code += this.#node.name;
+					code += '.';
+				}
 				if (memberLink)
 				{	code += mdLink(name, memberLink);
 					code += headerLine.slice(afterNamePos);
@@ -271,6 +273,7 @@ export class NodeToMd
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
 		let sectionsCode = '';
+		let declBeforeDoc = false;
 		if (this.#other.length)
 		{	const other = this.#other[0];
 			switch (other.kind)
@@ -282,10 +285,12 @@ export class NodeToMd
 					}
 					break;
 				case 'function':
-					sectionsCode = onMethod(other, false).text;
+					sectionsCode = onMethod(other, false).text + '\n\n';
+					declBeforeDoc = true;
 					break;
 				case 'variable':
-					sectionsCode = onVariable(other.variableDef);
+					sectionsCode = onVariable(other.variableDef) + '\n\n';
+					declBeforeDoc = true;
 					break;
 				case 'namespace':
 					sectionsCode = onNamespace(other.namespaceDef);
@@ -349,8 +354,14 @@ export class NodeToMd
 		const topHeader = onTopHeader();
 		const index = mdLink('Documentation Index', '../README.md')+'\n\n';
 		const jsDoc = onJsDoc(this.#node.jsDoc, this.#node, '', 0);
+		const jsDocFull = !jsDoc ? '' : jsDoc+'\n\n';
 		const importCode = getImportCode(this.#node, importUrls);
-		return decorators + '# ' + topHeader + '\n\n' + index + importCode + (!jsDoc ? '' : jsDoc+'\n\n') + outline + sectionsCode;
+		if (!declBeforeDoc)
+		{	return decorators + '# ' + topHeader + '\n\n' + index + importCode + jsDocFull + outline + sectionsCode;
+		}
+		else
+		{	return decorators + '# ' + topHeader + '\n\n' + index + importCode + sectionsCode + jsDocFull + outline;
+		}
 	}
 }
 
@@ -431,13 +442,13 @@ function getClassMembers
 							jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
 						};
 						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
+						propertiesAndAccessors.push(accessor);
 						if (j != -1)
 						{	const setter = methodsAndAccessors[j];
 							accessor.setter = setter;
 							if (!accessor.jsDoc)
 							{	accessor.jsDoc = 'jsDoc' in setter ? setter.jsDoc : undefined;
 							}
-							propertiesAndAccessors.push(accessor);
 							if (j < i)
 							{	const k = settersOnly.indexOf(setter);
 								settersOnly.splice(k, 1);
