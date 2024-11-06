@@ -2,6 +2,8 @@
 
 [Documentation Index](../README.md)
 
+`function` visitNodes\<TIn `extends` [Node](../interface.Node/README.md), TInArray `extends` [NodeArray](../interface.NodeArray/README.md)\<TIn> | `undefined`, TOut `extends` [Node](../interface.Node/README.md)>(nodes: TInArray, visitor: [Visitor](../type.Visitor/README.md)\<TIn, [Node](../interface.Node/README.md) | `undefined`>, test: (node: [Node](../interface.Node/README.md)) => node `is` TOut, start?: `number`, count?: `number`): [NodeArray](../interface.NodeArray/README.md)\<TOut>
+
 Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
 
 - If the input node array is undefined, the output is undefined.
@@ -10,4 +12,3 @@ Visits a NodeArray using the supplied visitor, possibly returning a new NodeArra
 - In order to obtain a return type that is more specific than `NodeArray<Node>`, a test
   function _must_ be provided, and that function must be a type predicate.
 
-`function` visitNodes\<TIn `extends` [Node](../interface.Node/README.md), TInArray `extends` [NodeArray](../interface.NodeArray/README.md)\<TIn> | `undefined`, TOut `extends` [Node](../interface.Node/README.md)>(nodes: TInArray, visitor: [Visitor](../type.Visitor/README.md)\<TIn, [Node](../interface.Node/README.md) | `undefined`>, test: (node: [Node](../interface.Node/README.md)) => node `is` TOut, start?: `number`, count?: `number`): [NodeArray](../interface.NodeArray/README.md)\<TOut>

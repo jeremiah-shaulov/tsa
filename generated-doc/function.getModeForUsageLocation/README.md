@@ -2,6 +2,8 @@
 
 [Documentation Index](../README.md)
 
+`function` getModeForUsageLocation(file: [SourceFile](../interface.SourceFile/README.md), usage: [StringLiteralLike](../type.StringLiteralLike/README.md), compilerOptions: [CompilerOptions](../interface.CompilerOptions/README.md)): ResolutionMode
+
 Use `program.getModeForUsageLocation`, which retrieves the correct `compilerOptions`, instead of this function whenever possible.
 Calculates the final resolution mode for a given module reference node. This function only returns a result when module resolution
 settings allow differing resolution between ESM imports and CJS requires, or when a mode is explicitly provided via import attributes,
@@ -33,4 +35,3 @@ import type {} from "mod" with { "resolution-mode": "import" };
 // Result: ESNext - conditional imports/exports always supported with "resolution-mode" attribute
 ```
 
-`function` getModeForUsageLocation(file: [SourceFile](../interface.SourceFile/README.md), usage: [StringLiteralLike](../type.StringLiteralLike/README.md), compilerOptions: [CompilerOptions](../interface.CompilerOptions/README.md)): ResolutionMode

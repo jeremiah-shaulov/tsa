@@ -31,7 +31,7 @@ declare module 'npm:typescript@5.6.2'
 			// To run this example:
 			// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-			import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.28/mod.ts';
+			import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.29/mod.ts';
 
 			const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 

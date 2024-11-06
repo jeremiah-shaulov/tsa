@@ -2,6 +2,8 @@
 
 [Documentation Index](../README.md)
 
+`function` createTsaProgram(entryPoints: ReadonlyArray\<`string` | URL>, compilerOptions?: [CompilerOptions](../interface.CompilerOptions/README.md), loadOptions?: [LoadOptions](../type.LoadOptions/README.md)): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>
+
 ### Configuration options for the Typescript Compiler (tsa.CompilerOptions)
 
 You can pass [tsa.CompilerOptions](../interface.CompilerOptions/README.md) to `tsa.createTsaProgram()`. It works in the same fashion as `typescript.CompilerOptions` for [typescript.createProgram()](../function.createProgram/README.md), with the following differences:
@@ -19,4 +21,3 @@ Else the compiler will not know that you're not going to write Javascript files,
 
 To produce bundle no special options are needed, and you can leave the options blank.
 
-`function` createTsaProgram(entryPoints: ReadonlyArray\<`string` | URL>, compilerOptions?: [CompilerOptions](../interface.CompilerOptions/README.md), loadOptions?: [LoadOptions](../type.LoadOptions/README.md)): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>

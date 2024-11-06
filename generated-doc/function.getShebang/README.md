@@ -2,6 +2,7 @@
 
 [Documentation Index](../README.md)
 
+`function` getShebang(text: `string`): `string`
+
 Optionally, get the shebang
 
-`function` getShebang(text: `string`): `string`

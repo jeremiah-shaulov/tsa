@@ -2,6 +2,8 @@
 
 [Documentation Index](../README.md)
 
+`function` getJSDocCommentsAndTags(hostNode: [Node](../interface.Node/README.md)): readonly (JSDocTag | JSDoc)\[]
+
 This function checks multiple locations for JSDoc comments that apply to a host node.
 At each location, the whole comment may apply to the node, or only a specific tag in
 the comment. In the first case, location adds the entire [JSDoc](../interface.JSDoc/README.md) object. In the
@@ -20,4 +22,3 @@ const a = 0
 function b(/** JSDoc will be returned for `c` *\/ c) {}
 ```
 
-`function` getJSDocCommentsAndTags(hostNode: [Node](../interface.Node/README.md)): readonly (JSDocTag | JSDoc)\[]

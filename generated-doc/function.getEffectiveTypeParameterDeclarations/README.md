@@ -2,6 +2,8 @@
 
 [Documentation Index](../README.md)
 
+`function` getEffectiveTypeParameterDeclarations(node: [DeclarationWithTypeParameters](../type.DeclarationWithTypeParameters/README.md)): readonly TypeParameterDeclaration\[]
+
 Gets the effective type parameters. If the node was parsed in a
 JavaScript file, gets the type parameters from the `@template` tag from JSDoc.
 
@@ -11,4 +13,3 @@ type Id = <T>(x: T) => T
 /** @type {Id} /
 function id(x) { return x }
 
-`function` getEffectiveTypeParameterDeclarations(node: [DeclarationWithTypeParameters](../type.DeclarationWithTypeParameters/README.md)): readonly TypeParameterDeclaration\[]
