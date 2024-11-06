@@ -75,6 +75,10 @@ L:	while (pos < namepath.length)
 								node.classDef.methods.find(p => p.name==name)
 							);
 						}
+						if (!member && node.classDef.superNodeIndex!=undefined)
+						{	node = nodes[node.classDef.superNodeIndex];
+							continue;
+						}
 						break;
 					case 'interface':
 						member =
