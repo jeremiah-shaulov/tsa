@@ -12,7 +12,7 @@
 #### 📄 detail?: `string`
 
 > An optional string which is rendered less prominently directly after
-> CompletionEntry.namename, without any spacing. Should be
+> `CompletionEntry.namename`, without any spacing. Should be
 > used for function signatures or type annotations.
 
 

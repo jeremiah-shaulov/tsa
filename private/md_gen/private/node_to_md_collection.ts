@@ -73,28 +73,30 @@ export class NodeToMdCollection
 		return `${toDocDir}${dir}/README.md${hashHeaderId}`;
 	}
 
-	getLinkByNamepath(namepath: string, toDocDir='../')
+	getLinkByNamepath(namepath: string, toDocDir: string, contextNode: DocNode)
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
 		}
-		const found = findNamepathTarget(this.#nodes, namepath);
+		const found = findNamepathTarget(this.#nodes, namepath, contextNode);
 		if (found)
 		{	const dir = this.getDir(found.node);
 			if (dir)
-			{	const hashHeaderId = this.#getHashHeaderId(found.node, found.member?.name, found.isStatic);
+			{	const isStatic = found.member && 'isStatic' in found.member && found.member.isStatic;
+				const hashHeaderId = this.#getHashHeaderId(found.node, found.member?.name, isStatic);
 				return `${toDocDir}${dir}/README.md${hashHeaderId}`;
 			}
 		}
 		return '';
 	}
 
-	getTsDeclByNamepath(namepath: string, toDocDir='../')
+	getTsDeclByNamepath(namepath: string, toDocDir: string, contextNode: DocNode)
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
 		{	return namepath;
 		}
-		const found = findNamepathTarget(this.#nodes, namepath);
+		const found = findNamepathTarget(this.#nodes, namepath, contextNode);
 		if (found)
-		{	return this.getNodeToMd(found.node)?.getTsDecl(found.member?.name, found.isStatic, toDocDir) ?? '';
+		{	const isStatic = found.member && 'isStatic' in found.member && found.member.isStatic;
+			return this.getNodeToMd(found.node)?.getTsDecl(found.member?.name, isStatic, toDocDir) ?? '';
 		}
 		return '';
 	}

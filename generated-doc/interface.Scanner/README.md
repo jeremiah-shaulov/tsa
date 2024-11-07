@@ -204,7 +204,7 @@
 
 > `deprecated`
 > 
-> use getTokenFullStart
+> use [getTokenFullStart](../interface.Scanner/README.md#-gettokenfullstart-number)
 
 
 
@@ -212,7 +212,7 @@
 
 > `deprecated`
 > 
-> use getTokenEnd
+> use [getTokenEnd](../interface.Scanner/README.md#-gettokenend-number)
 
 
 
@@ -220,7 +220,7 @@
 
 > `deprecated`
 > 
-> use getTokenStart
+> use [getTokenStart](../interface.Scanner/README.md#-gettokenstart-number)
 
 
 
@@ -228,7 +228,7 @@
 
 > `deprecated`
 > 
-> use reScanTemplateToken(false)
+> use [reScanTemplateToken](../interface.Scanner/README.md#-rescantemplatetokenistaggedtemplate-boolean-syntaxkind)(false)
 
 
 
@@ -236,7 +236,7 @@
 
 > `deprecated`
 > 
-> use resetTokenState
+> use [resetTokenState](../interface.Scanner/README.md#-resettokenstatepos-number-void)
 
 
 

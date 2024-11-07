@@ -1,5 +1,5 @@
 import {APP_GIT_TAG, indentAndWrap, crc32, path} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, ClassMethodDef, InterfacePropertyDef, InterfaceMethodDef, EnumMemberDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
 import {escapeShellArg, isDeprecated, isPublicOrProtected} from './util.ts';
@@ -543,7 +543,7 @@ class NodesToMd
 								}
 								if (!linkText)
 								{	if (curLinkIsCode)
-									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir);
+									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir, node);
 										if (tsDecl)
 										{	doc += tsDecl;
 											break;
@@ -551,8 +551,8 @@ class NodesToMd
 									}
 									linkText = curNamepath;
 								}
-								const link = this.#collection.getLinkByNamepath(curNamepath, toDocDir);
-								doc += link ? mdLink(linkText, link, curLinkIsCode) : linkText;
+								const link = this.#collection.getLinkByNamepath(curNamepath, toDocDir, node);
+								doc += link ? mdLink(linkText, link, curLinkIsCode) : '`'+linkText+'`';
 							}
 						}
 				}

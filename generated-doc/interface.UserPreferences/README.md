@@ -113,7 +113,7 @@
 
 #### 📄 `readonly` useLabelDetailsInCompletionEntries?: `boolean`
 
-> Indicates whether CompletionEntry.labelDetailscompletion entry label details are supported.
+> Indicates whether `CompletionEntry.labelDetailscompletion entry label details` are supported.
 > If not, contents of `labelDetails` may be included in the [CompletionEntry.name](../interface.CompletionEntry/README.md#-name-string) property.
 
 
@@ -215,7 +215,7 @@
 > Indicates whether imports should be organized via an "ordinal" (binary) comparison using the numeric value
 > of their code points, or via "unicode" collation (via the
 > [Unicode Collation Algorithm](https://unicode.org/reports/tr10/#Scope)) using rules associated with the locale
-> specified in organizeImportsCollationLocale.
+> specified in `organizeImportsCollationLocale`.
 > 
 > Default: `"ordinal"`.
 
@@ -226,7 +226,7 @@
 > Indicates the locale to use for "unicode" collation. If not specified, the locale `"en"` is used as an invariant
 > for the sake of consistent sorting. Use `"auto"` to use the detected UI locale.
 > 
-> This preference is ignored if organizeImportsCollation is not `"unicode"`.
+> This preference is ignored if [organizeImportsCollation](../interface.UserPreferences/README.md#-readonly-organizeimportscollation-ordinal--unicode) is not `"unicode"`.
 > 
 > Default: `"en"`
 
@@ -237,7 +237,7 @@
 > Indicates whether numeric collation should be used for digit sequences in strings. When `true`, will collate
 > strings such that `a1z < a2z < a100z`. When `false`, will collate strings such that `a1z < a100z < a2z`.
 > 
-> This preference is ignored if organizeImportsCollation is not `"unicode"`.
+> This preference is ignored if [organizeImportsCollation](../interface.UserPreferences/README.md#-readonly-organizeimportscollation-ordinal--unicode) is not `"unicode"`.
 > 
 > Default: `false`
 
@@ -247,9 +247,9 @@
 
 > Indicates whether accents and other diacritic marks are considered unequal for the purpose of collation. When
 > `true`, characters with accents and other diacritics will be collated in the order defined by the locale specified
-> in organizeImportsCollationLocale.
+> in `organizeImportsCollationLocale`.
 > 
-> This preference is ignored if organizeImportsCollation is not `"unicode"`.
+> This preference is ignored if [organizeImportsCollation](../interface.UserPreferences/README.md#-readonly-organizeimportscollation-ordinal--unicode) is not `"unicode"`.
 > 
 > Default: `true`
 
@@ -258,11 +258,11 @@
 #### 📄 `readonly` organizeImportsCaseFirst?: <mark>"upper"</mark> | <mark>"lower"</mark> | `false`
 
 > Indicates whether upper case or lower case should sort first. When `false`, the default order for the locale
-> specified in organizeImportsCollationLocale is used.
+> specified in `organizeImportsCollationLocale` is used.
 > 
-> This preference is ignored if organizeImportsCollation is not `"unicode"`. This preference is also
-> ignored if we are using case-insensitive sorting, which occurs when organizeImportsIgnoreCase is `true`,
-> or if organizeImportsIgnoreCase is `"auto"` and the auto-detected case sensitivity is determined to be
+> This preference is ignored if [organizeImportsCollation](../interface.UserPreferences/README.md#-readonly-organizeimportscollation-ordinal--unicode) is not `"unicode"`. This preference is also
+> ignored if we are using case-insensitive sorting, which occurs when [organizeImportsIgnoreCase](../interface.UserPreferences/README.md#-readonly-organizeimportsignorecase-auto--boolean) is `true`,
+> or if [organizeImportsIgnoreCase](../interface.UserPreferences/README.md#-readonly-organizeimportsignorecase-auto--boolean) is `"auto"` and the auto-detected case sensitivity is determined to be
 > case-insensitive.
 > 
 > Default: `false`

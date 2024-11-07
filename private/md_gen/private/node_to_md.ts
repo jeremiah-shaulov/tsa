@@ -206,7 +206,7 @@ export class NodeToMd
 				// properties
 				for (const m of this.#propertiesAndAccessors)
 				{	if (!isDeprecated(m))
-					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, 'isStatic' in m && m.isStatic);
 						if (memberCode)
 						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
@@ -215,7 +215,7 @@ export class NodeToMd
 				// methods
 				for (const m of this.#methods)
 				{	if (!isDeprecated(m))
-					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, false);
+					{	const memberCode = this.#getMemberHeaderAsLink(memberHeaders.get(m), m.name, 'isStatic' in m && m.isStatic);
 						if (memberCode)
 						{	code += `&nbsp; &nbsp; ${memberCode}<br>\n`;
 						}
@@ -258,13 +258,7 @@ export class NodeToMd
 	#getMemberHeader(memberName?: string, isStatic=false)
 	{	if (memberName)
 		{	const key = getMemberKey(memberName, isStatic);
-			let header = this.#memberHeadersByKey.get(key);
-			if (!header && isStatic)
-			{	// Instance members can be accessed by both '#' and '.'
-				const key = getMemberKey(memberName);
-				header = this.#memberHeadersByKey.get(key);
-			}
-			return header;
+			return this.#memberHeadersByKey.get(key);
 		}
 	}
 

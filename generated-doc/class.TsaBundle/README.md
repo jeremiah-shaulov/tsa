@@ -42,7 +42,7 @@ This object represents bundle that contains all the source files, and can be con
 #### ⚙ toProgram(compilerOptions: [tsa.CompilerOptions](../interface.CompilerOptions/README.md), logToConsole: `boolean`=false): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>
 
 > Convert this bundle to another
-> [tsa.TsaProgram](../interface.TsaProgram/README.md), on which you can call tsa.TsaProgram.emit() to convert it to single Javascript file.
+> [tsa.TsaProgram](../interface.TsaProgram/README.md), on which you can call [tsa.TsaProgram.emit()](../interface.Program/README.md#-emittargetsourcefile-sourcefile-writefile-writefilecallback-cancellationtoken-cancellationtoken-emitonlydtsfiles-boolean-customtransformers-customtransformers-emitresult) to convert it to single Javascript file.
 > This method first calls [toTs()](../class.TsaBundle/README.md#-totslogtoconsole-booleanfalse-string), and then [tsa.createTsaProgram()](../function.createTsaProgram/README.md).
 > 
 > ```ts

@@ -31,7 +31,7 @@
 > 
 > This will always parse JSDoc in non-TS files, but never in TS files.
 > 
-> Note: Do not use this mode if you require accurate type errors; use ParseForTypeErrors instead.
+> Note: Do not use this mode if you require accurate type errors; use [ParseForTypeErrors](../enum.JSDocParsingMode/README.md#parsefortypeerrors--2) instead.
 
 
 
