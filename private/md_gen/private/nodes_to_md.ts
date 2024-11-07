@@ -135,13 +135,20 @@ class NodesToMd
 								return {text, beforeNamePos: 0, afterNamePos};
 							},
 							onTypeAlias: m =>
-							{	let codeCur = '`type` ';
-								codeCur += mdEscape(node.name) + this.#convertTypeParams(m.typeParams) + ' = ' + this.#convertTsType(m.tsType);
-								return codeCur;
+							{	let text = '`type` ';
+								const beforeNamePos = text.length;
+								text += mdEscape(node.name);
+								const afterNamePos = text.length;
+								text += this.#convertTypeParams(m.typeParams) + ' = ' + this.#convertTsType(m.tsType);
+								return {text, beforeNamePos, afterNamePos};
 							},
 							onVariable: m =>
-							{	const introducer = m.kind == 'const' ? '`const` ' : '`var` ';
-								return introducer + mdEscape(node.name) + this.#convertTsTypeColon(m.tsType);
+							{	let text = m.kind == 'const' ? '`const` ' : '`var` ';
+								const beforeNamePos = text.length;
+								text += mdEscape(node.name);
+								const afterNamePos = text.length;
+								text += this.#convertTsTypeColon(m.tsType);
+								return {text, beforeNamePos, afterNamePos};
 							},
 							onNamespace: m =>
 							{	return this.#convertNamespace(m.elements);
@@ -150,7 +157,7 @@ class NodesToMd
 							{	return this.#convertJsDoc(jsDoc, node, headerId, submemberNo);
 							},
 							onLink: (node, memberName, isStatic) =>
-							{	return this.#collection.getLinkByMemberName(node, memberName, isStatic);
+							{	return !memberName ? this.#collection.getLink(node) : this.#collection.getLinkByMemberName(node, memberName, isStatic);
 							}
 						}
 					);

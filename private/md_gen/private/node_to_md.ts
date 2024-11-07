@@ -29,8 +29,8 @@ type ClassConverter =
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): HeaderLine;
 	onMethod(m: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|DocNodeFunction, isDestructor: boolean): HeaderLine;
 	onEnumMember(m: EnumMemberDef): HeaderLine;
-	onTypeAlias(m: TypeAliasDef): string;
-	onVariable(m: VariableDef): string;
+	onTypeAlias(m: TypeAliasDef): HeaderLine;
+	onVariable(m: VariableDef): HeaderLine;
 	onNamespace(m: NamespaceDef): string;
 	onJsDoc(m: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number): string;
 	onLink(node: DocNode, memberName: string, isStatic: boolean): string;
@@ -161,19 +161,22 @@ export class NodeToMd
 						code += '}';
 						break;
 					}
-					case 'function':
-						code = this.#converter.onMethod(other, false).text;
-						break;
-					case 'variable':
-						code = this.#converter.onVariable(other.variableDef);
-						break;
 					case 'namespace':
-						code = this.#converter.onNamespace(other.namespaceDef);
+					{	code = this.#converter.onNamespace(other.namespaceDef);
 						break;
+					}
+					case 'function':
+					{	code = this.#headerLineOfSelfToLink(this.#converter.onMethod(other, false));
+						break;
+					}
+					case 'variable':
+					{	code = this.#headerLineOfSelfToLink(this.#converter.onVariable(other.variableDef));
+						break;
+					}
 				}
 			}
 			else if (this.#typeAlias.length)
-			{	code = this.#converter.onTypeAlias(this.#typeAlias[0]);
+			{	code = this.#headerLineOfSelfToLink(this.#converter.onTypeAlias(this.#typeAlias[0]));
 			}
 			else
 			{	code = this.#converter.onTopHeader();
@@ -227,6 +230,11 @@ export class NodeToMd
 		code = mdBlockquote(code);
 		code = remapLinks(code, toDocDir);
 		return code;
+	}
+
+	#headerLineOfSelfToLink(headerLine: HeaderLine)
+	{	const {text, beforeNamePos, afterNamePos} = headerLine;
+		return this.#getMemberHeaderAsLink({name: this.#node.name, headerLine: text, beforeNamePos, afterNamePos, headerId: ''}, '', false);
 	}
 
 	#getMemberHeaderAsLink(header: MemberHeader|undefined, memberName: string, isStatic: boolean, withNodeNamePrefix=false)
@@ -283,7 +291,7 @@ export class NodeToMd
 					declBeforeDoc = true;
 					break;
 				case 'variable':
-					sectionsCode = onVariable(other.variableDef) + '\n\n';
+					sectionsCode = onVariable(other.variableDef).text + '\n\n';
 					declBeforeDoc = true;
 					break;
 				case 'namespace':
@@ -292,7 +300,7 @@ export class NodeToMd
 			}
 		}
 		else if (this.#typeAlias.length)
-		{	sectionsCode = onTypeAlias(this.#typeAlias[0]);
+		{	sectionsCode = onTypeAlias(this.#typeAlias[0]).text;
 		}
 		else
 		{	const sections = new ClassSections(this.#node.kind);
