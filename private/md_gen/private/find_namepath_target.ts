@@ -6,6 +6,7 @@ const RE_BACKSLASH_ESCAPE = /\\./g;
 type NodeOrTypeLiteral = DocNode | TsTypeLiteralDef;
 type FoundMember = ClassPropertyDef|ClassMethodDef|InterfacePropertyDef|InterfaceMethodDef|LiteralMethodDef|LiteralPropertyDef|EnumMemberDef;
 type Found = {node: NodeOrTypeLiteral, member: FoundMember|undefined};
+type Branch = {pos: number, found: Found|undefined};
 
 /**	`@`link tags allow to point to a node, or to a member of a node by so called namepath.
 
@@ -22,62 +23,61 @@ type Found = {node: NodeOrTypeLiteral, member: FoundMember|undefined};
 	Static ones only by `.`.
  **/
 export function findNamepathTarget(nodes: DocNode[], namepath: string, contextNode: DocNode)
-{	let pos = 0;
-	let wantStatic = false; // the member was requested with '.', not '#'
-	let found: Found|undefined;
-	while (pos < namepath.length)
-	{	if (pos != 0)
-		{	const c = namepath.charAt(pos++);
-			wantStatic = c == '.';
-			if (!wantStatic && c!='#')
-			{	return;
+{	const branches: Branch[] = [{pos: 0, found: undefined}];
+L:	for (let i=0; i<branches.length; i++) // `branches` array will be expanded during the iteration
+	{	let {pos, found} = branches[i];
+		while (pos < namepath.length)
+		{	let wantStatic = false; // the member was requested with '.', not '#'
+			if (pos != 0)
+			{	const c = namepath.charAt(pos++);
+				wantStatic = c == '.';
+				if (!wantStatic && c!='#')
+				{	continue L;
+				}
 			}
-		}
-		RE_LINK_PATH.lastIndex = pos;
-		const m = RE_LINK_PATH.exec(namepath);
-		if (!m)
-		{	return;
-		}
-		const name = namepath.charAt(pos)=='"' ? m[1].slice(1, -1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : m[1];
-		pos = RE_LINK_PATH.lastIndex;
-		if (!found)
-		{	// Find public symbol
-			const node = nodes.find(n => n.name==name && n.declarationKind=='export');
-			if (node)
-			{	found = {node, member: undefined};
+			RE_LINK_PATH.lastIndex = pos;
+			const m = RE_LINK_PATH.exec(namepath);
+			if (!m)
+			{	continue L;
+			}
+			const name = namepath.charAt(pos)=='"' ? m[1].slice(1, -1).replace(RE_BACKSLASH_ESCAPE, m => m.charAt(1)) : m[1];
+			pos = RE_LINK_PATH.lastIndex;
+			if (!found)
+			{	// Find public symbol
+				const node = nodes.find(n => n.name==name && n.declarationKind=='export');
+				if (node)
+				{	found = {node, member: undefined};
+				}
+				else
+				{	if (contextNode)
+					{	found = nodeGetMember(nodes, contextNode, name, wantStatic);
+					}
+					if (!found)
+					{	continue L;
+					}
+				}
+			}
+			else if (!found.member)
+			{	// Get member of `found.node`
+				found = nodeGetMember(nodes, found.node, name, wantStatic);
 			}
 			else
-			{	if (contextNode)
-				{	found = nodeGetMember(nodes, contextNode, name, wantStatic);
-				}
-				if (!found)
-				{	return;
-				}
-			}
-		}
-		else
-		{	if (found.member)
-			{	// Convert `member` to `node`
-				let node: NodeOrTypeLiteral|undefined;
+			{	// Get member of `found.member`
 				if ('tsType' in found.member && found.member.tsType)
 				{	const foundNodes = new Array<NodeOrTypeLiteral>;
 					tsTypeToNodeOrTypeLiteralDef(nodes, found.member.tsType, foundNodes);
-					node = foundNodes[0]; // TODO: ...
+					for (let j=0; j<foundNodes.length; j++)
+					{	branches.push({pos, found: {node: foundNodes[j], member: undefined}});
+					}
 				}
-				if (!node)
-				{	return;
-				}
-				found.node = node;
-				found.member = undefined;
+				continue L;
 			}
-			// Get member of node
-			found = nodeGetMember(nodes, found.node, name, wantStatic);
 		}
-	}
-	if (found)
-	{	const {node, member} = found;
-		if ('kind' in node)
-		{	return {node, member};
+		if (found)
+		{	const {node, member} = found;
+			if ('kind' in node)
+			{	return {node, member};
+			}
 		}
 	}
 }
