@@ -14,9 +14,7 @@ type Any = any;
 
 declare module 'npm:typescript@5.6.2'
 {	interface TsaProgram extends Program
-	{	// methods:
-
-		/**	Generate
+	{	/**	Generate
 			{@link DocNode} object for each symbol in the source code, which is subject to documentation.
 
 			By default it works as [x/deno_doc@0.62.0]{@link https://deno.land/x/deno_doc@0.62.0}, that is, it generates

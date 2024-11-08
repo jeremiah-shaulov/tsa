@@ -344,12 +344,17 @@ function convertJsDocTag(ts: typeof tsa, converter: Converter, tag: tsa.JSDocTag
 }
 
 function typeExpressionToString(ts: typeof tsa, typeExpression?: tsa.JSDocTypeExpression|tsa.JSDocTypeLiteral)
-{	if (typeExpression && ts.isJSDocTypeLiteral(typeExpression))
-	{	return !typeExpression.isArrayType ? 'Object' : 'Object[]';
+{	if (!typeExpression)
+	{	return '';
+	}
+	else if (ts.isJSDocTypeLiteral(typeExpression))
+	{	return typeExpression.isArrayType ? 'Object[]' : 'Object';
+	}
+	else if (ts.isJSDocTypeLiteral(typeExpression.type))
+	{	return typeExpression.type.isArrayType ? 'Object[]' : 'Object';
 	}
 	else
-	{	const tagExprType = typeExpression?.type;
-		return !tagExprType || !ts.isJSDocTypeLiteral(tagExprType) ? tagExprType?.getText() || '' : !tagExprType.isArrayType ? 'Object' : 'Object[]';
+	{	return typeExpression.type.getText();
 	}
 }
 
