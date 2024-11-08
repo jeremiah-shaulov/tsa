@@ -210,7 +210,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		const docDirBasename = outDir;
 		const baseDirUrl = outUrl && new URL('.', outUrl).href;
 		let nRemoved = 0;
-		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, importUrls, baseDirUrl))
+		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, entryPoints, importUrls, baseDirUrl))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? baseDir : path.join(baseDir, dir);
 			const filename = !dir ? outFile : path.join(curDir, 'README.md');

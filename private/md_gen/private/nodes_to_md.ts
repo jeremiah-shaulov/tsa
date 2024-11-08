@@ -1,4 +1,4 @@
-import {APP_GIT_TAG, indentAndWrap, crc32, path} from '../../deps.ts';
+import {APP_GIT_TAG, indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
@@ -12,22 +12,26 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 
-export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', importUrls=new Array<string>, baseDirUrl='')
-{	return new NodesToMd(nodes, outFileBasename, docDirBasename, baseDirUrl).genFiles(mainTitle, importUrls);
+export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
+{	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle);
 }
 
 class NodesToMd
 {	#nodes;
 	#outFileBasename;
 	#docDirBasename;
+	#entryPoints;
+	#importUrls;
 	#baseDirUrlWithTrailingSlash;
 	#collection: NodeToMdCollection;
 	#examplesUsed = new Set<number>;
 
-	constructor(nodes: DocNode[], outFileBasename: string, docDirBasename: string, baseDirUrl: string)
+	constructor(nodes: DocNode[], outFileBasename: string, docDirBasename: string, entryPoints: string[], importUrls: string[], baseDirUrl: string)
 	{	this.#nodes = nodes;
 		this.#outFileBasename = outFileBasename;
 		this.#docDirBasename = docDirBasename;
+		this.#entryPoints = entryPoints.map(f => path.toFileUrl(path.resolve(f)).href);
+		this.#importUrls = importUrls;
 		this.#baseDirUrlWithTrailingSlash = baseDirUrl.endsWith('/') ? baseDirUrl : baseDirUrl ? baseDirUrl+'/' : '';
 		this.#collection = new NodeToMdCollection
 		(	nodes,
@@ -166,7 +170,7 @@ class NodesToMd
 		);
 	}
 
-	*genFiles(mainTitle: string, importUrls: string[])
+	*genFiles(mainTitle: string)
 	{	// Module doc
 		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
 		if (mainTitle)
@@ -184,20 +188,20 @@ class NodesToMd
 		code += this.#convertNamespace(this.#nodes, '');
 		yield {dir: this.#docDirBasename, code};
 		// Symbols
-		yield *this.#genFilesForNodes(this.#nodes, importUrls, new Set);
+		yield *this.#genFilesForNodes(this.#nodes, new Set);
 	}
 
-	*#genFilesForNodes(nodes: DocNode[], importUrls: string[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
+	*#genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
 	{	for (const node of nodes)
 		{	if (node.kind != 'moduleDoc')
 			{	if (!nodesDone.has(node))
 				{	nodesDone.add(node);
 					const nodeToMd = this.#collection.getNodeToMd(node);
-					const code = nodeToMd?.getCode(importUrls) ?? '';
+					const code = nodeToMd?.getCode(this.#importUrls) ?? '';
 					const dir = path.join(this.#docDirBasename, this.#collection.getDir(node));
 					yield {dir, code};
 					if (node.kind == 'namespace')
-					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, importUrls, nodesDone);
+					{	yield *this.#genFilesForNodes(node.namespaceDef.elements, nodesDone);
 					}
 				}
 			}
@@ -576,10 +580,11 @@ class NodesToMd
 			{	doc = `Default value: \`${tagDefault.value}\`\n\n${doc}`;
 			}
 		}
-		// Convert examples
+		// Convert examples and substitute importUrls
 		if (!this.#baseDirUrlWithTrailingSlash || !doc)
 		{	return doc;
 		}
+		const importUrl = getUrlForFilename(node.location.filename, this.#entryPoints, this.#importUrls);
 		let newDoc = '';
 		let from = 0;
 		let codeFrom = -1;
@@ -600,7 +605,7 @@ class NodesToMd
 				{	if (!tag)
 					{	tag = 'ts';
 					}
-					newDoc += doc.slice(from, RE_MD_CODEBLOCKS.lastIndex-blockOpen.length);
+					newDoc += doc.slice(from, codeFrom-blockOpen.length);
 					newDoc += '```';
 					newDoc += tag;
 					from = codeFrom;
@@ -613,7 +618,8 @@ class NodesToMd
 				{	return doc; // error: "```tag" is used to close codeblock
 				}
 				if (codeTag.slice(0, 2).toLowerCase() == 'ts')
-				{	RE_MD_CODEBLOCK_EXAMPLE.lastIndex = codeFrom;
+				{	// Substitute "To run this example:"
+					RE_MD_CODEBLOCK_EXAMPLE.lastIndex = codeFrom;
 					const m2 = RE_MD_CODEBLOCK_EXAMPLE.exec(doc);
 					if (m2)
 					{	const nextComments = m2[1];
@@ -651,8 +657,83 @@ class NodesToMd
 								newDoc += exampleId;
 								newDoc += ".ts";
 								newDoc += nextComments.slice(lastCommentPos).replaceAll(EXAMPLE, `/tmp/${exampleId}.ts`);
-								from = RE_MD_CODEBLOCK_EXAMPLE.lastIndex;
+								if (!importUrl)
+								{	// No need to substitute imports in the codeblock
+									from = RE_MD_CODEBLOCK_EXAMPLE.lastIndex;
+								}
+								else
+								{	// Need to substitute imports in the codeblock, so go to comment end
+									const lfPos = doc.indexOf('\n', RE_MD_CODEBLOCK_EXAMPLE.lastIndex);
+									const newLinePos = lfPos==-1 ? doc.length : lfPos+1;
+									newDoc += doc.slice(RE_MD_CODEBLOCK_EXAMPLE.lastIndex, newLinePos);
+									from = codeFrom = newLinePos;
+								}
 							}
+						}
+					}
+					// Substitute imports in the codeblock
+					if (importUrl)
+					{	const codeTo = RE_MD_CODEBLOCKS.lastIndex - blockOpen.length;
+						const code = doc.slice(codeFrom, codeTo);
+						let offset = codeFrom;
+						const enum State
+						{	StmtStart,
+							StmtMid,
+							AfterImport,
+							AfterImportFrom,
+						}
+						let state = State.StmtStart;
+						for (const token of jstok(code))
+						{	const {text} = token;
+							if (token.level == 0)
+							{	switch (token.type)
+								{	case JstokTokenType.COMMENT:
+										break;
+									case JstokTokenType.WHITESPACE:
+										if (text.includes('\n'))
+										{	state = State.StmtStart;
+										}
+										break;
+									case JstokTokenType.OTHER:
+										if (text == ';')
+										{	state = State.StmtStart;
+										}
+										else if (state != State.AfterImport)
+										{	state = State.StmtMid;
+										}
+										break;
+									case JstokTokenType.IDENT:
+										if (state==State.StmtStart && (text=='import' || text=='export'))
+										{	state = State.AfterImport;
+										}
+										else if (state != State.AfterImport)
+										{	state = State.StmtMid;
+										}
+										else if (text == 'from')
+										{	state = State.AfterImportFrom;
+										}
+										break;
+									case JstokTokenType.STRING:
+										if (state == State.AfterImportFrom)
+										{	const str = token.getValue();
+											if (str.startsWith('./') || str.startsWith('../'))
+											{	const subst = JSON.stringify(new URL(str, importUrl).href);
+												newDoc += doc.slice(from, offset);
+												newDoc += text.charAt(0)=="'" && !subst.includes('\\') ? "'"+subst.slice(1, -1)+"'" : subst;
+												from = offset + text.length;
+											}
+										}
+										state = State.StmtMid;
+										break;
+									case JstokTokenType.MORE_REQUEST:
+										continue;
+									default:
+										if (state != State.AfterImport)
+										{	state = State.StmtMid;
+										}
+								}
+							}
+							offset += text.length;
 						}
 					}
 				}
@@ -667,6 +748,19 @@ class NodesToMd
 			if (!this.#examplesUsed.has(hash))
 			{	this.#examplesUsed.add(hash);
 				return 'example-' + hash.toString(36);
+			}
+		}
+	}
+}
+
+function getUrlForFilename(filename: string, entryPoints: string[], importUrls: string[])
+{	const len = entryPoints.length;
+	if (importUrls.length == len)
+	{	for (let i=0; i<len; i++)
+		{	const e = entryPoints[i];
+			if (filename.startsWith(e))
+			{	const relPath = filename.slice(filename.charAt(e.length)=='/' ? e.length+1 : e.length);
+				return new URL(relPath, importUrls[i]);
 			}
 		}
 	}
