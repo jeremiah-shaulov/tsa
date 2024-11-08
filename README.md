@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/tsa.ts doc-md --outFile=README.md mod.ts --importUrl https://deno.land/x/tsa@v0.0.30/mod.ts --moduleName 'tsa - Typescript source code analysis and documentation tool' --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/README.md
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/tsa.ts doc-md --outFile=README.md mod.ts --importUrl https://deno.land/x/tsa@v0.0.30/mod.ts --mainTitle 'tsa - Typescript source code analysis and documentation tool' --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/README.md
 -->
 
 # tsa - Typescript source code analysis and documentation tool
@@ -55,7 +55,7 @@ Options:
 - `--outFile <README.md>` (required) - Where to save the result.
 - `--outDir <generated-doc>` - This command also creates linked README.md files in the --outDir directory (default: "generated-doc").
 The directory will be created near --outFile or existing directory will be emptied if necessary.
-- `--moduleName <My Project>` - The title that will appear in the main README.md file.
+- `--mainTitle <My Project>` - The title that will appear in the main README.md file.
 - `--importUrl <URL>` - Optionally specify one such flag per each source file in corresponding order.
 This lets including in the documentation import examples for public symbols.
 The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator.

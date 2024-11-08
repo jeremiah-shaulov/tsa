@@ -46,7 +46,7 @@
 	- `--outFile <README.md>` (required) - Where to save the result.
 	- `--outDir <generated-doc>` - This command also creates linked README.md files in the --outDir directory (default: "generated-doc").
 	The directory will be created near --outFile or existing directory will be emptied if necessary.
-	- `--moduleName <My Project>` - The title that will appear in the main README.md file.
+	- `--mainTitle <My Project>` - The title that will appear in the main README.md file.
 	- `--importUrl <URL>` - Optionally specify one such flag per each source file in corresponding order.
 	This lets including in the documentation import examples for public symbols.
 	The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator.

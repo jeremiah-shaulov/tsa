@@ -12,8 +12,8 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 
-export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, moduleName='', importUrls=new Array<string>, baseDirUrl='')
-{	return new NodesToMd(nodes, outFileBasename, docDirBasename, baseDirUrl).genFiles(moduleName, importUrls);
+export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', importUrls=new Array<string>, baseDirUrl='')
+{	return new NodesToMd(nodes, outFileBasename, docDirBasename, baseDirUrl).genFiles(mainTitle, importUrls);
 }
 
 class NodesToMd
@@ -166,11 +166,11 @@ class NodesToMd
 		);
 	}
 
-	*genFiles(moduleName: string, importUrls: string[])
+	*genFiles(mainTitle: string, importUrls: string[])
 	{	// Module doc
 		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
-		if (moduleName)
-		{	code += `# ${mdEscape(moduleName)}\n\n`;
+		if (mainTitle)
+		{	code += `# ${mdEscape(mainTitle)}\n\n`;
 		}
 		code += mdLink('Documentation Index', this.#docDirBasename+'/README.md')+'\n\n';
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');

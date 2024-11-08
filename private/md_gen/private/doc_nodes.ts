@@ -6,7 +6,7 @@ export class DocNodes
 	{
 	}
 
-	toMd(outFileBasename='README.md', docDirBasename='generated-doc', moduleName='', importUrls=new Array<string>, baseDirUrl='')
-	{	return nodesToMd(this.nodes, outFileBasename, docDirBasename, moduleName, importUrls, baseDirUrl);
+	toMd(outFileBasename='README.md', docDirBasename='generated-doc', mainTitle='', importUrls=new Array<string>, baseDirUrl='')
+	{	return nodesToMd(this.nodes, outFileBasename, docDirBasename, mainTitle, importUrls, baseDirUrl);
 	}
 }
