@@ -15,11 +15,12 @@ const C_SQUARE_CLOSE = ']'.charCodeAt(0);
 const C_EQ = '='.charCodeAt(0);
 const C_SPACE = ' '.charCodeAt(0);
 const C_TAB = '\t'.charCodeAt(0);
+const C_TIMES = '*'.charCodeAt(0);
 
 const RE_TRIM_TAG = /\s*\*{0,2}$/;
 const RE_EXTRACT_DOC_COMMENT = /\s*\/\*\*+[ \t]*/y;
 const RE_PARSE_DOC_COMMENT = /^\/\*+[ \t]*|\*+\/$/g;
-const RE_PARSE_DOC_COMMENT_2 = /^\s*\*/gm;
+const RE_PARSE_DOC_COMMENT_2 = /^[ \t]*\*(?=\s)/mg;
 
 function tagToString(tag: tsa.JSDocTag)
 {	return tag.getText().replace(RE_TRIM_TAG, '');
@@ -37,7 +38,7 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 	if (symbolDisplayParts?.length || docTags?.length)
 	{	const extracted = extractJsDocComment(node);
 		let doc = undoCommentPreprocessing(extracted);
-		const docTokens = new Array<JsDocToken>();
+		const docTokens = new Array<JsDocToken>;
 		if (symbolDisplayParts)
 		{	for (let {text, kind} of symbolDisplayParts)
 			{	text = undoCommentPreprocessing(text);
@@ -48,7 +49,7 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 			}
 		}
 		if (extracted)
-		{	correctIndentInTokensAccordingToText(docTokens, extracted);
+		{	correctIndentInTokensAccordingToText(docTokens, doc);
 		}
 		const tags: JsDocTag[]|undefined = docTags?.map(tag => convertJsDocTag(ts, converter, tag));
 		return {
@@ -163,15 +164,21 @@ function correctIndentInTokensAccordingToText(docTokens: JsDocToken[], commentTe
 			let insFrom = -1;
 			while (true)
 			{	const c = commentText.charCodeAt(pos2);
-				if (c!=C_SPACE && c!=C_TAB)
-				{	break;
+				if (c!=C_SPACE && c!=C_TAB && c!=C_TIMES)
+				{	if (rmFrom == -1)
+					{	let c2;
+						while ((c2 = iText.charCodeAt(j))==C_SPACE || c2==C_TAB || c2==C_TIMES)
+						{	j++;
+						}
+					}
+					break;
 				}
 				if (rmFrom == -1)
-				{	let c2 = iText.charCodeAt(j);
+				{	let c2 = iText.charCodeAt(j++);
 					if (c2 != c)
 					{	insFrom = pos2;
-						rmFrom = j;
-						while (c2==C_SPACE || c2==C_TAB)
+						rmFrom = --j;
+						while (c2==C_SPACE || c2==C_TAB || c2==C_TIMES)
 						{	c2 = iText.charCodeAt(++j);
 						}
 						rmTo = j;
@@ -181,7 +188,7 @@ function correctIndentInTokensAccordingToText(docTokens: JsDocToken[], commentTe
 			}
 			if (insFrom != -1)
 			{	docTokens[i].text = iText = iText.slice(0, rmFrom) + commentText.slice(insFrom, pos2) + iText.slice(rmTo);
-				j += pos2 - insFrom;
+				j = rmFrom + (pos2 - insFrom);
 			}
 			pos = pos2;
 		}

@@ -11,9 +11,9 @@ import {emitTsaBundle} from './emit_bundle/mod.ts';
 import {DocNodes} from './md_gen/mod.ts';
 
 const UNICODE_LEFT_TO_RIGHT_MARK = '\u200E';
-const RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START = /^[ \t]*\*?[ \t]*([^@\r\n]*)(@[^\r\n]+)/mg;
+const RE_DOCCOMMENT_LINE = /^[ \t]*\*?[ \t]*([^\r\n]+)/mg;
 const ATSIGN_AFTER_SPACE_FOLLOWED_BY_WORD = /\s@\w/g;
-const RE_UNDO_COMMENT_PREPROCESSING = /[ \t]\u200E@\w/g;
+const RE_UNDO_COMMENT_PREPROCESSING = /\u200E@\w/g;
 
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
@@ -263,15 +263,21 @@ L:			for (let i=offset-1; i>=0; i--)
 				}
 			}
 			// 2. Take care of `@` in doc-comment
-			RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex = 3; // after '/**'
+			let inCodeblock = false;
+			RE_DOCCOMMENT_LINE.lastIndex = 3; // after '/**'
 			while (true)
-			{	const m = RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.exec(token.text);
+			{	const m = RE_DOCCOMMENT_LINE.exec(token.text);
 				if (!m)
 				{	break;
 				}
-				if (m[1]) // if there's text preceding `@`
-				{	const lineEnd = RE_ATSIGN_IN_DOCCOMMENT_NOT_AT_LINE_START.lastIndex;
-					const substFrom = lineEnd - m[2].length - 1; // 1 char before first `@` (which is not at line start)
+				const line = m[1];
+				if (line.startsWith('```'))
+				{	inCodeblock = !inCodeblock;
+				}
+				const atPos = line.indexOf('@');
+				if (atPos >= (inCodeblock ? 0 : 1)) // if there's text preceding `@`, or is in codeblock
+				{	const lineEnd = RE_DOCCOMMENT_LINE.lastIndex;
+					const substFrom = lineEnd - m[1].length + atPos - 1; // 1 char before first `@` (which is not at line start or is in codeblock)
 					const before = token.text.slice(substFrom, lineEnd);
 					const after = before.replace(ATSIGN_AFTER_SPACE_FOLLOWED_BY_WORD, m => m.charAt(0) + UNICODE_LEFT_TO_RIGHT_MARK + m.slice(1));
 					if (after.length > before.length)
@@ -290,5 +296,5 @@ L:			for (let i=offset-1; i>=0; i--)
 }
 
 export function undoCommentPreprocessing(content: string)
-{	return content.replace(RE_UNDO_COMMENT_PREPROCESSING, m => m.charAt(0) + m.slice(2));
+{	return content.replace(RE_UNDO_COMMENT_PREPROCESSING, m => m.slice(1));
 }

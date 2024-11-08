@@ -10,7 +10,7 @@ import {DocNodes} from "https://deno.land/x/tsa@v0.0.30/mod.ts"
 
 - [constructor](#-constructornodes-docnode)
 - property [nodes](#-nodes-docnode)
-- method [toMd](#-tomdoutfilebasename-stringreadmemd-docdirbasename-stringgenerateddoc-maintitle-string-importurls-stringnew-arraystring-basedirurl-string-generatordir-any-code-string-void-any)
+- method [toMd](#-tomdoutfilebasename-stringreadmemd-docdirbasename-stringgenerateddoc-maintitle-string-entrypoints-stringnew-arraystring-importurls-stringnew-arraystring-basedirurl-string-generatordir-any-code-string-void-any)
 
 
 #### 🔧 `constructor`(nodes: [DocNode](../type.DocNode/README.md)\[])
@@ -21,7 +21,7 @@ import {DocNodes} from "https://deno.land/x/tsa@v0.0.30/mod.ts"
 
 
 
-#### ⚙ toMd(outFileBasename: `string`="README.md", docDirBasename: `string`="generated-doc", mainTitle: `string`="", importUrls: `string`\[]=new Array\<string>, baseDirUrl: `string`=""): Generator\<\{dir: `any`, code: `string`}, `void`, `any`>
+#### ⚙ toMd(outFileBasename: `string`="README.md", docDirBasename: `string`="generated-doc", mainTitle: `string`="", entryPoints: `string`\[]=new Array\<string>, importUrls: `string`\[]=new Array\<string>, baseDirUrl: `string`=""): Generator\<\{dir: `any`, code: `string`}, `void`, `any`>
 
 
 

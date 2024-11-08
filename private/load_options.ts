@@ -16,7 +16,7 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 	// To run this example:
 	// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-	import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.30/mod.ts';
+	import {tsa, defaultLoad, printDiagnostics} from '../mod.ts';
 
 	const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 	const OUT_FILE = '/tmp/doc.json';
@@ -61,7 +61,7 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 	In the following example i use fake input file:
 
 	```ts
-	import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.30/mod.ts';
+	import {tsa, defaultResolve, defaultLoad, printDiagnostics} from '../mod.ts';
 
 	const INPUT =
 	`	/**	The main function.

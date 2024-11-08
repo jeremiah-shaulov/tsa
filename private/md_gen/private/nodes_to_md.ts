@@ -20,7 +20,7 @@ class NodesToMd
 {	#nodes;
 	#outFileBasename;
 	#docDirBasename;
-	#entryPoints;
+	#entryPointsDirs;
 	#importUrls;
 	#baseDirUrlWithTrailingSlash;
 	#collection: NodeToMdCollection;
@@ -30,7 +30,7 @@ class NodesToMd
 	{	this.#nodes = nodes;
 		this.#outFileBasename = outFileBasename;
 		this.#docDirBasename = docDirBasename;
-		this.#entryPoints = entryPoints.map(f => path.toFileUrl(path.resolve(f)).href);
+		this.#entryPointsDirs = entryPoints.map(f => path.toFileUrl(path.dirname(path.resolve(f))).href);
 		this.#importUrls = importUrls;
 		this.#baseDirUrlWithTrailingSlash = baseDirUrl.endsWith('/') ? baseDirUrl : baseDirUrl ? baseDirUrl+'/' : '';
 		this.#collection = new NodeToMdCollection
@@ -584,7 +584,7 @@ class NodesToMd
 		if (!this.#baseDirUrlWithTrailingSlash || !doc)
 		{	return doc;
 		}
-		const importUrl = getUrlForFilename(node.location.filename, this.#entryPoints, this.#importUrls);
+		const importUrl = getUrlForFilename(node.location.filename, this.#entryPointsDirs, this.#importUrls);
 		let newDoc = '';
 		let from = 0;
 		let codeFrom = -1;
@@ -753,11 +753,11 @@ class NodesToMd
 	}
 }
 
-function getUrlForFilename(filename: string, entryPoints: string[], importUrls: string[])
-{	const len = entryPoints.length;
+function getUrlForFilename(filename: string, entryPointsDirs: string[], importUrls: string[])
+{	const len = entryPointsDirs.length;
 	if (importUrls.length == len)
 	{	for (let i=0; i<len; i++)
-		{	const e = entryPoints[i];
+		{	const e = entryPointsDirs[i];
 			if (filename.startsWith(e))
 			{	const relPath = filename.slice(filename.charAt(e.length)=='/' ? e.length+1 : e.length);
 				return new URL(relPath, importUrls[i]);
