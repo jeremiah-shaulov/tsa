@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {defaultLoad} from "https://deno.land/x/tsa@v0.0.30/mod.ts"
+import {defaultLoad} from "https://deno.land/x/tsa@v0.0.31/mod.ts"
 ```
 
 `function` defaultLoad(specifier: `string`, \_isDynamic: `boolean`): Promise\<LoadResponse>

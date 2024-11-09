@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {NodeWithInfo} from "https://deno.land/x/tsa@v0.0.30/mod.ts"
+import {NodeWithInfo} from "https://deno.land/x/tsa@v0.0.31/mod.ts"
 ```
 
 ## This type has

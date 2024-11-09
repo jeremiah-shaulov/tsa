@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/tsa.ts doc-md --outFile=README.md mod.ts --importUrl https://deno.land/x/tsa@v0.0.30/mod.ts --mainTitle 'tsa - Typescript source code analysis and documentation tool' --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/README.md
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.31/tsa.ts doc-md --outFile=README.md mod.ts --importUrl https://deno.land/x/tsa@v0.0.31/mod.ts --mainTitle 'tsa - Typescript source code analysis and documentation tool' --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.31/README.md
 -->
 
 # tsa - Typescript source code analysis and documentation tool
@@ -24,7 +24,7 @@ Also this library can bundle Typescript project to single Typescript file (not o
 To install this tool do:
 
 ```bash
-deno install --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.30/tsa.ts
+deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.31/tsa.ts
 ```
 
 The command supports 5 operations:
@@ -44,7 +44,7 @@ Options:
 
 Example:
 ```bash
-tsa doc-json --pretty --outFile=/tmp/doc.json https://deno.land/x/dir@1.5.1/mod.ts
+tsa doc-json --pretty --outFile=/tmp/doc.json jsr:@std/bytes
 ```
 
 ### tsa doc-md [options] <file1.ts> [fileN.ts...]
@@ -66,6 +66,12 @@ you can optionally specify URL by which the --outFile will be publicly accessibl
 Then you can use script examples in doc-comments marked as `// To run this example:` on the first line,
 and followed by a line that contains "example.ts", like `// deno run --allow-all example.ts`, and these lines will be converted to `// To download and run this example:`...
 
+Example:
+```bash
+mkdir -p /tmp/tsa-test
+tsa doc-md --mainTitle 'Standard bytes library' --outFile=/tmp/tsa-test/README.md jsr:@std/bytes
+```
+
 ### tsa bundle-js [options] <file1.ts> [fileN.ts...]
 
 Bundle Typescript source files to single Javascript module.
@@ -74,6 +80,11 @@ Options:
 - `--outFile <out.js>` - Where to save the result (default: stdout).
 - `--target <ESNext>` - Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).
 
+Example:
+```bash
+tsa bundle --outFile=/tmp/bytes.js jsr:@std/bytes
+```
+
 ### tsa bundle-ts [options] <file1.ts> [fileN.ts...]
 
 Bundle Typescript source files to single `.ts` module.
@@ -81,6 +92,11 @@ Bundle Typescript source files to single `.ts` module.
 Options:
 - `--outFile <out.ts>` - Where to save the result (default: stdout).
 - `--target <ESNext>` - Target JavaScript version. One of: ES2015, ES2016, ES2017, ES2018, ES2019, ES2020, ES2021, ES2022, ESNext (default: ESNext).
+
+Example:
+```bash
+tsa bundle-ts --outFile=/tmp/bytes.ts jsr:@std/bytes
+```
 
 ### tsa types [options] <file1.ts> [fileN.ts...]
 
@@ -101,10 +117,10 @@ Similarly when using this library, the first step is to create [tsa.TsaProgram](
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.30/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.31/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-p9mn.ts
 
-import {tsa, printDiagnostics, LoadOptions} from 'https://deno.land/x/tsa@v0.0.30/mod.ts';
+import {tsa, printDiagnostics, LoadOptions} from 'https://deno.land/x/tsa@v0.0.31/mod.ts';
 
 const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 
