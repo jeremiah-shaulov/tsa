@@ -1,12 +1,12 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
 import {tsa, printDiagnostics} from './mod.ts';
-import {Command, path} from './private/deps.ts';
+import {Command, path, APP_GIT_TAG} from './private/deps.ts';
 
 const program = new Command('tsa');
 
 program
-	.version('0.0.1')
+	.version(APP_GIT_TAG)
 	.description
 	(	'Typescript compiler adapter for Deno.\n' +
 		'It can perform 3 operations: `tsa doc ...`, `tsa bundle ...`, and `tsa types ...`.\n' +
