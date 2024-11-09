@@ -129,7 +129,7 @@ export class Converter
 		{	const entryPointHref = entryPointsHrefs[i];
 			const sourceFile = this.program.getSourceFile(entryPointHref);
 			if (sourceFile)
-			{	this.#convertSourceFile(sourceFile, exportedSymbols, this.#followModuleImports ? entryPointsHrefs : undefined);
+			{	this.#convertSourceFile(sourceFile, i, exportedSymbols, this.#followModuleImports ? entryPointsHrefs : undefined);
 			}
 		}
 		// 2. Convert private symbols
@@ -218,7 +218,7 @@ export class Converter
 		return node;
 	}
 
-	#convertSourceFile(sourceFile: tsa.SourceFile, exportedSymbols?: Set<tsa.Symbol>, addToEntryPoints?: string[])
+	#convertSourceFile(sourceFile: tsa.SourceFile, entryPointNumber?: number, exportedSymbols?: Set<tsa.Symbol>, addToEntryPoints?: string[])
 	{	// 1. Add the first doc-comment in the file, if it contains @module tag
 		this.#convertModuleDoc(sourceFile);
 
@@ -245,7 +245,7 @@ export class Converter
 		{	const {isDeclarationFile} = sourceFile;
 			for (const symbol of this.checker.getExportsOfModule(mainSymbol))
 			{	exportedSymbols?.add(symbol);
-				this.#convertSymbol(symbol, true, isDeclarationFile);
+				this.#convertSymbol(symbol, isDeclarationFile, entryPointNumber, sourceFile);
 			}
 		}
 	}
@@ -257,7 +257,7 @@ export class Converter
 			{	for (const declaration of this.#getDeclarations(statement))
 				{	const symbol = declaration.name && this.checker.getSymbolAtLocation(declaration.name);
 					if (symbol && !this.#symbolDone(symbol) && !exportedSymbols.has(symbol))
-					{	this.#convertSymbol(symbol, false, isDeclarationFile);
+					{	this.#convertSymbol(symbol, isDeclarationFile);
 					}
 				}
 			}
@@ -326,13 +326,13 @@ export class Converter
 		}
 	}
 
-	#convertSymbol(symbol: tsa.Symbol, isExported: boolean, isDeclarationFile: boolean)
+	#convertSymbol(symbol: tsa.Symbol, isDeclarationFile: boolean, isExportedFromEntryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
 	{	const {ts} = this;
-		let {resolvedSymbol, exports, isExportAssignment, onlyResolvedIsExported} = resolveSymbolWithTrace(ts, this, symbol);
+		let {resolvedSymbol, exports, isExportAssignment, onlyResolvedIsExported} = resolveSymbolWithTrace(ts, this, symbol, isExportedFromEntryPointNumber, entryPointSourceFile);
 		resolvedSymbol ??= symbol;
 		const node = this.#symbolDone(resolvedSymbol, true)?.node;
 		if (!node)
-		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExported, this.checker) : isExported || isDeclarationFile)
+		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExportedFromEntryPointNumber!=undefined, this.checker) : isExportedFromEntryPointNumber!=undefined || isDeclarationFile)
 			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment || isDeclarationFile);
 				if (result)
 				{	if (exports?.length && !onlyResolvedIsExported)

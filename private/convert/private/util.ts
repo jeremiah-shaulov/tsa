@@ -10,7 +10,7 @@ export function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?:
 	return symbol;
 }
 
-export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, symbol?: tsa.Symbol)
+export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, symbol?: tsa.Symbol, isExportedFromEntryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
 {	let exports: Array<Export> | undefined;
 	let onlyResolvedIsExported = false;
 	let isExportAssignment = false;
@@ -27,11 +27,11 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 		{	if (!exports)
 			{	exports = [];
 			}
-			exports.push
-			(	{	name: symbol.name,
-					location: convertLocation(ts, converter, declaration),
-				}
-			);
+			const location = convertLocation(ts, converter, declaration);
+			if (location.entryPointNumber === isExportedFromEntryPointNumber)
+			{	isExportedFromEntryPointNumber = undefined;
+			}
+			exports.push({name: symbol.name, location});
 		}
 		symbol = converter.checker.getImmediateAliasedSymbol(symbol);
 	}
@@ -43,11 +43,13 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 			{	exports = [];
 				onlyResolvedIsExported = true;
 			}
-			exports.push
-			(	{	name: symbol.name,
-					location: convertLocation(ts, converter, declaration),
-				}
-			);
+			const location = convertLocation(ts, converter, declaration);
+			if (isExportedFromEntryPointNumber!=undefined && location.entryPointNumber!==isExportedFromEntryPointNumber)
+			{	const location = convertLocation(ts, converter, entryPointSourceFile);
+				exports.push({name: symbol.name, location});
+				onlyResolvedIsExported = false;
+			}
+			exports.push({name: symbol.name, location});
 		}
 		// 3. Add the recorded exports to `exportsPerResolvedSymbol`
 		const curExports = converter.exportsPerResolvedSymbol.get(symbol);
