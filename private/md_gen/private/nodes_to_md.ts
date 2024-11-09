@@ -6,11 +6,12 @@ import {escapeShellArg, isDeprecated, isPublicOrProtected} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
-const RE_NO_NL = /[\r\n]/;
 const EXAMPLE = 'example.ts';
 
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
+const RE_NO_NL = /[\r\n]/;
+const RE_STARTS_WITH_NEW_LINE = /^[\r\n]/;
 
 export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
 {	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle);
@@ -507,8 +508,9 @@ class NodesToMd
 		{	doc = '';
 			let curLinkIsCode = false;
 			let curNamepath = '';
-			for (const {kind, text} of docTokens)
-			{	switch (kind)
+			for (let i=0, iEnd=docTokens.length; i<iEnd; i++)
+			{	const {kind, text} = docTokens[i];
+				switch (kind)
 				{	case 'text':
 						// Text
 						doc += text;
@@ -553,7 +555,7 @@ class NodesToMd
 									}
 								}
 								if (!linkText)
-								{	if (curLinkIsCode)
+								{	if (curLinkIsCode && doc.endsWith('\n') && (i+1==iEnd || RE_STARTS_WITH_NEW_LINE.test(docTokens[i+1].text)))
 									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir, node);
 										if (tsDecl)
 										{	doc += tsDecl;
