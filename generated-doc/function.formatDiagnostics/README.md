@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {formatDiagnostics} from "https://deno.land/x/tsa@v0.0.31/mod.ts"
+import {formatDiagnostics} from "https://deno.land/x/tsa@v0.0.32/mod.ts"
 ```
 
 `function` formatDiagnostics(diagnostics: readonly [tsa.Diagnostic](../interface.Diagnostic/README.md)\[]): `string`

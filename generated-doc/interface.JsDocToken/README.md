@@ -2,6 +2,10 @@
 
 [Documentation Index](../README.md)
 
+```ts
+import {JsDocToken} from "https://deno.land/x/tsa@v0.0.32/mod.ts"
+```
+
 Doc-comment string split to tokens.
 
 `lineBreak` token separates several concatenated doc-comments.

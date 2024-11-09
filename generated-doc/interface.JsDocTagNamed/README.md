@@ -2,6 +2,10 @@
 
 [Documentation Index](../README.md)
 
+```ts
+import {JsDocTagNamed} from "https://deno.land/x/tsa@v0.0.32/mod.ts"
+```
+
 ## This interface has
 
 - 6 properties:

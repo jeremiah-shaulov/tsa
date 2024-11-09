@@ -2,6 +2,10 @@
 
 [Documentation Index](../README.md)
 
+```ts
+import {DocNode} from "https://deno.land/x/tsa@v0.0.32/mod.ts"
+```
+
 This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
 
 - [Location](../interface.Location/README.md) has additional [entryPointNumber](../interface.Location/README.md#-entrypointnumber-number) field.
