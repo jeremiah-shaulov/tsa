@@ -3,19 +3,20 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LiteralPropertyDef} from "https://deno.land/x/tsa@v0.0.33/mod.ts"
+import {LiteralPropertyDef} from "https://deno.land/x/tsa@v0.0.34/mod.ts"
 ```
 
 ## This interface has
 
-- 7 properties:
+- 8 properties:
 [name](#-name-string),
 [params](#-params-paramdef),
 [readonly](#-readonly-boolean),
 [computed](#-computed-boolean),
 [optional](#-optional-boolean),
 [tsType](#-tstype-tstypedef),
-[typeParams](#-typeparams-tstypeparamdef)
+[typeParams](#-typeparams-tstypeparamdef),
+[jsDoc](#-jsdoc-jsdoc)
 
 
 #### 📄 name: `string`
@@ -43,6 +44,10 @@ import {LiteralPropertyDef} from "https://deno.land/x/tsa@v0.0.33/mod.ts"
 
 
 #### 📄 typeParams: [TsTypeParamDef](../interface.TsTypeParamDef/README.md)\[]
+
+
+
+#### 📄 jsDoc?: [JsDoc](../interface.JsDoc/README.md)
 
 
 

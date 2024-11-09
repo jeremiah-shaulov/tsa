@@ -3,15 +3,16 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LiteralIndexSignatureDef} from "https://deno.land/x/tsa@v0.0.33/mod.ts"
+import {LiteralIndexSignatureDef} from "https://deno.land/x/tsa@v0.0.34/mod.ts"
 ```
 
 ## This interface has
 
-- 3 properties:
+- 4 properties:
 [readonly](#-readonly-boolean),
 [params](#-params-paramdef),
-[tsType](#-tstype-tstypedef)
+[tsType](#-tstype-tstypedef),
+[jsDoc](#-jsdoc-jsdoc)
 
 
 #### 📄 readonly: `boolean`
@@ -23,6 +24,10 @@ import {LiteralIndexSignatureDef} from "https://deno.land/x/tsa@v0.0.33/mod.ts"
 
 
 #### 📄 tsType?: [TsTypeDef](../type.TsTypeDef/README.md)
+
+
+
+#### 📄 jsDoc?: [JsDoc](../interface.JsDoc/README.md)
 
 
 

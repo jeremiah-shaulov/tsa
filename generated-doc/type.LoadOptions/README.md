@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LoadOptions} from "https://deno.land/x/tsa@v0.0.33/mod.ts"
+import {LoadOptions} from "https://deno.land/x/tsa@v0.0.34/mod.ts"
 ```
 
 You can pass `LoadOptions`
@@ -13,10 +13,10 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.33/generated-doc/type.LoadOptions/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-7jcr>~)' > /tmp/example-7jcr.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.34/generated-doc/type.LoadOptions/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-7jcr>~)' > /tmp/example-7jcr.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-7jcr.ts
 
-import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.33/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.34/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -61,7 +61,7 @@ console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.nodes.leng
 In the following example i use fake input file:
 
 ```ts
-import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.33/mod.ts';
+import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.34/mod.ts';
 
 const INPUT =
 `	/**	The main function.
@@ -114,17 +114,37 @@ console.log(JSON.stringify(docNodes.nodes, undefined, '\t'));
 
 #### 📄 importMap?: `string` | URL
 
+> An optional URL or path to an import map to be loaded and used to resolve module specifiers.
+> If both `importMap` and `resolve()` are specified, the `importMap` will be preferred.
+
 
 
 #### 📄 resolve?: [Resolve](../private.type.Resolve/README.md)
+
+> An optional callback that allows the default resolution logic of the module graph to be "overridden".
+> This is intended to allow items like an import map to be used with the module graph.
+> The callback takes the string of the module specifier, as it appears in `import from` or `export from`, and the string URL of the module where this import is found.
+> The callback then returns a resolved URL to the module file.
 
 
 
 #### 📄 load?: [Load](../private.type.Load/README.md)
 
+> An optional callback that is called with the URL string of the resource to be loaded.
+> The callback should return a `LoadResponse` or `undefined` if the module is not found.
+> If there are other errors encountered, a rejected promise should be returned.
+
 
 
 #### 📄 createSourceFile?: [CreateSourceFile](../private.type.CreateSourceFile/README.md)
+
+> Hook on creation `tsa.SourceFile` object from source code string.
+> The default implementation is:
+> ```ts
+> function defaultCreateSourceFile(origSpecifier: string, content: string, scriptKind: tsa.ScriptKind)
+> {	return tsa.createSourceFile(origSpecifier, content, scriptKind==tsa.ScriptKind.JSON ? tsa.ScriptTarget.JSON : tsa.ScriptTarget.Latest, undefined, scriptKind);
+> }
+> ```
 
 
 
