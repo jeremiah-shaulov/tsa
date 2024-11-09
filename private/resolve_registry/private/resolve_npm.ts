@@ -1,5 +1,5 @@
-import {cacheDirectory, path} from './deps.ts';
-import {exists} from './util.ts';
+import {cacheDirectory, path} from '../../deps.ts';
+import {exists} from '../../util.ts';
 
 let npmRoots: string[] | undefined;
 const known = new Map<string, {fileUrl: URL, specifier: string}|null>;
@@ -22,7 +22,7 @@ async function getNpmRoots()
 	return npmRoots;
 }
 
-export async function getNpmFilename(specifier: string)
+export async function resolveNpm(specifier: string)
 {	if (specifier.startsWith('npm:'))
 	{	let result = known.get(specifier);
 		if (result === undefined)

@@ -1,6 +1,6 @@
 import {tsa} from './tsa_ns.ts';
 import {cache, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} from './deps.ts';
-import {getNpmFilename} from './npm.ts';
+import {resolveRegistry} from './resolve_registry/mod.ts';
 import {isUrl} from './util.ts';
 
 type Resolve = (specifier: string, referrer: string) => string | Promise<string>;
@@ -120,7 +120,7 @@ export type LoadOptions =
 		The callback should return a `LoadResponse` or `undefined` if the module is not found.
 		If there are other errors encountered, a rejected promise should be returned.
 
-		@param specifier The URL string of the resource to be loaded and resolved
+		@param specifier The URL string of the resource to be loaded
 		@param isDynamic A flag that indicates if the module was being loaded dynamically
 	 **/
 	load?: Load;
@@ -161,17 +161,20 @@ export class Loader
 		this.#useCreateSourceFile = useCreateSourceFile;
 	}
 
-	/**	Resolve, and remember how it was resolved.
-		Later `resolved()` can return this synchronously.
+	/**	Resolve specifier (something that appears in `import ... from`) to final URL.
+		The result of resolution will be memorized, and later {@link resolved()} can return it synchronously.
 	 **/
 	async resolve(specifier: string, referrer: string)
-	{	const result = await this.#useResolve(specifier, referrer);
-		let byReferrer = this.#resolved.get(referrer);
+	{	let byReferrer = this.#resolved.get(referrer);
 		if (!byReferrer)
 		{	byReferrer = new Map;
 			this.#resolved.set(referrer, byReferrer);
 		}
-		byReferrer.set(specifier, result);
+		let result = byReferrer.get(specifier);
+		if (!result)
+		{	result = await this.#useResolve(specifier, referrer);
+			byReferrer.set(specifier, result);
+		}
 		return result;
 	}
 
@@ -211,11 +214,9 @@ async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load
 }
 
 export async function defaultResolve(specifier: string, referrer: string)
-{	if (specifier.startsWith('npm:'))
-	{	const result = await getNpmFilename(specifier);
-		if (result)
-		{	return result.specifier;
-		}
+{	const result = await resolveRegistry(specifier);
+	if (result)
+	{	return result.specifier;
 	}
 	return defaultResolveSync(specifier, referrer);
 }
@@ -225,7 +226,7 @@ function defaultResolveSync(specifier: string, referrer: string)
 	{	return new URL(specifier, new URL(referrer)).href;
 	}
 	catch
-	{	// URL fails for 'npm:' schema
+	{	// `URL` fails for schemas like 'npm:'
 		const prefix = 'http://http/';
 		const {href} = new URL(specifier, prefix+referrer);
 		return href.startsWith(prefix) ? href.slice(prefix.length) : href;
@@ -236,7 +237,7 @@ export async function defaultLoad(specifier: string, _isDynamic: boolean): Promi
 {	let filename;
 	let headers;
 	if (specifier.startsWith('npm:'))
-	{	const result = await getNpmFilename(specifier);
+	{	const result = await resolveRegistry(specifier);
 		if (!result)
 		{	return {kind: 'external', specifier};
 		}
