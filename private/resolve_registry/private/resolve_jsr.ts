@@ -1,4 +1,4 @@
-import {cache, path} from '../../deps.ts';
+import {cache, path, semver} from '../../deps.ts';
 
 // deno-lint-ignore no-explicit-any
 type Any = any;
@@ -52,7 +52,32 @@ async function getMeta(packageUrl: string, version='')
 }
 
 function metaChooseVersion(meta: Any, versionQuery: string): string
-{	return meta.latest;
+{	if (!versionQuery)
+	{	if ('latest' in meta && typeof(meta.latest)=='string')
+		{	return meta.latest;
+		}
+	}
+	else
+	{	if ('versions' in meta && typeof(meta.versions)=='object')
+		{	const query = semver.parseRange(versionQuery);
+			const versionStrings = new Array<string>;
+			const versions = new Array<semver.SemVer>;
+			for (const [k, v] of Object.entries(meta.versions))
+			{	if (typeof(v)=='object' && v && !('yanked' in v && v.yanked))
+				{	versionStrings.push(k);
+					versions.push(semver.parse(k));
+				}
+			}
+			const satisfying = semver.maxSatisfying(versions, query);
+			if (satisfying)
+			{	const i = versions.indexOf(satisfying);
+				if (i != -1)
+				{	return versionStrings[i];
+				}
+			}
+		}
+	}
+	return '';
 }
 
 function versionMetaChooseEntryPoint(versionMeta: Any, entryPointQuery: string)
