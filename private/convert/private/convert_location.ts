@@ -1,8 +1,8 @@
 import {tsa} from '../../tsa_ns.ts';
-import {DocNode} from '../../doc_node/mod.ts';
+import {Location} from '../../doc_node/mod.ts';
 import {Converter} from './converter.ts';
 
-export function convertLocation(_ts: typeof tsa, converter: Converter, node?: tsa.Node): DocNode['location']
+export function convertLocation(_ts: typeof tsa, converter: Converter, node?: tsa.Node): Location
 {	const sourceFile = node?.getSourceFile();
 	const pos = node && sourceFile?.getLineAndCharacterOfPosition(node.pos);
 	const filename = sourceFile?.fileName || '';
