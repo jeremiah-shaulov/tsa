@@ -12,6 +12,7 @@
     - Added `nodeIndex` to `DecoratorDef`.
     - Added `nodeIndex` and `nodeSubIndex` to `TsTypeRefDef`.
     - Added `superNodeIndex` to `ClassDef`.
+    - Added `jsDoc` to `LiteralMethodDef`, `LiteralPropertyDef`, `LiteralCallSignatureDef` and `LiteralIndexSignatureDef`
 
     @module
  **/
@@ -416,6 +417,7 @@ export interface LiteralCallSignatureDef {
   params: ParamDef[];
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
+  jsDoc?: JsDoc;
 }
 
 export type LiteralDefKind =
@@ -465,6 +467,7 @@ export interface LiteralIndexSignatureDef {
   readonly: boolean;
   params: ParamDef[];
   tsType?: TsTypeDef;
+  jsDoc?: JsDoc;
 }
 
 export interface LiteralMethodDef {
@@ -475,6 +478,7 @@ export interface LiteralMethodDef {
   optional: boolean;
   returnType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
+  jsDoc?: JsDoc;
 }
 
 export interface LiteralPropertyDef {
@@ -485,6 +489,7 @@ export interface LiteralPropertyDef {
   optional: boolean;
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
+  jsDoc?: JsDoc;
 }
 
 export interface Location {

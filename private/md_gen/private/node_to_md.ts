@@ -314,7 +314,7 @@ export class NodeToMd
 			for (const m of this.#destructors)
 			{	const memberHeader = memberHeaders.get(m);
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Destructor, memberHeader, mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
+				sections.add(sectionIndex(m, deprecated), What.Destructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
@@ -325,14 +325,14 @@ export class NodeToMd
 			for (const m of this.#propertiesAndAccessors)
 			{	const memberHeader = memberHeaders.get(m);
 				let code = '';
-				const getCode = 'getter' in m && m.getter && 'jsDoc' in m.getter && m.getter.jsDoc && onJsDoc(m.getter.jsDoc, this.#node, memberHeader?.headerId ?? '', 0);
-				const setCode = 'setter' in m && m.setter && 'jsDoc' in m.setter && m.setter.jsDoc && onJsDoc(m.setter.jsDoc, this.#node, memberHeader?.headerId ?? '', 1);
+				const getCode = 'getter' in m && m.getter && m.getter.jsDoc && onJsDoc(m.getter.jsDoc, this.#node, memberHeader?.headerId ?? '', 0);
+				const setCode = 'setter' in m && m.setter && m.setter.jsDoc && onJsDoc(m.setter.jsDoc, this.#node, memberHeader?.headerId ?? '', 1);
 				if (getCode && setCode)
 				{	code += mdBlockquote('`get`\n\n'+getCode)+mdBlockquote('`set`\n\n'+setCode);
 				}
 				else
 				{	let getOrSetCode = getCode || setCode;
-					if (!getOrSetCode && 'jsDoc' in m)
+					if (!getOrSetCode)
 					{	getOrSetCode = onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0);
 					}
 					if (getOrSetCode)
@@ -346,7 +346,7 @@ export class NodeToMd
 			for (const m of this.#methods)
 			{	const memberHeader = memberHeaders.get(m);
 				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Method, memberHeader,  mdBlockquote(onJsDoc('jsDoc' in m ? m.jsDoc : undefined, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
+				sections.add(sectionIndex(m, deprecated), What.Method, memberHeader,  mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
 			}
 			// done
 			sectionsCode = sections+'';
@@ -441,7 +441,7 @@ function getClassMembers
 							isStatic,
 							accessibility,
 							location: 'location' in m ? m.location : undefined,
-							jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+							jsDoc: m.jsDoc,
 						};
 						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
 						propertiesAndAccessors.push(accessor);
@@ -449,7 +449,7 @@ function getClassMembers
 						{	const setter = methodsAndAccessors[j];
 							accessor.setter = setter;
 							if (!accessor.jsDoc)
-							{	accessor.jsDoc = 'jsDoc' in setter ? setter.jsDoc : undefined;
+							{	accessor.jsDoc = setter.jsDoc;
 							}
 							if (j < i)
 							{	const k = settersOnly.indexOf(setter);
@@ -478,7 +478,7 @@ function getClassMembers
 					isStatic,
 					accessibility,
 					location: 'location' in m ? m.location : undefined,
-					jsDoc: 'jsDoc' in m ? m.jsDoc : undefined,
+					jsDoc: m.jsDoc,
 				}
 			);
 		}

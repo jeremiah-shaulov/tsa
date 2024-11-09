@@ -5,6 +5,7 @@ import {convertTypeParameter, convertTypeParamNode} from './convert_type_paramet
 import {resolveSymbol, getText, removeUndefined, getPropertySpecialName} from './util.ts';
 import {convertSignatureReturnType, createPredicate} from './convert_index_signature.ts';
 import {Converter} from './converter.ts';
+import {convertJsDoc} from './convert_js_doc.ts';
 
 export const TYPE_NOT_DETECTED: TsTypeDef = {repr: 'unknown', kind: 'keyword', keyword: 'unknown'};
 
@@ -162,7 +163,8 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 		const methods = new Array<LiteralMethodDef>();
 		for (const member of node.members)
 		{	if (ts.isPropertySignature(member))
-			{	const readonly = member.modifiers?.some(m => m.kind == ts.SyntaxKind.ReadonlyKeyword) ?? false;
+			{	const symbol = converter.checker.getSymbolAtLocation(member.name);
+				const readonly = member.modifiers?.some(m => m.kind == ts.SyntaxKind.ReadonlyKeyword) ?? false;
 				properties.push
 				(	{	name: getPropertySpecialName(ts, member.name, true) || getText(ts, member.name),
 						params: [],
@@ -171,38 +173,46 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 						optional: member.questionToken != undefined,
 						tsType: member.type && convertType(ts, converter, member.type),
 						typeParams: [],
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
 			else if (ts.isIndexSignatureDeclaration(member))
-			{	indexSignatures.push
+			{	const symbol = 'symbol' in member ? member.symbol as tsa.Symbol : undefined;
+				indexSignatures.push
 				(	{	readonly: member.modifiers?.some(m => m.kind == ts.SyntaxKind.ReadonlyKeyword) ?? false,
 						params: member.parameters.map(param => convertParameterNode(ts, converter, param)),
 						tsType: member.type && convertType(ts, converter, member.type),
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
 			else if (ts.isCallSignatureDeclaration(member))
-			{	callSignatures.push
+			{	const symbol = 'symbol' in member ? member.symbol as tsa.Symbol : undefined;
+				callSignatures.push
 				(	{	params: member.parameters.map(param => convertParameterNode(ts, converter, param)),
 						tsType: member.type && convertType(ts, converter, member.type),
 						typeParams: member.typeParameters?.map(type => convertTypeParamNode(ts, converter, type)) ?? [],
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
 			else if (ts.isConstructSignatureDeclaration(member) || ts.isConstructorDeclaration(member))
-			{	methods.push
+			{	const symbol = 'symbol' in member ? member.symbol as tsa.Symbol : undefined;
+				methods.push
 				(	{	name: 'new',
 						kind: 'method',
 						params: member.parameters.map(param => convertParameterNode(ts, converter, param)),
 						optional: member.questionToken != undefined,
 						returnType: member.type && convertType(ts, converter, member.type),
 						typeParams: member.typeParameters?.map(type => convertTypeParamNode(ts, converter, type)) ?? [],
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
 			else if (ts.isMethodDeclaration(member) || ts.isMethodSignature(member))
-			{	const sig = converter.checker.getSignatureFromDeclaration(member);
+			{	const symbol = converter.checker.getSymbolAtLocation(member.name);
+				const sig = converter.checker.getSignatureFromDeclaration(member);
 				methods.push
 				(	{	name: getPropertySpecialName(ts, member.name, true) || getText(ts, member.name),
 						kind: 'method',
@@ -211,11 +221,13 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 						returnType: sig ? convertSignatureReturnType(ts, converter, sig) : member.type && convertType(ts, converter, member.type),
 						typeParams: sig?.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(param => param) ?? member.typeParameters?.map(type => convertTypeParamNode(ts, converter, type)) ?? [],
 						...(ts.isComputedPropertyName(member.name) ? {computed: true} : undefined),
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
 			else if (ts.isGetAccessor(member) || ts.isGetAccessorDeclaration(member) || ts.isSetAccessor(member) || ts.isSetAccessorDeclaration(member))
-			{	const sig = converter.checker.getSignatureFromDeclaration(member);
+			{	const symbol = converter.checker.getSymbolAtLocation(member.name);
+				const sig = converter.checker.getSignatureFromDeclaration(member);
 				methods.push
 				(	{	name: getPropertySpecialName(ts, member.name, true) || getText(ts, member.name),
 						kind: ts.isGetAccessor(member) || ts.isGetAccessorDeclaration(member) ? 'getter' : 'setter',
@@ -228,6 +240,7 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 						),
 						typeParams: [],
 						...(ts.isComputedPropertyName(member.name) ? {computed: true} : undefined),
+						...(symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), member)),
 					}
 				);
 			}
