@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.34/mod.ts"
+import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.35/mod.ts"
 ```
 
 ## This interface has

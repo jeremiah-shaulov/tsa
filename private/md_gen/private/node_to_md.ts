@@ -180,6 +180,9 @@ export class NodeToMd
 			}
 			else
 			{	code = this.#converter.onTopHeader();
+				if (this.#node.kind == 'typeAlias')
+				{	code += ' =';
+				}
 				code += '<br>\n{<br>\n';
 				// constructors
 				for (const m of this.#constructors)
