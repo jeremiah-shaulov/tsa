@@ -558,7 +558,7 @@ class NodesToMd
 								{	if (curLinkIsCode && doc.endsWith('\n') && (i+1==iEnd || RE_STARTS_WITH_NEW_LINE.test(docTokens[i+1].text)))
 									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir, node);
 										if (tsDecl)
-										{	doc += tsDecl;
+										{	doc += tsDecl.trim();
 											break;
 										}
 									}

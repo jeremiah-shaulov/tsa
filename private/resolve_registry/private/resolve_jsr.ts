@@ -26,19 +26,22 @@ export async function resolveJsr(specifier: string)
 const RE_JSR_NAME_SAN = /^[a-z0-9\-]{2,64}$/;
 
 function parseJsrSpecifier(specifier: string)
-{	if (specifier.startsWith('jsr:@'))
-	{	const pos = specifier.indexOf('/', 5);
-		if (pos != -1)
-		{	const scope = specifier.slice(5, pos);
-			const pos2 = specifier.indexOf('/', pos+1);
-			const packageAndVersion = specifier.slice(pos+1, pos2==-1 ? specifier.length : pos2);
-			const entryPointQuery = pos2==-1 ? '' : specifier.slice(pos2+1);
-			const pos3 = packageAndVersion.indexOf('@');
-			const packageName = pos3==-1 ? packageAndVersion : packageAndVersion.slice(0, pos3);
-			const versionQuery = pos3==-1 ? '' : packageAndVersion.slice(pos3+1);
-			if (RE_JSR_NAME_SAN.test(scope) && RE_JSR_NAME_SAN.test(packageName))
-			{	const packageUrl = `https://jsr.io/@${scope}/${packageName}/`;
-				return {packageUrl, versionQuery, entryPointQuery};
+{	if (specifier.startsWith('jsr:'))
+	{	const from = specifier.charAt(4)=='/' ? 6 : 5;
+		if (specifier.charAt(from-1) == '@')
+		{	const pos = specifier.indexOf('/', from);
+			if (pos != -1)
+			{	const scope = specifier.slice(from, pos);
+				const pos2 = specifier.indexOf('/', pos+1);
+				const packageAndVersion = specifier.slice(pos+1, pos2==-1 ? specifier.length : pos2);
+				const entryPointQuery = pos2==-1 ? '' : specifier.slice(pos2+1);
+				const pos3 = packageAndVersion.indexOf('@');
+				const packageName = pos3==-1 ? packageAndVersion : packageAndVersion.slice(0, pos3);
+				const versionQuery = pos3==-1 ? '' : packageAndVersion.slice(pos3+1);
+				if (RE_JSR_NAME_SAN.test(scope) && RE_JSR_NAME_SAN.test(packageName))
+				{	const packageUrl = `https://jsr.io/@${scope}/${packageName}/`;
+					return {packageUrl, versionQuery, entryPointQuery};
+				}
 			}
 		}
 	}

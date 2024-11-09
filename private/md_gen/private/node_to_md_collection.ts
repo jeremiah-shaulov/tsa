@@ -91,7 +91,7 @@ export class NodeToMdCollection
 
 	getTsDeclByNamepath(namepath: string, toDocDir: string, contextNode: DocNode)
 	{	if (namepath.startsWith('https://') || namepath.startsWith('http://'))
-		{	return namepath;
+		{	return '';
 		}
 		const found = findNamepathTarget(this.#nodes, namepath, contextNode);
 		if (found)
