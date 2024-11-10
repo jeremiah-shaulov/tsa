@@ -11,7 +11,9 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 const RE_NO_NL = /[\r\n]/;
-const RE_STARTS_WITH_NEW_LINE = /^[\r\n]/;
+
+const C_CR = '\r'.charCodeAt(0);
+const C_LF = '\n'.charCodeAt(0);
 
 export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
 {	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle);
@@ -508,16 +510,25 @@ class NodesToMd
 		{	doc = '';
 			let curLinkIsCode = false;
 			let curNamepath = '';
+			let isAfterLinkcode = false;
+			let midEndlinePos = -1;
 			for (let i=0, iEnd=docTokens.length; i<iEnd; i++)
 			{	const {kind, text} = docTokens[i];
 				switch (kind)
 				{	case 'text':
 						// Text
+						if (text=='\n' || text=='\r\n') // '\n' between 2 links
+						{	midEndlinePos = doc.length;
+						}
+						else
+						{	isAfterLinkcode = false;
+						}
 						doc += text;
 						break;
 					case 'lineBreak':
 						// New paragraph
 						doc += '\n\n------\n\n';
+						isAfterLinkcode = false;
 						break;
 					case 'linkText':
 					case 'linkName':
@@ -555,10 +566,21 @@ class NodesToMd
 									}
 								}
 								if (!linkText)
-								{	if (curLinkIsCode && doc.endsWith('\n') && (i+1==iEnd || RE_STARTS_WITH_NEW_LINE.test(docTokens[i+1].text)))
+								{	let c;
+									if (curLinkIsCode && doc.endsWith('\n') && (i+1==iEnd || (c = docTokens[i+1].text.charCodeAt(0))==C_CR || c==C_LF))
 									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir, node);
 										if (tsDecl)
-										{	doc += tsDecl.trim();
+										{	if (isAfterLinkcode)
+											{	if (midEndlinePos != -1)
+												{	doc = doc.slice(0, midEndlinePos) + '<br>' + doc.slice(midEndlinePos);
+												}
+												else
+												{	doc += '<br>';
+												}
+											}
+											doc += tsDecl.trim();
+											isAfterLinkcode = true;
+											midEndlinePos = -1;
 											break;
 										}
 									}
