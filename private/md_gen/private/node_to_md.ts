@@ -421,6 +421,7 @@ function getClassMembers
 	const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : tsType && 'typeLiteral' in tsType ? tsType.typeLiteral : undefined;
 	if (def)
 	{	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
+		const methodsByName = new Map<string, LiteralMethodDef|InterfaceMethodDef|ClassMethodDef>;
 		for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
 		{	const m = methodsAndAccessors[i];
 			if (isPublicOrProtected(m))
@@ -432,7 +433,17 @@ function getClassMembers
 						{	destructors.push(m);
 						}
 						else
-						{	methods.push(m);
+						{	const cur = methodsByName.get(m.name);
+							if (!cur)
+							{	methodsByName.set(m.name, m);
+								methods.push(m);
+							}
+							else if (!('functionDef' in m) || !('hasBody' in m.functionDef) || !m.functionDef.hasBody)
+							{	methods.push(m);
+							}
+							else if (m.jsDoc && !cur.jsDoc)
+							{	cur.jsDoc = m.jsDoc;
+							}
 						}
 						break;
 					}

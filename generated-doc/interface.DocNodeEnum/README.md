@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNodeEnum} from "https://deno.land/x/tsa@v0.0.35/mod.ts"
+import {DocNodeEnum} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 ```
 
 ## This interface has

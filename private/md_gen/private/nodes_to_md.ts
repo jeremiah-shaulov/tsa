@@ -511,14 +511,14 @@ class NodesToMd
 			let curLinkIsCode = false;
 			let curNamepath = '';
 			let isAfterLinkcode = false;
-			let midEndlinePos = -1;
+			let midEndline = '';
 			for (let i=0, iEnd=docTokens.length; i<iEnd; i++)
 			{	const {kind, text} = docTokens[i];
 				switch (kind)
 				{	case 'text':
 						// Text
 						if (text=='\n' || text=='\r\n') // '\n' between 2 links
-						{	midEndlinePos = doc.length;
+						{	midEndline = text;
 						}
 						else
 						{	isAfterLinkcode = false;
@@ -571,8 +571,10 @@ class NodesToMd
 									{	const tsDecl = this.#collection.getTsDeclByNamepath(curNamepath, toDocDir, node);
 										if (tsDecl)
 										{	if (isAfterLinkcode)
-											{	if (midEndlinePos != -1)
-												{	doc = doc.slice(0, midEndlinePos) + '<br>' + doc.slice(midEndlinePos);
+											{	if (midEndline)
+												{	doc = doc.slice(0, -midEndline.length);
+													doc += '<br>';
+													doc += midEndline;
 												}
 												else
 												{	doc += '<br>';
@@ -580,7 +582,7 @@ class NodesToMd
 											}
 											doc += tsDecl.trim();
 											isAfterLinkcode = true;
-											midEndlinePos = -1;
+											midEndline = '';
 											break;
 										}
 									}
