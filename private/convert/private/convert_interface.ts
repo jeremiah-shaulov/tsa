@@ -4,7 +4,7 @@ import {convertJsDoc} from './convert_js_doc.ts';
 import {convertLocation} from './convert_location.ts';
 import {convertTypeParameter} from './convert_type_parameter.ts';
 import {convertDefaultValue} from './convert_expression.ts';
-import {getHeritageTypes, getPropertySpecialName, getTypeNodeOfDeclaration, removeUndefined} from './util.ts';
+import {getHeritageTypes, setMemberName, getTypeNodeOfDeclaration, removeUndefined} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {convertType} from './convert_type.ts';
 import {convertParameter} from './convert_parameter.ts';
@@ -75,31 +75,41 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 	{	if (ts.isGetAccessorDeclaration(declaration) || ts.isSetAccessorDeclaration(declaration))
 		{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 			outMethods.push
-			(	{	name: getPropertySpecialName(ts, declaration.name, true) ?? symbol.name,
-					kind: ts.isGetAccessorDeclaration(declaration) ? 'getter' : 'setter',
-					location: convertLocation(ts, converter, declaration),
-					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
-					...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
-					optional: declaration.questionToken != undefined,
-					params: sig?.parameters.map(param => convertParameter(ts, converter, param)) ?? [],
-					...(ts.isGetAccessorDeclaration(declaration) ? {returnType: removeUndefined(convertType(ts, converter, sig?.getReturnType()), declaration.questionToken!=undefined)} : undefined),
-					typeParams: [],
-				}
+			(	setMemberName
+				(	ts,
+					converter,
+					{	name: symbol.name,
+						kind: ts.isGetAccessorDeclaration(declaration) ? 'getter' : 'setter',
+						location: convertLocation(ts, converter, declaration),
+						...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
+						...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
+						optional: declaration.questionToken != undefined,
+						params: sig?.parameters.map(param => convertParameter(ts, converter, param)) ?? [],
+						...(ts.isGetAccessorDeclaration(declaration) ? {returnType: removeUndefined(convertType(ts, converter, sig?.getReturnType()), declaration.questionToken!=undefined)} : undefined),
+						typeParams: [],
+					},
+					declaration.name
+				)
 			);
 		}
 		else if (ts.isMethodDeclaration(declaration) || ts.isMethodSignature(declaration))
 		{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 			outMethods.push
-			(	{	name: getPropertySpecialName(ts, declaration.name, true) ?? symbol.name,
-					kind: 'method',
-					location: convertLocation(ts, converter, declaration),
-					...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
-					...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
-					optional: declaration.questionToken != undefined,
-					params: sig?.parameters.map((param, i) => convertParameter(ts, converter, param, declaration.parameters[i])) ?? [],
-					returnType: convertSignatureReturnType(ts, converter, sig),
-					typeParams: sig?.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(param => param) ?? [],
-				}
+			(	setMemberName
+				(	ts,
+					converter,
+					{	name: symbol.name,
+						kind: 'method',
+						location: convertLocation(ts, converter, declaration),
+						...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
+						...(ts.isComputedPropertyName(declaration.name) ? {computed: true} : undefined),
+						optional: declaration.questionToken != undefined,
+						params: sig?.parameters.map((param, i) => convertParameter(ts, converter, param, declaration.parameters[i])) ?? [],
+						returnType: convertSignatureReturnType(ts, converter, sig),
+						typeParams: sig?.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(param => param) ?? [],
+					},
+					declaration.name
+				)
 			);
 		}
 		else
@@ -110,32 +120,42 @@ function convertInterfaceProperty(ts: typeof tsa, converter: Converter, symbol: 
 			const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && (getTypeNodeOfDeclaration(ts, symbol.valueDeclaration) ?? converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration))), optional);
 			if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method
 			{	outMethods.push
-				(	{	name: getPropertySpecialName(ts, propertyName, true) ?? symbol.name,
-						kind: 'method',
-						location: convertLocation(ts, converter, declaration),
-						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
-						...(propertyName && ts.isComputedPropertyName(propertyName) ? {computed: true} : undefined),
-						optional,
-						params: tsType.fnOrConstructor.params,
-						returnType: tsType.fnOrConstructor.tsType,
-						typeParams: tsType.fnOrConstructor.typeParams,
-					}
+				(	setMemberName
+					(	ts,
+						converter,
+						{	name: symbol.name,
+							kind: 'method',
+							location: convertLocation(ts, converter, declaration),
+							...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
+							...(propertyName && ts.isComputedPropertyName(propertyName) ? {computed: true} : undefined),
+							optional,
+							params: tsType.fnOrConstructor.params,
+							returnType: tsType.fnOrConstructor.tsType,
+							typeParams: tsType.fnOrConstructor.typeParams,
+						},
+						propertyName
+					)
 				);
 			}
 			else if (!outProperties.some(p => p.name == symbol.name))
 			{	const init = convertDefaultValue(ts, declaration);
 				outProperties.push
-				(	{	name: getPropertySpecialName(ts, propertyName, true) ?? symbol.name,
-						location: convertLocation(ts, converter, declaration),
-						...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
-						...(init && {init}),
-						params: [],
-						...(readonly && {readonly}),
-						computed: !!(propertyName && ts.isComputedPropertyName(propertyName)),
-						optional,
-						tsType,
-						typeParams: [],
-					}
+				(	setMemberName
+					(	ts,
+						converter,
+						{	name: symbol.name,
+							location: convertLocation(ts, converter, declaration),
+							...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
+							...(init && {init}),
+							params: [],
+							...(readonly && {readonly}),
+							computed: !!(propertyName && ts.isComputedPropertyName(propertyName)),
+							optional,
+							tsType,
+							typeParams: [],
+						},
+						propertyName
+					)
 				);
 			}
 		}

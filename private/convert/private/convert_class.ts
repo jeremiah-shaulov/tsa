@@ -8,7 +8,7 @@ import {convertTypeParameter} from './convert_type_parameter.ts';
 import {convertDefaultValue} from './convert_expression.ts';
 import {convertAccessibility} from './convert_accessibility.ts';
 import {convertType} from './convert_type.ts';
-import {getHeritageTypes, getPropertySpecialName, getTypeNodeOfDeclaration, removeUndefined, resolveSymbol} from './util.ts';
+import {getHeritageTypes, setMemberName, getTypeNodeOfDeclaration, removeUndefined, resolveSymbol} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {Converter} from './converter.ts';
 
@@ -118,25 +118,30 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 			{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 				const isOverride = declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.OverrideKeyword) ?? false;
 				outMethods.push
-				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
-						...convertAccessibility(ts, declaration.modifiers),
-						optional: declaration.questionToken != undefined,
-						isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
-						isStatic,
-						...(isOverride && {isOverride}),
-						name: getPropertySpecialName(ts, declaration.name) ?? symbol.name,
-						kind: ts.isGetAccessorDeclaration(declaration) ? 'getter' : 'setter',
-						functionDef:
-						{	params: sig?.parameters.map(param => convertParameter(ts, converter, param)) ?? [],
-							...(ts.isGetAccessorDeclaration(declaration) ? {returnType: removeUndefined(convertType(ts, converter, sig?.getReturnType()), declaration.questionToken!=undefined)} : undefined),
-							hasBody: declaration.body != undefined,
-							isAsync: false,
-							isGenerator: false,
-							typeParams: [],
-							...convertDecorators(ts, converter, declaration.modifiers),
+				(	setMemberName
+					(	ts,
+						converter,
+						{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
+							...convertAccessibility(ts, declaration.modifiers),
+							optional: declaration.questionToken != undefined,
+							isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
+							isStatic,
+							...(isOverride && {isOverride}),
+							name: symbol.name,
+							kind: ts.isGetAccessorDeclaration(declaration) ? 'getter' : 'setter',
+							functionDef:
+							{	params: sig?.parameters.map(param => convertParameter(ts, converter, param)) ?? [],
+								...(ts.isGetAccessorDeclaration(declaration) ? {returnType: removeUndefined(convertType(ts, converter, sig?.getReturnType()), declaration.questionToken!=undefined)} : undefined),
+								hasBody: declaration.body != undefined,
+								isAsync: false,
+								isGenerator: false,
+								typeParams: [],
+								...convertDecorators(ts, converter, declaration.modifiers),
+							},
+							location: convertLocation(ts, converter, declaration),
 						},
-						location: convertLocation(ts, converter, declaration),
-					}
+						declaration.name
+					)
 				);
 			}
 		}
@@ -145,25 +150,30 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 			{	const sig = converter.checker.getSignatureFromDeclaration(declaration);
 				const isOverride = declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.OverrideKeyword) ?? false;
 				outMethods.push
-				(	{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
-						...convertAccessibility(ts, declaration.modifiers),
-						optional: declaration.questionToken != undefined,
-						isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
-						isStatic,
-						...(isOverride && {isOverride}),
-						name: getPropertySpecialName(ts, declaration.name) ?? symbol.name,
-						kind: 'method',
-						functionDef:
-						{	params: sig?.parameters.map((param, i) => convertParameter(ts, converter, param, declaration.parameters[i])) ?? [],
-							returnType: convertSignatureReturnType(ts, converter, sig),
-							hasBody: 'body' in declaration && declaration.body!=undefined,
-							isAsync: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AsyncKeyword) ?? false,
-							isGenerator: ts.isMethodDeclaration(declaration) && !!declaration.asteriskToken,
-							typeParams: sig?.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(param => param) ?? [],
-							...convertDecorators(ts, converter, declaration.modifiers),
+				(	setMemberName
+					(	ts,
+						converter,
+						{	...convertJsDoc(ts, converter, (sig ?? symbol)?.getDocumentationComment(converter.checker), declaration),
+							...convertAccessibility(ts, declaration.modifiers),
+							optional: declaration.questionToken != undefined,
+							isAbstract: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AbstractKeyword) ?? false,
+							isStatic,
+							...(isOverride && {isOverride}),
+							name: symbol.name,
+							kind: 'method',
+							functionDef:
+							{	params: sig?.parameters.map((param, i) => convertParameter(ts, converter, param, declaration.parameters[i])) ?? [],
+								returnType: convertSignatureReturnType(ts, converter, sig),
+								hasBody: 'body' in declaration && declaration.body!=undefined,
+								isAsync: declaration.modifiers?.some(m => m.kind == ts.SyntaxKind.AsyncKeyword) ?? false,
+								isGenerator: ts.isMethodDeclaration(declaration) && !!declaration.asteriskToken,
+								typeParams: sig?.typeParameters?.map(param => convertTypeParameter(ts, converter, param)!).filter(param => param) ?? [],
+								...convertDecorators(ts, converter, declaration.modifiers),
+							},
+							location: convertLocation(ts, converter, declaration),
 						},
-						location: convertLocation(ts, converter, declaration),
-					}
+						declaration.name
+					)
 				);
 			}
 		}
@@ -179,43 +189,53 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 				const isAbstract = !!(modifiers & ts.ModifierFlags.Abstract);
 				if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method
 				{	outMethods.push
-					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
-							...(accessibility && {accessibility}),
-							optional,
-							isAbstract,
-							isStatic,
-							...(isOverride && {isOverride}),
-							name: getPropertySpecialName(ts, propertyName) ?? symbol.name,
-							kind: 'method',
-							functionDef:
-							{	params: tsType.fnOrConstructor.params,
-								returnType: tsType.fnOrConstructor.tsType,
-								hasBody: true,
-								isAsync: false,
-								isGenerator: false,
-								typeParams: tsType.fnOrConstructor.typeParams,
-								...((ts.isPropertyDeclaration(declaration) || ts.isPropertySignature(declaration)) && convertDecorators(ts, converter, declaration.modifiers)),
+					(	setMemberName
+						(	ts,
+							converter,
+							{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
+								...(accessibility && {accessibility}),
+								optional,
+								isAbstract,
+								isStatic,
+								...(isOverride && {isOverride}),
+								name: symbol.name,
+								kind: 'method',
+								functionDef:
+								{	params: tsType.fnOrConstructor.params,
+									returnType: tsType.fnOrConstructor.tsType,
+									hasBody: true,
+									isAsync: false,
+									isGenerator: false,
+									typeParams: tsType.fnOrConstructor.typeParams,
+									...((ts.isPropertyDeclaration(declaration) || ts.isPropertySignature(declaration)) && convertDecorators(ts, converter, declaration.modifiers)),
+								},
+								location: convertLocation(ts, converter, declaration),
 							},
-							location: convertLocation(ts, converter, declaration),
-						}
+							propertyName
+						)
 					);
 				}
 				else
 				{	const init = convertDefaultValue(ts, declaration);
 					outProperties.push
-					(	{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
-							tsType,
-							readonly,
-							...((ts.isPropertyDeclaration(declaration) || ts.isPropertySignature(declaration)) && convertDecorators(ts, converter, declaration.modifiers)),
-							...(accessibility && {accessibility}),
-							optional,
-							isAbstract,
-							isStatic,
-							...(isOverride && {isOverride}),
-							name: getPropertySpecialName(ts, propertyName) ?? symbol.name,
-							location: convertLocation(ts, converter, declaration),
-							...(init && {init}),
-						}
+					(	setMemberName
+						(	ts,
+							converter,
+							{	...convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), symbol.valueDeclaration),
+								tsType,
+								readonly,
+								...((ts.isPropertyDeclaration(declaration) || ts.isPropertySignature(declaration)) && convertDecorators(ts, converter, declaration.modifiers)),
+								...(accessibility && {accessibility}),
+								optional,
+								isAbstract,
+								isStatic,
+								...(isOverride && {isOverride}),
+								name: symbol.name,
+								location: convertLocation(ts, converter, declaration),
+								...(init && {init}),
+							},
+							propertyName
+						)
 					);
 				}
 			}

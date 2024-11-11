@@ -1,5 +1,5 @@
 import {Accessibility, JsDoc, ClassPropertyDef, ClassMethodDef, Location, ClassConstructorDef, ClassIndexSignatureDef, DocNodeClass, DocNodeInterface, InterfaceMethodDef, InterfacePropertyDef, LiteralMethodDef, LiteralPropertyDef, DocNodeTypeAlias, TypeAliasDef, DocNodeFunction, DocNodeVariable, VariableDef, DocNodeEnum, EnumMemberDef, DocNodeNamespace, NamespaceDef, DocNode, DocNodeKind, DecoratorDef} from '../../doc_node/mod.ts';
-import {isDeprecated, isPublicOrProtected, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
+import {isDeprecated, mdBlockquote, mdEscape, mdLink, parseHeaderId} from './util.ts';
 
 const RE_REMAP_LINKS = /\\.|`[^`]*`|``.*``|```.*```|(\[[^\]\\]*(?:\\.[^\]\\]*)*\]\()\.\.\/([^)]*\))/sg;
 
@@ -34,6 +34,7 @@ type ClassConverter =
 	onNamespace(m: NamespaceDef): string;
 	onJsDoc(m: JsDoc|undefined, node: DocNode, headerId: string, submemberNo: number): string;
 	onLink(node: DocNode, memberName: string, isStatic: boolean): string;
+	isPublicOrProtectedMember(member: ClassConstructorDef|ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef): boolean;
 };
 
 type Member = ClassConstructorDef | ClassMethodDef | InterfaceMethodDef | LiteralMethodDef | ClassIndexSignatureDef | ClassPropertyDef | InterfacePropertyDef | LiteralPropertyDef | Accessor | EnumMemberDef;
@@ -90,7 +91,7 @@ export class NodeToMd
 			}
 		}
 		else if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias')
-		{	getClassMembers
+		{	this.#getClassMembers
 			(	node,
 				this.#constructors,
 				this.#destructors,
@@ -368,6 +369,136 @@ export class NodeToMd
 		{	return decorators + '# ' + topHeader + '\n\n' + index + importCode + sectionsCode + jsDocFull + outline;
 		}
 	}
+
+	#getClassMembers
+	(	node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias,
+		constructors: ClassConstructorDef[],
+		destructors: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
+		indexSignatures: ClassIndexSignatureDef[],
+		propertiesAndAccessors: Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>,
+		methods: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
+		typeAlias: [] | [TypeAliasDef],
+	)
+	{	const settersOnly = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
+		const typeAliasDef = 'typeAliasDef' in node ? node.typeAliasDef : undefined;
+		let tsType = typeAliasDef?.tsType;
+		while (tsType?.kind === 'parenthesized')
+		{	tsType = tsType.parenthesized;
+		}
+		const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : tsType && 'typeLiteral' in tsType ? tsType.typeLiteral : undefined;
+		if (def)
+		{	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
+			const isPublicOrProtectedMember = this.#converter.isPublicOrProtectedMember;
+			const methodsByName = new Map<string, LiteralMethodDef|InterfaceMethodDef|ClassMethodDef>;
+			for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
+			{	const m = methodsAndAccessors[i];
+				if (isPublicOrProtectedMember(m))
+				{	const isStatic = 'isStatic' in m && m.isStatic;
+					const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+					switch (m.kind)
+					{	case 'method':
+						{	if (!isStatic && accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
+							{	destructors.push(m);
+							}
+							else
+							{	const cur = methodsByName.get(m.name);
+								if (!cur)
+								{	methodsByName.set(m.name, m);
+									methods.push(m);
+								}
+								else if (!('functionDef' in m) || !('hasBody' in m.functionDef) || !m.functionDef.hasBody)
+								{	methods.push(m);
+								}
+								else if (m.jsDoc && !cur.jsDoc)
+								{	cur.jsDoc = m.jsDoc;
+								}
+							}
+							break;
+						}
+						case 'getter':
+						{	const accessor: Accessor =
+							{	getter: m,
+								setter: undefined,
+								name: m.name,
+								isStatic,
+								accessibility,
+								location: 'location' in m ? m.location : undefined,
+								jsDoc: m.jsDoc,
+							};
+							const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
+							propertiesAndAccessors.push(accessor);
+							if (j != -1)
+							{	const setter = methodsAndAccessors[j];
+								accessor.setter = setter;
+								if (!accessor.jsDoc)
+								{	accessor.jsDoc = setter.jsDoc;
+								}
+								if (j < i)
+								{	const k = settersOnly.indexOf(setter);
+									settersOnly.splice(k, 1);
+								}
+								else
+								{	methodsAndAccessors.splice(j, 1);
+								}
+							}
+							break;
+						}
+						case 'setter':
+						{	settersOnly.push(m);
+						}
+					}
+				}
+			}
+			// Add `settersOnly` and `def.properties` to propertiesAndAccessors
+			for (const m of settersOnly)
+			{	const isStatic = 'isStatic' in m && m.isStatic;
+				const accessibility = 'accessibility' in m ? m.accessibility : undefined;
+				propertiesAndAccessors.push
+				(	{	getter: undefined,
+						setter: m,
+						name: m.name,
+						isStatic,
+						accessibility,
+						location: 'location' in m ? m.location : undefined,
+						jsDoc: m.jsDoc,
+					}
+				);
+			}
+			for (const p of def.properties)
+			{	if (isPublicOrProtectedMember(p))
+				{	propertiesAndAccessors.push(p);
+				}
+			}
+			// Add `def.constructors` to `constructors`
+			// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
+			if ('classDef' in node)
+			{	for (const c of node.classDef.constructors)
+				{	if (isPublicOrProtectedMember(c))
+					{	constructors.push(c);
+					}
+				}
+			}
+			// Sort `propertiesAndAccessors`
+			propertiesAndAccessors.sort
+			(	(a, b) =>
+				{	const aLocation = 'location' in a ? a.location : undefined;
+					const aFilename = aLocation?.filename ?? '';
+					const aLine = aLocation?.line ?? 0;
+					const bLocation = 'location' in b ? b.location : undefined;
+					const bFilename = bLocation?.filename ?? '';
+					const bLine = bLocation?.line ?? 0;
+					return aFilename < bFilename ? -1 : aFilename > bFilename ? +1 : aLine - bLine;
+				}
+			);
+			// Add `classDef.indexSignatures` to `indexSignatures`
+			for (const m of def.indexSignatures)
+			{	indexSignatures.push(m);
+			}
+		}
+		else if (typeAliasDef)
+		{	typeAlias[0] = typeAliasDef;
+		}
+	}
 }
 
 function getImportCode(node: DocNode, importUrls: string[])
@@ -401,135 +532,6 @@ function remapLinks(code: string, toDocDir: string)
 		);
 	}
 	return code;
-}
-
-function getClassMembers
-(	node: DocNodeClass|DocNodeInterface|DocNodeTypeAlias,
-	constructors: ClassConstructorDef[],
-	destructors: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
-	indexSignatures: ClassIndexSignatureDef[],
-	propertiesAndAccessors: Array<ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor>,
-	methods: Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>,
-	typeAlias: [] | [TypeAliasDef],
-)
-{	const settersOnly = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
-	const typeAliasDef = 'typeAliasDef' in node ? node.typeAliasDef : undefined;
-	let tsType = typeAliasDef?.tsType;
-	while (tsType?.kind === 'parenthesized')
-	{	tsType = tsType.parenthesized;
-	}
-	const def = 'classDef' in node ? node.classDef : 'interfaceDef' in node ? node.interfaceDef : tsType && 'typeLiteral' in tsType ? tsType.typeLiteral : undefined;
-	if (def)
-	{	// Resort `def.methods` to `methods` (regular methods), `accessors` (properties that have a getter, and maybe setter), and `settersOnly`
-		const methodsByName = new Map<string, LiteralMethodDef|InterfaceMethodDef|ClassMethodDef>;
-		for (let methodsAndAccessors=def.methods, i=0; i<methodsAndAccessors.length; i++)
-		{	const m = methodsAndAccessors[i];
-			if (isPublicOrProtected(m))
-			{	const isStatic = 'isStatic' in m && m.isStatic;
-				const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-				switch (m.kind)
-				{	case 'method':
-					{	if (!isStatic && accessibility!=='protected' && (m.name=='[Symbol.dispose]' || m.name=='[Symbol.asyncDispose]'))
-						{	destructors.push(m);
-						}
-						else
-						{	const cur = methodsByName.get(m.name);
-							if (!cur)
-							{	methodsByName.set(m.name, m);
-								methods.push(m);
-							}
-							else if (!('functionDef' in m) || !('hasBody' in m.functionDef) || !m.functionDef.hasBody)
-							{	methods.push(m);
-							}
-							else if (m.jsDoc && !cur.jsDoc)
-							{	cur.jsDoc = m.jsDoc;
-							}
-						}
-						break;
-					}
-					case 'getter':
-					{	const accessor: Accessor =
-						{	getter: m,
-							setter: undefined,
-							name: m.name,
-							isStatic,
-							accessibility,
-							location: 'location' in m ? m.location : undefined,
-							jsDoc: m.jsDoc,
-						};
-						const j = methodsAndAccessors.findIndex(s => s.kind=='setter' && s.name==m.name && ('isStatic' in s && s.isStatic)==isStatic);
-						propertiesAndAccessors.push(accessor);
-						if (j != -1)
-						{	const setter = methodsAndAccessors[j];
-							accessor.setter = setter;
-							if (!accessor.jsDoc)
-							{	accessor.jsDoc = setter.jsDoc;
-							}
-							if (j < i)
-							{	const k = settersOnly.indexOf(setter);
-								settersOnly.splice(k, 1);
-							}
-							else
-							{	methodsAndAccessors.splice(j, 1);
-							}
-						}
-						break;
-					}
-					case 'setter':
-					{	settersOnly.push(m);
-					}
-				}
-			}
-		}
-		// Add `settersOnly` and `def.properties` to propertiesAndAccessors
-		for (const m of settersOnly)
-		{	const isStatic = 'isStatic' in m && m.isStatic;
-			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
-			propertiesAndAccessors.push
-			(	{	getter: undefined,
-					setter: m,
-					name: m.name,
-					isStatic,
-					accessibility,
-					location: 'location' in m ? m.location : undefined,
-					jsDoc: m.jsDoc,
-				}
-			);
-		}
-		for (const p of def.properties)
-		{	if (isPublicOrProtected(p))
-			{	propertiesAndAccessors.push(p);
-			}
-		}
-		// Add `def.constructors` to `constructors`
-		// Also add class members declared in constructor arguments (like `constructor(public memb=1) {}`) to `propertiesAndAccessors`
-		if ('classDef' in node)
-		{	for (const c of node.classDef.constructors)
-			{	if (isPublicOrProtected(c))
-				{	constructors.push(c);
-				}
-			}
-		}
-		// Sort `propertiesAndAccessors`
-		propertiesAndAccessors.sort
-		(	(a, b) =>
-			{	const aLocation = 'location' in a ? a.location : undefined;
-				const aFilename = aLocation?.filename ?? '';
-				const aLine = aLocation?.line ?? 0;
-				const bLocation = 'location' in b ? b.location : undefined;
-				const bFilename = bLocation?.filename ?? '';
-				const bLine = bLocation?.line ?? 0;
-				return aFilename < bFilename ? -1 : aFilename > bFilename ? +1 : aLine - bLine;
-			}
-		);
-		// Add `classDef.indexSignatures` to `indexSignatures`
-		for (const m of def.indexSignatures)
-		{	indexSignatures.push(m);
-		}
-	}
-	else if (typeAliasDef)
-	{	typeAlias[0] = typeAliasDef;
-	}
 }
 
 class ClassSections

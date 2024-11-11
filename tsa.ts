@@ -231,7 +231,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 					break;
 				}
 				catch (e)
-				{	if (i!=0 || e.code!='ENOENT')
+				{	if (i!=0 || !e || typeof(e)!='object' || !('code' in e) || e.code!='ENOENT')
 					{	throw e;
 					}
 					await Deno.mkdir(curDir, {recursive: true});

@@ -2,7 +2,7 @@ import {APP_GIT_TAG, indentAndWrap, crc32, path, jstok, JstokTokenType} from '..
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
-import {escapeShellArg, isDeprecated, isPublicOrProtected} from './util.ts';
+import {escapeShellArg, isDeprecated} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
@@ -45,7 +45,7 @@ class NodesToMd
 						{	onDecorators: decorators =>
 							{	let code = '';
 								for (const d of decorators)
-								{	const link = this.#collection.getLink(this.#nodes[d.nodeIndex ?? -1]);
+								{	const link = this.#collection.getLink(this.#nodes[d.nameNodeIndex ?? -1]);
 									const name = link ? mdLink(d.name, link) : d.name;
 									code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 								}
@@ -165,6 +165,9 @@ class NodesToMd
 							},
 							onLink: (node, memberName, isStatic) =>
 							{	return !memberName ? this.#collection.getLink(node) : this.#collection.getLinkByMemberName(node, memberName, isStatic);
+							},
+							isPublicOrProtectedMember: node =>
+							{	return this.#isPublicOrProtectedMember(node);
 							}
 						}
 					);
@@ -221,29 +224,29 @@ class NodesToMd
 		for (const node of nodes)
 		{	switch (node.kind)
 			{	case 'namespace':
-					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	namespaces.push(node);
 					}
 					break;
 				case 'variable':
-					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	variables.push(node);
 					}
 					break;
 				case 'function':
-					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	functions.push(node);
 					}
 					break;
 				case 'class':
-					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	classes.push(node);
 					}
 					break;
 				case 'enum':
 				case 'typeAlias':
 				case 'interface':
-					if (node.declarationKind=='export' && isPublicOrProtected(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	types.push(node);
 					}
 			}
@@ -408,7 +411,7 @@ class NodesToMd
 			case 'optional':
 				return this.#convertTsType(typeDef.optional) + '?';
 			case 'typeQuery':
-				return '`typeof`(' + this.#getTypeName(typeDef.typeQuery) + ')';
+				return '`typeof` ' + this.#getTypeName(typeDef.typeQuery);
 			case 'this':
 				return '`this`';
 			case 'fnOrConstructor':
@@ -776,6 +779,24 @@ class NodesToMd
 				return 'example-' + hash.toString(36);
 			}
 		}
+	}
+
+	/**	Returns false if the given node has `private` modifier.
+		Also returns false if this node has attached doc-comment that contains `@`private or `@`internal tag.
+		Otherwise returns true.
+	 **/
+	#isPublicOrProtectedMember(node: object | {accessibility?: Accessibility, jsDoc?: JsDoc}): boolean
+	{	if ('accessibility' in node && node.accessibility==='private')
+		{	return false;
+		}
+		if ('jsDoc' in node)
+		{	return (node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value=='@internal') ?? -1) == -1;
+		}
+		if ('nameNodeIndex' in node && node.nameNodeIndex!=undefined && typeof(node.nameNodeIndex)=='number')
+		{	const refNode = this.#nodes[node.nameNodeIndex];
+			return refNode.declarationKind!='private' && this.#isPublicOrProtectedMember(refNode) && isExportFromEntryPoint(refNode);
+		}
+		return true;
 	}
 }
 

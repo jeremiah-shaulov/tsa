@@ -1,5 +1,5 @@
 import {tsa} from '../../tsa_ns.ts';
-import {TsTypeDef, Export} from '../../doc_node/mod.ts';
+import {TsTypeDef, Export, ClassPropertyDef, ClassMethodDef, InterfaceMethodDef, InterfacePropertyDef, LiteralPropertyDef, LiteralMethodDef} from '../../doc_node/mod.ts';
 import {convertLocation} from './convert_location.ts';
 import {Converter} from './converter.ts';
 
@@ -123,11 +123,18 @@ export function removeUndefined(type: TsTypeDef, isOptional: boolean): TsTypeDef
 	return type;
 }
 
-export function getPropertySpecialName(ts: typeof tsa, name?: tsa.PropertyName, noBrackets=false)
+export function setMemberName<T extends ClassPropertyDef|ClassMethodDef|InterfaceMethodDef|InterfacePropertyDef|LiteralPropertyDef|LiteralMethodDef>(ts: typeof tsa, converter: Converter, member: T, name: tsa.PropertyName|undefined): T
 {	if (name && ts.isComputedPropertyName(name))
 	{	const text = getText(ts, name.expression);
-		return noBrackets || ts.isStringLiteral(name.expression) ? text : '['+text+']';
+		if (ts.isIdentifier(name.expression))
+		{	const symbol = converter.checker.getSymbolAtLocation(name.expression);
+			if (symbol)
+			{	converter.addRef(member, symbol);
+			}
+		}
+		member.name = ts.isStringLiteral(name.expression) ? text : '['+text+']';
 	}
+	return member;
 }
 
 export function getTypeNodeOfDeclaration(ts: typeof tsa, declaration: tsa.Declaration)

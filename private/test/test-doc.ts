@@ -236,12 +236,15 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		if (dataDoc.returnType && dataDenoDoc.returnType==undefined)
 		{	dataDenoDoc.returnType = dataDoc.returnType;
 		}
-		// 8. Fix `nodeIndex` and `nodeSubIndex` (copy from dataDoc to dataDenoDoc)
+		// 8. Fix `nodeIndex`, `nameNodeIndex` and `nodeSubIndex` (copy from dataDoc to dataDenoDoc)
 		if (dataDoc.nodeIndex != undefined)
 		{	dataDenoDoc.nodeIndex = dataDoc.nodeIndex;
 			if (dataDoc.nodeSubIndex != undefined)
 			{	dataDenoDoc.nodeSubIndex = dataDoc.nodeSubIndex;
 			}
+		}
+		else if (dataDoc.nameNodeIndex != undefined)
+		{	dataDenoDoc.nameNodeIndex = dataDoc.nameNodeIndex;
 		}
 		// 9. Fix `converter.entryPointNumber` (copy from dataDoc to dataDenoDoc)
 		if (dataDoc.entryPointNumber != undefined)

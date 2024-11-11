@@ -30,8 +30,10 @@
     - Doc-comments are returned not only as [doc]{@link JsDoc.doc} string, but also [docTokens]{@link JsDoc.docTokens}, that have separate parts for comment text and `@link` tags.
     - {@link JsDocTagTyped} (for `@enum`, `@extends`, `@this` and `@type` tags) and {@link JsDocTagParam} (for `@param`) have additional `tsType` field for the object type.
     - {@link JsDocTagNamed} (for `@callback` and `@template` tags) has additional [tsType]{@link JsDocTagNamed.tsType} and [typeParams]{@link JsDocTagNamed.typeParams} fields.
-    - {@link DecoratorDef} has additional [nodeIndex]{@link DecoratorDef.nodeIndex} field that contains node index in the results where this decorator function is returned, if it's returned.
+    - {@link DecoratorDef} has additional [nameNodeIndex]{@link DecoratorDef.nameNodeIndex} field that contains node index in the results where this decorator function is returned, if it's returned.
     To include referenced symbols in the result, use {@link EmitDocOptions.includeReferenced} option.
+    - In {@link ClassPropertyDef}, {@link ClassMethodDef}, {@link InterfaceMethodDef}, {@link InterfacePropertyDef}, {@link LiteralPropertyDef} and {@link LiteralMethodDef}, if property or method name is computed identifier (like `[ident]: type`),
+    they can have additional [nameNodeIndex]{@link ClassPropertyDef.nameNodeIndex} field with node index in the results for the identifier ({@link EmitDocOptions.includeReferenced} option is also needed).
     - References to another named types are returned as {@link TsTypeRefDef} objects that contain not only [typeName]{@link TsTypeRefDef.typeName},
     but also additional [nodeIndex]{@link TsTypeRefDef.nodeIndex} field, that contains index in the results for this type.
     If the type is an enum member, also [nodeSubIndex]{@link TsTypeRefDef.nodeSubIndex} will be set to member number. See {@link EmitDocOptions.includeReferenced}.
@@ -176,6 +178,7 @@ export interface ClassMethodDef {
   kind: MethodKind;
   functionDef: FunctionDef;
   location: Location;
+  nameNodeIndex?: number;
 }
 
 export interface ClassPropertyDef {
@@ -193,13 +196,14 @@ export interface ClassPropertyDef {
   name: string;
   decorators?: DecoratorDef[];
   location: Location;
+  nameNodeIndex?: number;
 }
 
 export interface DecoratorDef {
   name: string;
   args?: string[];
   location: Location;
-  nodeIndex?: number;
+  nameNodeIndex?: number;
 }
 
 export interface EnumDef {
@@ -264,6 +268,7 @@ export interface InterfaceMethodDef {
   params: ParamDef[];
   returnType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
+  nameNodeIndex?: number;
 }
 
 export interface InterfacePropertyDef {
@@ -276,6 +281,7 @@ export interface InterfacePropertyDef {
   optional: boolean;
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
+  nameNodeIndex?: number;
 }
 
 /** Doc-comment string split to tokens.
@@ -479,6 +485,7 @@ export interface LiteralMethodDef {
   returnType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
   jsDoc?: JsDoc;
+  nameNodeIndex?: number;
 }
 
 export interface LiteralPropertyDef {
@@ -490,6 +497,7 @@ export interface LiteralPropertyDef {
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
   jsDoc?: JsDoc;
+  nameNodeIndex?: number;
 }
 
 export interface Location {

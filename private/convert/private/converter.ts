@@ -1,6 +1,6 @@
 import {tsa} from '../../tsa_ns.ts';
 import {Loader} from '../../load_options.ts';
-import {ClassDef, DecoratorDef, DocNode, Export, TsTypeRefDef, DocNodeNamespace, Location, JsDoc} from '../../doc_node/mod.ts';
+import {ClassDef, DecoratorDef, DocNode, Export, TsTypeRefDef, DocNodeNamespace, Location, JsDoc, ClassPropertyDef, ClassMethodDef, InterfaceMethodDef, InterfacePropertyDef, LiteralPropertyDef, LiteralMethodDef} from '../../doc_node/mod.ts';
 import {convertImport} from './convert_import.ts';
 import {convertModuleDoc} from './convert_module_doc.ts';
 import {convertSymbol} from './convert_symbol.ts';
@@ -18,7 +18,11 @@ export type EmitDocOptions =
 	 	Symbol names can appear in type aliases, type parameters, etc.
 		Also decorators refer to functions defined somewhere, not necessarily in entry point modules.
 		If this flag is set to `true`, referenced symbols will be included in the result, and their indices in the resulting array will be recorded in the nodes that refer to them.
-		The referrers include: {@link DecoratorDef#nodeIndex}, {@link TsTypeRefDef#nodeIndex} and {@link TsTypeRefDef#nodeSubIndex} (for enum members), and {@link ClassDef#superNodeIndex}.
+		The referrers include: {@link TsTypeRefDef#nodeIndex}, {@link TsTypeRefDef#nodeSubIndex} (for enum members),
+		{@link ClassDef#superNodeIndex}, {@link DecoratorDef#nameNodeIndex},
+		{@link ClassPropertyDef.nameNodeIndex}, {@link ClassMethodDef.nameNodeIndex},
+		{@link InterfaceMethodDef.nameNodeIndex}, {@link InterfacePropertyDef.nameNodeIndex},
+		{@link LiteralPropertyDef.nameNodeIndex} and {@link LiteralMethodDef.nameNodeIndex}.
 	 **/
 	includeReferenced?: boolean;
 
@@ -93,12 +97,12 @@ export class Converter
 	 **/
 	#declarations = new Map<tsa.Declaration, {node: DocNode, nodeIndex: number}>;
 
-	/**	When a `TsTypeRefDef` or another node that has `nodeIndex` (or `superNodeIndex`) is generated,
+	/**	When a `TsTypeRefDef` or another node that has `nodeIndex` (or `nameNodeIndex` or `superNodeIndex`) is generated,
 		it's temporarily stored here with the symbol that this `TsTypeRefDef` references.
 		The symbol can be already converted, or not.
 		Then i'll ensure that it's converted, and will update `subj.nodeIndex` to the symbol index in `outNodes`.
 	 **/
-	#refs = new Array<{subj: TsTypeRefDef|ClassDef|DecoratorDef, symbol: tsa.Symbol}>;
+	#refs = new Array<{subj: TsTypeRefDef|ClassDef|DecoratorDef|ClassPropertyDef|ClassMethodDef|InterfaceMethodDef|InterfacePropertyDef|LiteralPropertyDef|LiteralMethodDef, symbol: tsa.Symbol}>;
 
 	/**	When `export * as nsName from '...'` is encountered, i add record here, and later i'll copy relevant nodes to it.
 	 **/
@@ -364,8 +368,8 @@ export class Converter
 	{	return this.#entryPointsHrefs.indexOf(fileHref);
 	}
 
-	addRef(subj: TsTypeRefDef|ClassDef|DecoratorDef, symbol: tsa.Symbol|undefined)
-	{	if (symbol && this.#includeReferenced)
+	addRef(subj: TsTypeRefDef|ClassDef|DecoratorDef|ClassPropertyDef|ClassMethodDef|InterfaceMethodDef|InterfacePropertyDef|LiteralPropertyDef|LiteralMethodDef, symbol: tsa.Symbol)
+	{	if (this.#includeReferenced)
 		{	if (this.#includeBuiltIn || symbol.getDeclarations()?.some(d => !d.getSourceFile().fileName.startsWith(this.libLocation)))
 			{	this.#refs.push({subj, symbol});
 			}
@@ -378,7 +382,10 @@ export class Converter
 			if (!symbol && this.ts.isTypeReferenceNode(node))
 			{	symbol = this.checker.getSymbolAtLocation(node.typeName);
 			}
-			this.addRef(subj, symbol ?? type.getSymbol());
+			symbol ??= type.getSymbol();
+			if (symbol)
+			{	this.addRef(subj, symbol);
+			}
 		}
 	}
 
@@ -424,6 +431,9 @@ export class Converter
 			if (nodeIndex != -1)
 			{	if ('superTypeParams' in subj) // if is ClassDef
 				{	subj.superNodeIndex = nodeIndex;
+				}
+				else if ('name' in subj)
+				{	subj.nameNodeIndex = nodeIndex;
 				}
 				else
 				{	subj.nodeIndex = nodeIndex;
