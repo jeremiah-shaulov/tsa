@@ -614,9 +614,25 @@ class NodesToMd
 		}
 		// Add tags
 		if (jsDoc?.tags)
-		{	const tagDefault = jsDoc.tags.find(t => t.kind == 'default');
-			if (tagDefault)
-			{	doc = `Default value: \`${tagDefault.value}\`\n\n${doc}`;
+		{	let params = '';
+			for (const tag of jsDoc.tags)
+			{	switch (tag.kind)
+				{	case 'default':
+					{	doc = `Default value: \`${tag.value}\`\n\n${doc}`;
+						break;
+					}
+					case 'param':
+					{	params += `\n\n🎚️ Parameter **${mdEscape(tag.name)}**:\n\n` + this.#convertJsDoc(tag, node, headerId, 0);
+						break;
+					}
+					case 'return':
+					{	params += `\n\n✔️ Return value:\n\n` + this.#convertJsDoc(tag, node, headerId, 0);
+						break;
+					}
+				}
+			}
+			if (params)
+			{	doc = doc + params;
 			}
 		}
 		// Convert examples and substitute importUrls
