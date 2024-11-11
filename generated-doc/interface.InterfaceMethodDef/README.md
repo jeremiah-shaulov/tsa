@@ -3,12 +3,12 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 ## This interface has
 
-- 9 properties:
+- 10 properties:
 [name](#-name-string),
 [kind](#-kind-methodkind),
 [location](#-location-location),
@@ -17,7 +17,8 @@ import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 [optional](#-optional-boolean),
 [params](#-params-paramdef),
 [returnType](#-returntype-tstypedef),
-[typeParams](#-typeparams-tstypeparamdef)
+[typeParams](#-typeparams-tstypeparamdef),
+[nameNodeIndex](#-namenodeindex-number)
 
 
 #### 📄 name: `string`
@@ -53,6 +54,10 @@ import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 
 
 #### 📄 typeParams: [TsTypeParamDef](../interface.TsTypeParamDef/README.md)\[]
+
+
+
+#### 📄 nameNodeIndex?: `number`
 
 
 

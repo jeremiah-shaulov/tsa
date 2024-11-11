@@ -6,7 +6,7 @@
 
 - 8 properties:
 [flags](#-flags-symbolflags),
-[escapedName](#-escapedname-string),
+[escapedName](#-escapedname-__string),
 [declarations](#-declarations-declaration),
 [valueDeclaration](#-valuedeclaration-declaration),
 [members](#-members-symboltable),
@@ -58,7 +58,7 @@
 
 
 
-#### ⚙ getEscapedName(): __String
+#### ⚙ getEscapedName(): \_\_String
 
 
 

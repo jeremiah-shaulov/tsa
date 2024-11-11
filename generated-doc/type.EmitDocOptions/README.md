@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {EmitDocOptions} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {EmitDocOptions} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 Options that you can provide
@@ -32,7 +32,11 @@ to [tsa.TsaProgram.emitDoc](../interface.TsaProgram/README.md#-emitdocoptions-em
 >  	Symbol names can appear in type aliases, type parameters, etc.
 > 	Also decorators refer to functions defined somewhere, not necessarily in entry point modules.
 > 	If this flag is set to `true`, referenced symbols will be included in the result, and their indices in the resulting array will be recorded in the nodes that refer to them.
-> 	The referrers include: [DecoratorDef\#nodeIndex](../interface.DecoratorDef/README.md#-nodeindex-number), [TsTypeRefDef\#nodeIndex](../interface.TsTypeRefDef/README.md#-nodeindex-number) and [TsTypeRefDef\#nodeSubIndex](../interface.TsTypeRefDef/README.md#-nodesubindex-number) (for enum members), and [ClassDef\#superNodeIndex](../interface.ClassDef/README.md#-supernodeindex-number).
+> 	The referrers include: [TsTypeRefDef\#nodeIndex](../interface.TsTypeRefDef/README.md#-nodeindex-number), [TsTypeRefDef\#nodeSubIndex](../interface.TsTypeRefDef/README.md#-nodesubindex-number) (for enum members),
+> [ClassDef\#superNodeIndex](../interface.ClassDef/README.md#-supernodeindex-number), [DecoratorDef\#nameNodeIndex](../interface.DecoratorDef/README.md#-namenodeindex-number),
+> [ClassPropertyDef.nameNodeIndex](../interface.ClassPropertyDef/README.md#-namenodeindex-number), [ClassMethodDef.nameNodeIndex](../interface.ClassMethodDef/README.md#-namenodeindex-number),
+> [InterfaceMethodDef.nameNodeIndex](../interface.InterfaceMethodDef/README.md#-namenodeindex-number), [InterfacePropertyDef.nameNodeIndex](../interface.InterfacePropertyDef/README.md#-namenodeindex-number),
+> [LiteralPropertyDef.nameNodeIndex](../interface.LiteralPropertyDef/README.md#-namenodeindex-number) and [LiteralMethodDef.nameNodeIndex](../interface.LiteralMethodDef/README.md#-namenodeindex-number).
 
 
 

@@ -7,7 +7,7 @@ Brand for a PropertyAccessExpression which, like a QualifiedName, consists of a 
 ## This interface has
 
 - 3 properties:
-[\_propertyAccessExpressionLikeQualifiedNameBrand](#-propertyaccessexpressionlikequalifiednamebrand-any),
+[\_propertyAccessExpressionLikeQualifiedNameBrand](#-_propertyaccessexpressionlikequalifiednamebrand-any),
 [expression](#-readonly-expression-entitynameexpression),
 [name](#-readonly-name-identifier)
 

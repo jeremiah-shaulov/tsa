@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_memberExpressionBrand](#-memberexpressionbrand-any)
+- property [\_memberExpressionBrand](#-_memberexpressionbrand-any)
 
 
 #### 📄 \_memberExpressionBrand: `any`

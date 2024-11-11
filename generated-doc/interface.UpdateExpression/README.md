@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_updateExpressionBrand](#-updateexpressionbrand-any)
+- property [\_updateExpressionBrand](#-_updateexpressionbrand-any)
 
 
 #### 📄 \_updateExpressionBrand: `any`

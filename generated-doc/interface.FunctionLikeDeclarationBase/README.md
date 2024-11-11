@@ -12,7 +12,7 @@ Examples:
 ## This interface has
 
 - 5 properties:
-[\_functionLikeDeclarationBrand](#-functionlikedeclarationbrand-any),
+[\_functionLikeDeclarationBrand](#-_functionlikedeclarationbrand-any),
 [asteriskToken](#-readonly-asterisktoken-asterisktoken),
 [questionToken](#-readonly-questiontoken-questiontoken),
 [exclamationToken](#-readonly-exclamationtoken-exclamationtoken),

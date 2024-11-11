@@ -3,12 +3,12 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 ## This interface has
 
-- 12 properties:
+- 13 properties:
 [jsDoc](#-jsdoc-jsdoc),
 [tsType](#-tstype-tstypedef),
 [readonly](#-readonly-boolean),
@@ -20,7 +20,8 @@ import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 [isOverride](#-isoverride-boolean),
 [name](#-name-string),
 [decorators](#-decorators-decoratordef),
-[location](#-location-location)
+[location](#-location-location),
+[nameNodeIndex](#-namenodeindex-number)
 
 
 #### 📄 jsDoc?: [JsDoc](../interface.JsDoc/README.md)
@@ -70,6 +71,10 @@ import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 
 
 #### 📄 location: [Location](../interface.Location/README.md)
+
+
+
+#### 📄 nameNodeIndex?: `number`
 
 
 

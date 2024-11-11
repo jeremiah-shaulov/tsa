@@ -5,7 +5,7 @@
 ## This interface has
 
 - 3 properties:
-[\_typeElementBrand](#-typeelementbrand-any),
+[\_typeElementBrand](#-_typeelementbrand-any),
 [name](#-readonly-name-propertyname),
 [questionToken](#-readonly-questiontoken-questiontoken)
 

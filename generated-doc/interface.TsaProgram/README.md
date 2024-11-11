@@ -24,10 +24,10 @@
 > 
 > ```ts
 > // To download and run this example:
-> // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.36/generated-doc/interface.TsaProgram/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-g8c4>~)' > /tmp/example-g8c4.ts
+> // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.37/generated-doc/interface.TsaProgram/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-g8c4>~)' > /tmp/example-g8c4.ts
 > // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-g8c4.ts
 > 
-> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.36/mod.ts';
+> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.37/mod.ts';
 > 
 > const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 > 

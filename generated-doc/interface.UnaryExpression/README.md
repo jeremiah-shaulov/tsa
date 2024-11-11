@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_unaryExpressionBrand](#-unaryexpressionbrand-any)
+- property [\_unaryExpressionBrand](#-_unaryexpressionbrand-any)
 
 
 #### 📄 \_unaryExpressionBrand: `any`

@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_declarationBrand](#-declarationbrand-any)
+- property [\_declarationBrand](#-_declarationbrand-any)
 
 
 #### 📄 \_declarationBrand: `any`

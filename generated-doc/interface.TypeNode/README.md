@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_typeNodeBrand](#-typenodebrand-any)
+- property [\_typeNodeBrand](#-_typenodebrand-any)
 
 
 #### 📄 \_typeNodeBrand: `any`

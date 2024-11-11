@@ -5,7 +5,7 @@
 ## This interface has
 
 - 2 properties:
-[\_objectLiteralBrand](#-objectliteralbrand-any),
+[\_objectLiteralBrand](#-_objectliteralbrand-any),
 [name](#-readonly-name-propertyname)
 
 

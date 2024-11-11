@@ -5,7 +5,7 @@
 ## This interface has
 
 - 2 properties:
-[\_classElementBrand](#-classelementbrand-any),
+[\_classElementBrand](#-_classelementbrand-any),
 [name](#-readonly-name-propertyname)
 
 

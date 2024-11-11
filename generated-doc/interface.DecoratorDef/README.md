@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 ## This interface has
@@ -12,7 +12,7 @@ import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 [name](#-name-string),
 [args](#-args-string),
 [location](#-location-location),
-[nodeIndex](#-nodeindex-number)
+[nameNodeIndex](#-namenodeindex-number)
 
 
 #### 📄 name: `string`
@@ -27,7 +27,7 @@ import {DecoratorDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 
 
 
-#### 📄 nodeIndex?: `number`
+#### 📄 nameNodeIndex?: `number`
 
 
 

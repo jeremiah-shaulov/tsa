@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_autoAccessorBrand](#-autoaccessorbrand-any)
+- property [\_autoAccessorBrand](#-_autoaccessorbrand-any)
 
 
 #### 📄 \_autoAccessorBrand: `any`

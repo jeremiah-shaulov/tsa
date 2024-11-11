@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_primaryExpressionBrand](#-primaryexpressionbrand-any)
+- property [\_primaryExpressionBrand](#-_primaryexpressionbrand-any)
 
 
 #### 📄 \_primaryExpressionBrand: `any`

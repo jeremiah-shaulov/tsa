@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_optionalChainBrand](#-optionalchainbrand-any)
+- property [\_optionalChainBrand](#-_optionalchainbrand-any)
 
 
 #### 📄 \_optionalChainBrand: `any`

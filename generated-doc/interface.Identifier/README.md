@@ -6,7 +6,7 @@
 
 - 3 properties:
 [kind](#-readonly-kind-syntaxkindidentifier),
-[escapedText](#-readonly-escapedtext-string),
+[escapedText](#-readonly-escapedtext-__string),
 [text](#-readonly-text-string)
 
 

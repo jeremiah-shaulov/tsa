@@ -6,7 +6,7 @@
 
 - 2 properties:
 [symbol](#-symbol-symbol),
-[escapedName](#-escapedname-string)
+[escapedName](#-escapedname-__string)
 
 
 #### 📄 symbol: [Symbol](../interface.Symbol/README.md)

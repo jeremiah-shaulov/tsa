@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_literalExpressionBrand](#-literalexpressionbrand-any)
+- property [\_literalExpressionBrand](#-_literalexpressionbrand-any)
 
 
 #### 📄 \_literalExpressionBrand: `any`

@@ -5,7 +5,7 @@
 ## This interface has
 
 - [index signature](#-n-number-t)
-- property [ \_\_sortedArrayBrand](#--sortedarraybrand-any)
+- property [ \_\_sortedArrayBrand](#--__sortedarraybrand-any)
 
 
 #### 🔍 [n: `number`]: T

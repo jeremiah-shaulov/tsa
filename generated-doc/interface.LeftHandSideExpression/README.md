@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_leftHandSideExpressionBrand](#-lefthandsideexpressionbrand-any)
+- property [\_leftHandSideExpressionBrand](#-_lefthandsideexpressionbrand-any)
 
 
 #### 📄 \_leftHandSideExpressionBrand: `any`

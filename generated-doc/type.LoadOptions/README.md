@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LoadOptions} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {LoadOptions} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 You can pass `LoadOptions`
@@ -13,10 +13,10 @@ For example `LoadOptions` allow to substitute source code of a module during loa
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.36/generated-doc/type.LoadOptions/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-7jcr>~)' > /tmp/example-7jcr.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.37/generated-doc/type.LoadOptions/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-7jcr>~)' > /tmp/example-7jcr.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-7jcr.ts
 
-import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.36/mod.ts';
+import {tsa, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.37/mod.ts';
 
 const DOCS_FOR = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 const OUT_FILE = '/tmp/doc.json';
@@ -61,7 +61,7 @@ console.log('%c%d doc-nodes %cwritten to %s', 'color:green', docNodes.nodes.leng
 In the following example i use fake input file:
 
 ```ts
-import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.36/mod.ts';
+import {tsa, defaultResolve, defaultLoad, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.37/mod.ts';
 
 const INPUT =
 `	/**	The main function.

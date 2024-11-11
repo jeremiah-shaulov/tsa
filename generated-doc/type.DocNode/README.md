@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNode} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {DocNode} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
@@ -17,8 +17,10 @@ If this filename is one of the entry points, the [Location.entryPointNumber](../
 - Doc-comments are returned not only as [doc](../interface.JsDoc/README.md#-doc-string) string, but also [docTokens](../interface.JsDoc/README.md#-doctokens-jsdoctoken), that have separate parts for comment text and `@link` tags.
 - [JsDocTagTyped](../interface.JsDocTagTyped/README.md) (for `@enum`, `@extends`, `@this` and `@type` tags) and [JsDocTagParam](../interface.JsDocTagParam/README.md) (for `@param`) have additional `tsType` field for the object type.
 - [JsDocTagNamed](../interface.JsDocTagNamed/README.md) (for `@callback` and `@template` tags) has additional [tsType](../interface.JsDocTagNamed/README.md#-tstype-tstypedef) and [typeParams](../interface.JsDocTagNamed/README.md#-typeparams-tstypeparamdef) fields.
-- [DecoratorDef](../interface.DecoratorDef/README.md) has additional [nodeIndex](../interface.DecoratorDef/README.md#-nodeindex-number) field that contains node index in the results where this decorator function is returned, if it's returned.
+- [DecoratorDef](../interface.DecoratorDef/README.md) has additional [nameNodeIndex](../interface.DecoratorDef/README.md#-namenodeindex-number) field that contains node index in the results where this decorator function is returned, if it's returned.
 To include referenced symbols in the result, use [EmitDocOptions.includeReferenced](../type.EmitDocOptions/README.md#-includereferenced-boolean) option.
+- In [ClassPropertyDef](../interface.ClassPropertyDef/README.md), [ClassMethodDef](../interface.ClassMethodDef/README.md), [InterfaceMethodDef](../interface.InterfaceMethodDef/README.md), [InterfacePropertyDef](../interface.InterfacePropertyDef/README.md), [LiteralPropertyDef](../interface.LiteralPropertyDef/README.md) and [LiteralMethodDef](../interface.LiteralMethodDef/README.md), if property or method name is computed identifier (like `[ident]: type`),
+they can have additional [nameNodeIndex](../interface.ClassPropertyDef/README.md#-namenodeindex-number) field with node index in the results for the identifier ([EmitDocOptions.includeReferenced](../type.EmitDocOptions/README.md#-includereferenced-boolean) option is also needed).
 - References to another named types are returned as [TsTypeRefDef](../interface.TsTypeRefDef/README.md) objects that contain not only [typeName](../interface.TsTypeRefDef/README.md#-typename-string),
 but also additional [nodeIndex](../interface.TsTypeRefDef/README.md#-nodeindex-number) field, that contains index in the results for this type.
 If the type is an enum member, also [nodeSubIndex](../interface.TsTypeRefDef/README.md#-nodesubindex-number) will be set to member number. See [EmitDocOptions.includeReferenced](../type.EmitDocOptions/README.md#-includereferenced-boolean).

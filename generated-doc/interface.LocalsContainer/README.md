@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_localsContainerBrand](#-localscontainerbrand-any)
+- property [\_localsContainerBrand](#-_localscontainerbrand-any)
 
 
 #### 📄 \_localsContainerBrand: `any`

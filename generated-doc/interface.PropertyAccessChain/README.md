@@ -5,7 +5,7 @@
 ## This interface has
 
 - 2 properties:
-[\_optionalChainBrand](#-optionalchainbrand-any),
+[\_optionalChainBrand](#-_optionalchainbrand-any),
 [name](#-readonly-name-membername)
 
 

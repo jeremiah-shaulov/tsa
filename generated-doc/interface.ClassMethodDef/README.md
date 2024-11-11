@@ -3,12 +3,12 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {ClassMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
+import {ClassMethodDef} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
 ```
 
 ## This interface has
 
-- 10 properties:
+- 11 properties:
 [jsDoc](#-jsdoc-jsdoc),
 [accessibility](#-accessibility-accessibility),
 [optional](#-optional-boolean),
@@ -18,7 +18,8 @@ import {ClassMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 [name](#-name-string),
 [kind](#-kind-methodkind),
 [functionDef](#-functiondef-functiondef),
-[location](#-location-location)
+[location](#-location-location),
+[nameNodeIndex](#-namenodeindex-number)
 
 
 #### 📄 jsDoc?: [JsDoc](../interface.JsDoc/README.md)
@@ -58,6 +59,10 @@ import {ClassMethodDef} from "https://deno.land/x/tsa@v0.0.36/mod.ts"
 
 
 #### 📄 location: [Location](../interface.Location/README.md)
+
+
+
+#### 📄 nameNodeIndex?: `number`
 
 
 

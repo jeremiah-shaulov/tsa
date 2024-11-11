@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_jsdocContainerBrand](#-jsdoccontainerbrand-any)
+- property [\_jsdocContainerBrand](#-_jsdoccontainerbrand-any)
 
 
 #### 📄 \_jsdocContainerBrand: `any`

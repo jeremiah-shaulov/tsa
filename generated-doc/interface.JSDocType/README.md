@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- property [\_jsDocTypeBrand](#-jsdoctypebrand-any)
+- property [\_jsDocTypeBrand](#-_jsdoctypebrand-any)
 
 
 #### 📄 \_jsDocTypeBrand: `any`
