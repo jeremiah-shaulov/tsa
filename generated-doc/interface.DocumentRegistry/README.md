@@ -35,6 +35,29 @@ to all subsequent createLanguageService calls.
 > Request a stored SourceFile with a given fileName and compilationSettings.
 > The first call to acquire will call createLanguageServiceSourceFile to generate
 > the SourceFile if was not found in the registry.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The name of the file requested
+> 
+> 🎚️ Parameter **compilationSettingsOrHost**:
+> 
+> Some compilation settings like target affects the
+> shape of a the resulting SourceFile. This allows the DocumentRegistry to store
+> multiple copies of the same file for different compilation settings. A minimal
+> resolution cache is needed to fully define a source file's shape when
+> the compilation settings include `module: node16`+, so providing a cache host
+> object should be preferred. A common host is a language service `ConfiguredProject`.
+> 
+> 🎚️ Parameter **scriptSnapshot**:
+> 
+> Text of the file. Only used if the file was not found
+> in the registry and a new one was created.
+> 
+> 🎚️ Parameter **version**:
+> 
+> Current version of the file. Only used if the file was not found
+> in the registry and a new one was created.
 
 
 
@@ -47,6 +70,27 @@ to all subsequent createLanguageService calls.
 > Request an updated version of an already existing SourceFile with a given fileName
 > and compilationSettings. The update will in-turn call updateLanguageServiceSourceFile
 > to get an updated SourceFile.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The name of the file requested
+> 
+> 🎚️ Parameter **compilationSettingsOrHost**:
+> 
+> Some compilation settings like target affects the
+> shape of a the resulting SourceFile. This allows the DocumentRegistry to store
+> multiple copies of the same file for different compilation settings. A minimal
+> resolution cache is needed to fully define a source file's shape when
+> the compilation settings include `module: node16`+, so providing a cache host
+> object should be preferred. A common host is a language service `ConfiguredProject`.
+> 
+> 🎚️ Parameter **scriptSnapshot**:
+> 
+> Text of the file.
+> 
+> 🎚️ Parameter **version**:
+> 
+> Current version of the file.
 
 
 
@@ -64,6 +108,22 @@ to all subsequent createLanguageService calls.
 > 
 > Note: It is not allowed to call release on a SourceFile that was not acquired from
 > this registry originally.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The name of the file to be released
+> 
+> 🎚️ Parameter **compilationSettings**:
+> 
+> The compilation settings used to acquire the file
+> 
+> 🎚️ Parameter **scriptKind**:
+> 
+> The script kind of the file to be released
+> 
+> 🎚️ Parameter **impliedNodeFormat**:
+> 
+> The implied source file format of the file to be released
 
 
 
@@ -83,6 +143,18 @@ to all subsequent createLanguageService calls.
 > 
 > Note: It is not allowed to call release on a SourceFile that was not acquired from
 > this registry originally.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The name of the file to be released
+> 
+> 🎚️ Parameter **compilationSettings**:
+> 
+> The compilation settings used to acquire the file
+> 
+> 🎚️ Parameter **scriptKind**:
+> 
+> The script kind of the file to be released
 
 > `deprecated`
 > 

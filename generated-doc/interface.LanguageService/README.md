@@ -95,6 +95,10 @@
 > 
 > While these represent the majority of syntax-related diagnostics, there are some
 > that require the type system, which will be present in `getSemanticDiagnostics`.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> A path to the file you want syntactic diagnostics for
 
 
 
@@ -111,6 +115,10 @@
 > To contrast the differences between semantic and syntactic diagnostics, consider the
 > sentence: "The sun is green." is syntactically correct; those are real English words with
 > correct sentence structure. However, it is semantically invalid, because it is not true.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> A path to the file you want semantic diagnostics for
 
 
 
@@ -119,6 +127,10 @@
 > Gets suggestion diagnostics for a specific file. These diagnostics tend to
 > proactively suggest refactors, as opposed to diagnostics that indicate
 > potentially incorrect runtime behavior.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> A path to the file you want semantic diagnostics for
 
 
 
@@ -146,18 +158,79 @@
 
 > Gets semantic highlights information for a particular file. Has two formats, an older
 > version used by VS and a format used by VS Code.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The path to the file
+> 
+> 🎚️ Parameter **position**:
+> 
+> A text span to return results within
+> 
+> 🎚️ Parameter **format**:
+> 
+> Which format to use, defaults to "original"
+> 
+> ✔️ Return value:
+> 
+> a number array encoded as triples of [start, length, ClassificationType, ...].
 
 
 
 #### ⚙ getCompletionsAtPosition(fileName: `string`, position: `number`, options: [GetCompletionsAtPositionOptions](../interface.GetCompletionsAtPositionOptions/README.md) | `undefined`, formattingSettings?: [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): WithMetadata
 
 > Gets completion entries at a particular position in a file.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The path to the file
+> 
+> 🎚️ Parameter **position**:
+> 
+> A zero-based index of the character where you want the entries
+> 
+> 🎚️ Parameter **options**:
+> 
+> An object describing how the request was triggered and what kinds
+> of code actions can be returned with the completions.
+> 
+> 🎚️ Parameter **formattingSettings**:
+> 
+> settings needed for calling formatting functions.
 
 
 
 #### ⚙ getCompletionEntryDetails(fileName: `string`, position: `number`, entryName: `string`, formatOptions: [FormatCodeOptions](../interface.FormatCodeOptions/README.md) | [FormatCodeSettings](../interface.FormatCodeSettings/README.md) | `undefined`, source: `string` | `undefined`, preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`, data: [CompletionEntryData](../type.CompletionEntryData/README.md) | `undefined`): [CompletionEntryDetails](../interface.CompletionEntryDetails/README.md)
 
 > Gets the extended details for a completion entry retrieved from `getCompletionsAtPosition`.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The path to the file
+> 
+> 🎚️ Parameter **position**:
+> 
+> A zero based index of the character where you want the entries
+> 
+> 🎚️ Parameter **entryName**:
+> 
+> The `name` from an existing completion which came from `getCompletionsAtPosition`
+> 
+> 🎚️ Parameter **formatOptions**:
+> 
+> How should code samples in the completions be formatted, can be undefined for backwards compatibility
+> 
+> 🎚️ Parameter **source**:
+> 
+> `source` property from the completion entry
+> 
+> 🎚️ Parameter **preferences**:
+> 
+> User settings, can be undefined for backwards compatibility
+> 
+> 🎚️ Parameter **data**:
+> 
+> `data` property from the completion entry
 
 
 
@@ -169,6 +242,14 @@
 
 > Gets semantic information about the identifier at a particular position in a
 > file. Quick info is what you typically see when you hover in an editor.
+> 
+> 🎚️ Parameter **fileName**:
+> 
+> The path to the file
+> 
+> 🎚️ Parameter **position**:
+> 
+> A zero-based index of the character where you want the quick info
 
 
 
@@ -332,6 +413,15 @@
 
 
 #### ⚙ getApplicableRefactors(fileName: `string`, positionOrRange: `number` | [TextRange](../interface.TextRange/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`, triggerReason?: [RefactorTriggerReason](../type.RefactorTriggerReason/README.md), kind?: `string`, includeInteractiveActions?: `boolean`): [ApplicableRefactorInfo](../interface.ApplicableRefactorInfo/README.md)\[]
+
+> 
+> 
+> 🎚️ Parameter **includeInteractiveActions**:
+> 
+> Include refactor actions that require additional arguments to be
+> passed when calling `getEditsForRefactor`. When true, clients should inspect the `isInteractive`
+> property of each returned `RefactorActionInfo` and ensure they are able to collect the appropriate
+> arguments for any interactive action before offering it.
 
 
 

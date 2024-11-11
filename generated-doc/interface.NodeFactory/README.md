@@ -497,12 +497,30 @@
 #### ⚙ createTempVariable(recordTempVariable: ((node: [Identifier](../interface.Identifier/README.md)) => `void`) | `undefined`, reservedInNestedScopes?: `boolean`): [Identifier](../interface.Identifier/README.md)
 
 > Create a unique temporary variable.
+> 
+> 🎚️ Parameter **recordTempVariable**:
+> 
+> An optional callback used to record the temporary variable name. This
+> should usually be a reference to `hoistVariableDeclaration` from a `TransformationContext`, but
+> can be `undefined` if you plan to record the temporary variable manually.
+> 
+> 🎚️ Parameter **reservedInNestedScopes**:
+> 
+> When `true`, reserves the temporary variable name in all nested scopes
+> during emit so that the variable can be referenced in a nested function body. This is an alternative to
+> setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
 
 
 
 #### ⚙ createLoopVariable(reservedInNestedScopes?: `boolean`): [Identifier](../interface.Identifier/README.md)
 
 > Create a unique temporary variable for use in a loop.
+> 
+> 🎚️ Parameter **reservedInNestedScopes**:
+> 
+> When `true`, reserves the temporary variable name in all nested scopes
+> during emit so that the variable can be referenced in a nested function body. This is an alternative to
+> setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
 
 
 

@@ -23,12 +23,28 @@
 > A hook used by the Printer to provide notifications prior to emitting a node. A
 > compatible implementation **must** invoke `emitCallback` with the provided `hint` and
 > `node` values.
+> 
+> 🎚️ Parameter **hint**:
+> 
+> A hint indicating the intended purpose of the node.
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to emit.
+> 
+> 🎚️ Parameter **emitCallback**:
+> 
+> A callback that, when invoked, will emit the node.
 
 
 
 #### ⚙ isEmitNotificationEnabled?(node: [Node](../interface.Node/README.md)): `boolean`
 
 > A hook used to check if an emit notification is required for a node.
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to emit.
 
 
 
@@ -37,6 +53,14 @@
 > A hook used by the Printer to perform just-in-time substitution of a node. This is
 > primarily used by node transformations that need to substitute one node for another,
 > such as replacing `myExportedVar` with `exports.myExportedVar`.
+> 
+> 🎚️ Parameter **hint**:
+> 
+> A hint indicating the intended purpose of the node.
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to emit.
 
 
 

@@ -6,3 +6,16 @@
 
 Parse the contents of a config file (tsconfig.json).
 
+🎚️ Parameter **jsonNode**:
+
+The contents of the config file to parse
+
+🎚️ Parameter **host**:
+
+Instance of ParseConfigHost used to enumerate files in folder.
+
+🎚️ Parameter **basePath**:
+
+A root directory to resolve relative path entries in the config
+file to. e.g. outDir
+

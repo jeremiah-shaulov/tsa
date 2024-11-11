@@ -6,3 +6,7 @@
 
 Clears any `EmitNode` entries from parse-tree nodes.
 
+🎚️ Parameter **sourceFile**:
+
+A source file.
+

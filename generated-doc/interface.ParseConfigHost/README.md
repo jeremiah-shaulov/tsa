@@ -23,6 +23,10 @@
 #### ⚙ fileExists(path: `string`): `boolean`
 
 > Gets a value indicating whether the specified path exists and is a file.
+> 
+> 🎚️ Parameter **path**:
+> 
+> The path to test.
 
 
 

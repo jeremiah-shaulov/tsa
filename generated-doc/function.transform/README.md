@@ -6,3 +6,15 @@
 
 Transform one or more nodes using the supplied transformers.
 
+🎚️ Parameter **source**:
+
+A single `Node` or an array of `Node` objects.
+
+🎚️ Parameter **transformers**:
+
+An array of `TransformerFactory` callbacks used to process the transformation.
+
+🎚️ Parameter **compilerOptions**:
+
+Optional compiler options.
+

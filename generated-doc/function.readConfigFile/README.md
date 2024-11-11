@@ -6,3 +6,7 @@
 
 Read tsconfig.json file
 
+🎚️ Parameter **fileName**:
+
+The path to the config file
+

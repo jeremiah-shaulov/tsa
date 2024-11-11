@@ -12,3 +12,23 @@ Visits a NodeArray using the supplied visitor, possibly returning a new NodeArra
 - In order to obtain a return type that is more specific than `NodeArray<Node>`, a test
   function _must_ be provided, and that function must be a type predicate.
 
+🎚️ Parameter **nodes**:
+
+The NodeArray to visit.
+
+🎚️ Parameter **visitor**:
+
+The callback used to visit a Node.
+
+🎚️ Parameter **test**:
+
+A node test to execute for each node.
+
+🎚️ Parameter **start**:
+
+An optional value indicating the starting offset at which to start visiting.
+
+🎚️ Parameter **count**:
+
+An optional value indicating the maximum number of nodes to visit.
+

@@ -10,3 +10,11 @@ that represent a compilation unit.
 Creating a program proceeds from a set of root files, expanding the set of inputs by following imports and
 triple-slash-reference-path directives transitively. '@types' and triple-slash-reference-types are also pulled in.
 
+🎚️ Parameter **createProgramOptions**:
+
+- The options for creating a program.
+
+✔️ Return value:
+
+A 'Program' object.
+

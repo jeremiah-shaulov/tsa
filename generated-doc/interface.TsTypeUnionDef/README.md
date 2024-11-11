@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {TsTypeUnionDef} from "https://deno.land/x/tsa@v0.0.37/mod.ts"
+import {TsTypeUnionDef} from "https://deno.land/x/tsa@v0.0.38/mod.ts"
 ```
 
 ## This interface has

@@ -29,18 +29,42 @@
 #### ⚙ substituteNode(hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md)): [Node](../interface.Node/README.md)
 
 > Gets a substitute for a node, if one is available; otherwise, returns the original node.
+> 
+> 🎚️ Parameter **hint**:
+> 
+> A hint as to the intended usage of the node.
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to substitute.
 
 
 
 #### ⚙ emitNodeWithNotification(hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md), emitCallback: (hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md)) => `void`): `void`
 
 > Emits a node with possible notification.
+> 
+> 🎚️ Parameter **hint**:
+> 
+> A hint as to the intended usage of the node.
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to emit.
+> 
+> 🎚️ Parameter **emitCallback**:
+> 
+> A callback used to emit the node.
 
 
 
 #### ⚙ isEmitNotificationEnabled?(node: [Node](../interface.Node/README.md)): `boolean`
 
 > Indicates if a given node needs an emit notification
+> 
+> 🎚️ Parameter **node**:
+> 
+> The node to emit.
 
 
 

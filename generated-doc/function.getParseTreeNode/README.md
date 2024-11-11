@@ -6,3 +6,11 @@
 
 Gets the original parse tree node for a node.
 
+🎚️ Parameter **node**:
+
+The original node.
+
+✔️ Return value:
+
+The original parse tree node if found; otherwise, undefined.
+

@@ -6,3 +6,7 @@
 
 Gets a value indicating whether a node originated in the parse tree.
 
+🎚️ Parameter **node**:
+
+The node to test.
+

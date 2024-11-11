@@ -9,3 +9,15 @@ stored in properties. If a 'cbNodes' callback is specified, it is invoked for em
 embedded arrays are flattened and the 'cbNode' callback is invoked for each element. If a callback returns
 a truthy value, iteration stops and that value is returned. Otherwise, undefined is returned.
 
+🎚️ Parameter **node**:
+
+a given node to visit its children
+
+🎚️ Parameter **cbNode**:
+
+a callback to be invoked for all child nodes
+
+🎚️ Parameter **cbNodes**:
+
+a callback to be invoked for embedded array
+

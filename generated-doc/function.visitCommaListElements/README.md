@@ -6,3 +6,11 @@
 
 Visits the elements of a [CommaListExpression](../interface.CommaListExpression/README.md).
 
+🎚️ Parameter **visitor**:
+
+The visitor to use when visiting expressions whose result will not be discarded at runtime.
+
+🎚️ Parameter **discardVisitor**:
+
+The visitor to use when visiting expressions whose result will be discarded at runtime. Defaults to `visitor`.
+

@@ -12,3 +12,19 @@ Visits a Node using the supplied visitor, possibly returning a new Node in its p
 - In order to obtain a return type that is more specific than `Node`, a test
   function _must_ be provided, and that function must be a type predicate.
 
+🎚️ Parameter **node**:
+
+The Node to visit.
+
+🎚️ Parameter **visitor**:
+
+The callback used to visit the Node.
+
+🎚️ Parameter **test**:
+
+A callback to execute to verify the Node is valid.
+
+🎚️ Parameter **lift**:
+
+An optional callback to execute to lift a NodeArray into a valid Node.
+

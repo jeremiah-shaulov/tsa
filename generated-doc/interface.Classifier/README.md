@@ -23,6 +23,24 @@
 > speed trumps accuracy, this function is preferable; however, for true accuracy, the
 > syntactic classifier is ideal. In fact, in certain editing scenarios, combining the
 > lexical, syntactic, and semantic classifiers may issue the best user experience.
+> 
+> 🎚️ Parameter **text**:
+> 
+> The text of a line to classify.
+> 
+> 🎚️ Parameter **lexState**:
+> 
+> The state of the lexical classifier at the end of the previous line.
+> 
+> 🎚️ Parameter **syntacticClassifierAbsent**:
+> 
+> Whether the client is *not* using a syntactic classifier.
+> If there is no syntactic classifier (syntacticClassifierAbsent=true),
+> certain heuristics may be used in its place; however, if there is a
+> syntactic classifier (syntacticClassifierAbsent=false), certain
+> classifications which may be incorrectly categorized will be given
+> back as Identifiers in order to allow the syntactic classifier to
+> subsume the classification.
 
 > `deprecated`
 > 

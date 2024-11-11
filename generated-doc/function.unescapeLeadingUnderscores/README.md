@@ -6,3 +6,11 @@
 
 Remove extra underscore from escaped identifier text content.
 
+🎚️ Parameter **identifier**:
+
+The escaped identifier text.
+
+✔️ Return value:
+
+The unescaped identifier text.
+

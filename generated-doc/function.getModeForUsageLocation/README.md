@@ -35,3 +35,20 @@ import type {} from "mod" with { "resolution-mode": "import" };
 // Result: ESNext - conditional imports/exports always supported with "resolution-mode" attribute
 ```
 
+🎚️ Parameter **file**:
+
+The file the import or import-like reference is contained within
+
+🎚️ Parameter **usage**:
+
+The module reference string
+
+🎚️ Parameter **compilerOptions**:
+
+The compiler options for the program that owns the file. If the file belongs to a referenced project, the compiler options
+should be the options of the referenced project, not the referencing project.
+
+✔️ Return value:
+
+The final resolution mode of the import
+

@@ -327,6 +327,10 @@
 
 > returns unknownSignature in the case of an error.
 > returns undefined if the node is not valid.
+> 
+> 🎚️ Parameter **argumentCount**:
+> 
+> Apparent number of arguments, passed in case of a possibly incomplete call. This should come from an ArgumentListInfo. See `signatureHelp.ts`.
 
 
 
