@@ -28,6 +28,7 @@ class NodesToMd
 	#baseDirUrlWithTrailingSlash;
 	#collection: NodeToMdCollection;
 	#examplesUsed = new Set<number>;
+	#nodesLinked = new Set<DocNode>;
 
 	constructor(nodes: DocNode[], outFileBasename: string, docDirBasename: string, entryPoints: string[], importUrls: string[], baseDirUrl: string)
 	{	this.#nodes = nodes;
@@ -45,7 +46,7 @@ class NodesToMd
 						{	onDecorators: decorators =>
 							{	let code = '';
 								for (const d of decorators)
-								{	const link = this.#collection.getLink(this.#nodes[d.nameNodeIndex ?? -1]);
+								{	const link = this.#getLink(this.#nodes[d.nameNodeIndex ?? -1]);
 									const name = link ? mdLink(d.name, link) : d.name;
 									code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 								}
@@ -164,7 +165,7 @@ class NodesToMd
 							{	return this.#convertJsDoc(jsDoc, node, headerId, submemberNo);
 							},
 							onLink: (node, memberName, isStatic) =>
-							{	return !memberName ? this.#collection.getLink(node) : this.#collection.getLinkByMemberName(node, memberName, isStatic);
+							{	return !memberName ? this.#getLink(node) : this.#collection.getLinkByMemberName(node, memberName, isStatic);
 							},
 							isPublicOrProtectedMember: node =>
 							{	return this.#isPublicOrProtectedMember(node);
@@ -174,6 +175,13 @@ class NodesToMd
 				}
 			}
 		);
+	}
+
+	#getLink(node: DocNode|undefined, nodeSubIndex?: number, toDocDir='../')
+	{	if (node)
+		{	this.#nodesLinked.add(node);
+		}
+		return this.#collection.getLink(node, nodeSubIndex, toDocDir);
 	}
 
 	*genFiles(mainTitle: string)
@@ -200,7 +208,7 @@ class NodesToMd
 	*#genFilesForNodes(nodes: DocNode[], nodesDone: Set<DocNode>): Generator<{dir: string, code: string}>
 	{	for (const node of nodes)
 		{	if (node.kind != 'moduleDoc')
-			{	if (!nodesDone.has(node))
+			{	if (!nodesDone.has(node) && this.#nodesLinked.has(node))
 				{	nodesDone.add(node);
 					const nodeToMd = this.#collection.getNodeToMd(node);
 					const code = nodeToMd?.getCode(this.#importUrls) ?? '';
@@ -252,11 +260,11 @@ class NodesToMd
 			}
 		}
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, this.#collection.getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Variables', variables.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Functions', functions.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Classes', classes.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		code += mdGrid('Types', types.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
 		return code;
 	}
 
@@ -441,7 +449,7 @@ class NodesToMd
 	}
 
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
-	{	const link = this.#collection.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
+	{	const link = this.#getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
 		if (link)
 		{	return mdLink(typeName, link);
 		}
@@ -792,7 +800,9 @@ class NodesToMd
 		{	return false;
 		}
 		if ('jsDoc' in node)
-		{	return (node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value=='@internal') ?? -1) == -1;
+		{	if ((node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value=='@internal') ?? -1) != -1)
+			{	return false;
+			}
 		}
 		if ('nameNodeIndex' in node && node.nameNodeIndex!=undefined && typeof(node.nameNodeIndex)=='number')
 		{	const refNode = this.#nodes[node.nameNodeIndex];
