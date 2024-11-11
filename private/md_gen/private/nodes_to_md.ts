@@ -443,9 +443,11 @@ class NodesToMd
 	#getTypeName(typeName: string, nodeIndex?: number, nodeSubIndex?: number)
 	{	const link = this.#collection.getLink(this.#nodes[nodeIndex ?? -1], nodeSubIndex);
 		if (link)
-		{	typeName = mdLink(typeName, link);
+		{	return mdLink(typeName, link);
 		}
-		return typeName;
+		else
+		{	return mdEscape(typeName);
+		}
 	}
 
 	#convertTsLiteralType(litDef: LiteralDef, repr: string)
