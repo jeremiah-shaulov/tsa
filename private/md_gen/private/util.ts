@@ -86,6 +86,9 @@ export function parseHeaderId(headerLine: string)
 				headerId += parseHeaderId(m[2]);
 				RE_PARSE_HEADER_ID.lastIndex = pos;
 			}
+			else if (m[0] == '\\_')
+			{	headerId += '_';
+			}
 		}
 	}
 	return headerId;
