@@ -1,6 +1,10 @@
-# `interface` RenameInfoOptions
+# `deprecated` `interface` RenameInfoOptions
 
 [Documentation Index](../README.md)
+
+`deprecated`
+
+Use `UserPreferences` instead.
 
 ## This interface has
 

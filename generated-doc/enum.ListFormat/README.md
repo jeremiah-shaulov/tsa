@@ -166,7 +166,7 @@
 
 
 
-#### ImportClauseEntries = <mark>526226</mark>
+#### `deprecated` ImportClauseEntries = <mark>526226</mark>
 
 
 

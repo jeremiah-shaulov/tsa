@@ -2,7 +2,7 @@
 
 [Documentation Index](../README.md)
 
-#### ES3 = <mark>0</mark>
+#### `deprecated` ES3 = <mark>0</mark>
 
 
 

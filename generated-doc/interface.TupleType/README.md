@@ -47,7 +47,7 @@
 #### 📄 `deprecated` hasRestElement: `boolean`
 
 > True if tuple has any rest or variadic elements
-
+> 
 > `deprecated`
 > 
 > Use `.combinedFlags & ElementFlags.Variable` instead

@@ -1,4 +1,4 @@
-# `interface` ImportTypeAssertionContainer `extends` [Node](../interface.Node/README.md)
+# `deprecated` `interface` ImportTypeAssertionContainer `extends` [Node](../interface.Node/README.md)
 
 [Documentation Index](../README.md)
 
@@ -11,7 +11,7 @@
 - [deprecated symbol](#-deprecated-readonly-assertclause-assertclause)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ImportTypeAssertionContainer](../enum.SyntaxKind/README.md#importtypeassertioncontainer--302)
+#### 📄 `readonly` kind: [SyntaxKind.ImportTypeAssertionContainer](../enum.SyntaxKind/README.md#deprecated-importtypeassertioncontainer--302)
 
 
 

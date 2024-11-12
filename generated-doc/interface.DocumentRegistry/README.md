@@ -155,7 +155,7 @@ to all subsequent createLanguageService calls.
 > 🎚️ Parameter **scriptKind**:
 > 
 > The script kind of the file to be released
-
+> 
 > `deprecated`
 > 
 > pass scriptKind and impliedNodeFormat for correctness

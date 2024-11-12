@@ -1,4 +1,4 @@
-# `interface` AssertEntry `extends` [ImportAttribute](../interface.ImportAttribute/README.md)
+# `deprecated` `interface` AssertEntry `extends` [ImportAttribute](../interface.ImportAttribute/README.md)
 
 [Documentation Index](../README.md)
 

@@ -1,4 +1,4 @@
-# `function` isAssertClause
+# `deprecated` `function` isAssertClause
 
 [Documentation Index](../README.md)
 

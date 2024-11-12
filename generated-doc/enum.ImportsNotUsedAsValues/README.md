@@ -1,4 +1,4 @@
-# `enum` ImportsNotUsedAsValues
+# `deprecated` `enum` ImportsNotUsedAsValues
 
 [Documentation Index](../README.md)
 

@@ -1,6 +1,10 @@
-# `interface` EditorOptions
+# `deprecated` `interface` EditorOptions
 
 [Documentation Index](../README.md)
+
+`deprecated`
+
+- consider using EditorSettings instead
 
 ## This interface has
 

@@ -192,7 +192,7 @@
 
 
 
-#### jsxAttribute = <mark>"JSX attribute"</mark>
+#### `deprecated` jsxAttribute = <mark>"JSX attribute"</mark>
 
 > <JsxTagName attribute1 attribute2={0} />
 

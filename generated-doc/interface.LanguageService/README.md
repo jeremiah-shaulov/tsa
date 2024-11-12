@@ -414,8 +414,6 @@
 
 #### ⚙ getApplicableRefactors(fileName: `string`, positionOrRange: `number` | [TextRange](../interface.TextRange/README.md), preferences: [UserPreferences](../interface.UserPreferences/README.md) | `undefined`, triggerReason?: [RefactorTriggerReason](../type.RefactorTriggerReason/README.md), kind?: `string`, includeInteractiveActions?: `boolean`): [ApplicableRefactorInfo](../interface.ApplicableRefactorInfo/README.md)\[]
 
-> 
-> 
 > 🎚️ Parameter **includeInteractiveActions**:
 > 
 > Include refactor actions that require additional arguments to be

@@ -311,19 +311,17 @@ export class NodeToMd
 			// constructors
 			for (const m of this.#constructors)
 			{	const memberHeader = memberHeaders.get(m);
-				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Constructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
+				sections.add(sectionIndex(m), What.Constructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)));
 			}
 			// destructors
 			for (const m of this.#destructors)
 			{	const memberHeader = memberHeaders.get(m);
-				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Destructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
+				sections.add(sectionIndex(m), What.Destructor, memberHeader, mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)));
 			}
 			// index signatures
 			for (const m of this.#indexSignatures)
 			{	const memberHeader = memberHeaders.get(m);
-				sections.add(sectionIndex(m), What.IndexSignature, memberHeader, '', '');
+				sections.add(sectionIndex(m), What.IndexSignature, memberHeader, '');
 			}
 			// properties
 			for (const m of this.#propertiesAndAccessors)
@@ -343,14 +341,12 @@ export class NodeToMd
 					{	code +=  mdBlockquote(getOrSetCode);
 					}
 				}
-				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.PropertyOrAccessor, memberHeader, code, onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 3));
+				sections.add(sectionIndex(m), What.PropertyOrAccessor, memberHeader, code);
 			}
 			// methods
 			for (const m of this.#methods)
 			{	const memberHeader = memberHeaders.get(m);
-				const deprecated: JsDoc|undefined = isDeprecated(m);
-				sections.add(sectionIndex(m, deprecated), What.Method, memberHeader,  mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)), onJsDoc(deprecated, this.#node, memberHeader?.headerId ?? '', 1));
+				sections.add(sectionIndex(m), What.Method, memberHeader,  mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)));
 			}
 			// done
 			sectionsCode = sections+'';
@@ -567,11 +563,8 @@ class ClassSections
 	{	this.#kind = kind;
 	}
 
-	add(sectionIndex: number, what: What, memberHeader: MemberHeader|undefined, code: string, deprecatedCode: string)
+	add(sectionIndex: number, what: What, memberHeader: MemberHeader|undefined, code: string)
 	{	// Section
-		if (deprecatedCode)
-		{	code += mdBlockquote('`deprecated`\n\n' + deprecatedCode);
-		}
 		this.#sections[sectionIndex] += `#### ${memberHeader?.headerLine ?? ''}\n\n${code}\n\n`;
 		// Outline
 		if (memberHeader)
@@ -686,12 +679,12 @@ class ClassSections
 	}
 }
 
-function sectionIndex(node: Member, deprecated?: JsDoc)
+function sectionIndex(node: Member)
 {	let i = 0;
 	if (!('isStatic' in node && node.isStatic))
 	{	i |= 4;
 	}
-	if (deprecated)
+	if (isDeprecated(node))
 	{	i |= 2;
 	}
 	if ('accessibility' in node && node.accessibility==='protected')

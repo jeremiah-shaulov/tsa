@@ -1,4 +1,4 @@
-# `type` AssertionKey
+# `deprecated` `type` AssertionKey
 
 [Documentation Index](../README.md)
 

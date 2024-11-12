@@ -1210,15 +1210,15 @@
 
 
 
-#### AssertClause = <mark>300</mark>
+#### `deprecated` AssertClause = <mark>300</mark>
 
 
 
-#### AssertEntry = <mark>301</mark>
+#### `deprecated` AssertEntry = <mark>301</mark>
 
 
 
-#### ImportTypeAssertionContainer = <mark>302</mark>
+#### `deprecated` ImportTypeAssertionContainer = <mark>302</mark>
 
 
 
@@ -1294,7 +1294,11 @@
 
 
 
-#### JSDocComment = <mark>320</mark>
+#### `deprecated` JSDocComment = <mark>320</mark>
+
+> `deprecated`
+> 
+> Use SyntaxKind.JSDoc
 
 
 

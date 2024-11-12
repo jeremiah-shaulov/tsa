@@ -1,4 +1,4 @@
-# `function` isAssertEntry
+# `deprecated` `function` isAssertEntry
 
 [Documentation Index](../README.md)
 

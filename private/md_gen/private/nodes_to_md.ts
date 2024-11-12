@@ -54,6 +54,9 @@ class NodesToMd
 							},
 							onTopHeader: () =>
 							{	let code = '';
+								if (isDeprecated(node))
+								{	code = '`deprecated` ';
+								}
 								if (node.kind == 'class')
 								{	const {classDef} = node;
 									// Class (h1 header)
@@ -135,7 +138,11 @@ class NodesToMd
 								return this.#convertFunction(icon, m.kind, m.name, !!isDeprecated(m), accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
 							},
 							onEnumMember: m =>
-							{	let text = mdEscape(m.name);
+							{	let text = '';
+								if (isDeprecated(m))
+								{	text = '`deprecated` ';
+								}
+								text += mdEscape(m.name);
 								const afterNamePos = text.length;
 								if (m.init)
 								{	text += ' = '+this.#convertTsType(m.init);
@@ -614,25 +621,45 @@ class NodesToMd
 		}
 		// Add tags
 		if (jsDoc?.tags)
-		{	let params = '';
+		{	let deprecated = '';
+			let params = '';
+			let returns = '';
+			let submemberNo = 0;
 			for (const tag of jsDoc.tags)
 			{	switch (tag.kind)
 				{	case 'default':
-					{	doc = `Default value: \`${tag.value}\`\n\n${doc}`;
+					{	doc = `Default value: \`${tag.value}\`` + (!doc ? '' : '\n\n'+doc);
 						break;
 					}
 					case 'param':
-					{	params += `\n\n🎚️ Parameter **${mdEscape(tag.name)}**:\n\n` + this.#convertJsDoc(tag, node, headerId, 0);
+					{	const paramDoc = this.#convertJsDoc(tag, node, headerId, ++submemberNo);
+						if (paramDoc)
+						{	params += `\n\n🎚️ Parameter **${mdEscape(tag.name)}**:\n\n${paramDoc}`;
+						}
 						break;
 					}
 					case 'return':
-					{	params += `\n\n✔️ Return value:\n\n` + this.#convertJsDoc(tag, node, headerId, 0);
+					{	returns = this.#convertJsDoc(tag, node, headerId, ++submemberNo);
+						if (returns)
+						{	returns = `\n\n✔️ Return value:\n\n${returns}`;
+						}
+						break;
+					}
+					case 'deprecated':
+					{	const deprecatedDoc = this.#convertJsDoc(tag, node, headerId, ++submemberNo);
+						if (deprecatedDoc)
+						{	if (!deprecated)
+							{	deprecated = '\n\n`deprecated`';
+							}
+							deprecated += '\n\n' + deprecatedDoc;
+						}
 						break;
 					}
 				}
 			}
-			if (params)
-			{	doc = doc + params;
+			const addDoc = params + returns + deprecated;
+			if (addDoc)
+			{	doc = !doc ? addDoc.trimStart() : doc+addDoc;
 			}
 		}
 		// Convert examples and substitute importUrls

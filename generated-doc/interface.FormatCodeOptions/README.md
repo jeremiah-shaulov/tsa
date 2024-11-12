@@ -1,6 +1,10 @@
-# `interface` FormatCodeOptions `extends` [EditorOptions](../interface.EditorOptions/README.md)
+# `deprecated` `interface` FormatCodeOptions `extends` [EditorOptions](../interface.EditorOptions/README.md)
 
 [Documentation Index](../README.md)
+
+`deprecated`
+
+- consider using FormatCodeSettings instead
 
 ## This interface has
 

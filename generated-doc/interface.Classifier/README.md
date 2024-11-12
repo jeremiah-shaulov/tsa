@@ -41,7 +41,7 @@
 > classifications which may be incorrectly categorized will be given
 > back as Identifiers in order to allow the syntactic classifier to
 > subsume the classification.
-
+> 
 > `deprecated`
 > 
 > Use getLexicalClassifications instead.
