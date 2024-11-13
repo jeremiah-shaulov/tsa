@@ -2,7 +2,11 @@
 
 import {tsa, printDiagnostics} from './mod.ts';
 import {Command, path, APP_GIT_TAG} from './private/deps.ts';
+import {writeTextFile} from './private/util.ts';
 
+const RE_BAD_SHELL_CHAR = /[^\w%+\-.\/:=@]/;
+
+const {args} = Deno;
 const program = new Command('tsa');
 
 program
@@ -91,7 +95,8 @@ program
 			}
 
 			// Gen doc
-			await doc(entryPoints, outFile, outDir, false, true, mainTitle, importUrls, outUrl);
+			const mainPageStart = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
+			await doc(entryPoints, outFile, outDir, false, true, mainTitle, mainPageStart, importUrls, outUrl);
 
 			// Done
 			Deno.exit();
@@ -184,16 +189,24 @@ program
 		}
 	);
 
-program.parse(Deno.args);
+program.parse(args);
 
 function optionStringArray(value: unknown, previous: unknown[])
 {	const arr = [String(value)];
 	return !previous ? arr : previous.concat(arr);
 }
 
-async function doc(entryPoints: string[], outFile: string, outDir: string, pretty: boolean, isMd: boolean, mainTitle='', importUrls=new Array<string>, outUrl='')
+/**	Enclose text in apostrophs and/or add backslashes if the text contains characters that must be escaped in bash command line.
+ **/
+function escapeShellArg(arg: string)
+{	return RE_BAD_SHELL_CHAR.test(arg) ? "'" + arg.replaceAll("'", "'\\''") + "'" : arg;
+}
+
+async function doc(entryPoints: string[], outFile: string, outDir: string, pretty: boolean, isMd: boolean, mainTitle='', mainPageStart='', importUrls=new Array<string>, outUrl='')
 {	// Create program
-	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true});
+	const compilerOptions = {declaration: true, emitDeclarationOnly: true};
+	const host = tsa.createCompilerHost(compilerOptions);
+	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Generate doc
@@ -201,7 +214,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 
 	if (!isMd)
 	{	// Save the resulting nodes to file (or print to stdout), and exit
-		await writeTextFile(outFile, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
+		writeTextFile(host, outFile, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
 	}
 	else
 	{	const createdDirs = new Array<string>;
@@ -210,17 +223,17 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		const docDirBasename = outDir;
 		const baseDirUrl = outUrl && new URL('.', outUrl).href;
 		let nRemoved = 0;
-		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, entryPoints, importUrls, baseDirUrl))
+		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, mainPageStart, entryPoints, importUrls, baseDirUrl))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? baseDir : path.join(baseDir, dir);
 			const filename = !dir ? outFile : path.join(curDir, 'README.md');
 			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
 			{	try
-				{	await Deno.writeTextFile(filename, code);
+				{	writeTextFile(host, filename, code);
 					// If successfully written from the first attempt, see what else files exist in this directory, and remove them
 					if (i==0 && dir)
-					{	for await (const {name} of Deno.readDir(curDir))
+					{	for (const name of host.getDirectories!(curDir))
 						{	if (name != 'README.md')
 							{	// Remove this file or directory
 								await Deno.remove(path.join(curDir, name), {recursive: true});
@@ -244,7 +257,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		// Delete existing files that i didn't create
 		const outDirPath = path.join(baseDir, docDirBasename);
 		if (createdDirs.length)
-		{	for await (const {name} of Deno.readDir(outDirPath))
+		{	for (const name of host.getDirectories!(outDirPath))
 			{	if (name!='README.md' && !createdDirs.includes(path.join(docDirBasename, name)))
 				{	// Remove this file or directory
 					await Deno.remove(path.join(outDirPath, name), {recursive: true});
@@ -259,7 +272,9 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 
 async function types(entryPoints: string[], outFile: string)
 {	// Create program
-	const program = await tsa.createTsaProgram(entryPoints, {declaration: true, emitDeclarationOnly: true, outFile});
+	const compilerOptions = {declaration: true, emitDeclarationOnly: true, outFile};
+	const host = tsa.createCompilerHost(compilerOptions);
+	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Generate the DTS
@@ -273,20 +288,24 @@ async function types(entryPoints: string[], outFile: string)
 	printDiagnostics(result.diagnostics);
 
 	// Save the result to file (or print to stdout)
-	await writeTextFile(outFile, contents);
+	writeTextFile(host, outFile, contents);
 }
 
 async function bundle(entryPoints: string[], outFile: string, target: tsa.ScriptTarget, isTs: boolean)
 {	// Create program to bundle source files to single `.ts`
-	const program = await tsa.createTsaProgram(entryPoints);
+	const compilerOptions = {};
+	const host = tsa.createCompilerHost(compilerOptions);
+	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
 	printDiagnostics(tsa.getPreEmitDiagnostics(program));
 
 	// Bundle
 	const bundle = program.emitTsaBundle();
 
+	let contents = '';
+
 	if (isTs)
 	{	// Save the result to file (or print to stdout)
-		await writeTextFile(outFile, bundle.toTs(), !bundle.hasExports);
+		contents = bundle.toTs();
 	}
 	else
 	{	// Create second program to transpile the bundle to Javascript
@@ -294,7 +313,6 @@ async function bundle(entryPoints: string[], outFile: string, target: tsa.Script
 		printDiagnostics(tsa.getPreEmitDiagnostics(program2));
 
 		// Transpile
-		let contents = '';
 		const result2 = program2.emit
 		(	undefined,
 			(_fileName, text) =>
@@ -305,10 +323,13 @@ async function bundle(entryPoints: string[], outFile: string, target: tsa.Script
 		if (result2.emitSkipped)
 		{	Deno.exit(1);
 		}
-
-		// Save the result to file (or print to stdout)
-		await writeTextFile(outFile, contents, !bundle.hasExports);
 	}
+
+	// Save the result to file (or print to stdout)
+	if (!bundle.hasExports)
+	{	contents = `(async function() {\n${contents}\n})()`;
+	}
+	writeTextFile(host, outFile, contents);
 }
 
 function targetToNum(target?: string|boolean): tsa.ScriptTarget
@@ -326,24 +347,5 @@ function targetToNum(target?: string|boolean): tsa.ScriptTarget
 		default:
 			console.error(`Target not supported: ${target}`);
 			Deno.exit();
-	}
-}
-
-async function writeTextFile(filename: string, contents: string, wrapInAsyncScope=false)
-{	if (wrapInAsyncScope)
-	{	contents = `(async function() {\n${contents}\n})()`;
-	}
-	if (filename == '/dev/stdout')
-	{	// Support Windows
-		const writer = Deno.stdout.writable.getWriter();
-		try
-		{	await writer.write(new TextEncoder().encode(contents));
-		}
-		finally
-		{	writer.releaseLock();
-		}
-	}
-	else
-	{	await Deno.writeTextFile(filename, contents);
 	}
 }

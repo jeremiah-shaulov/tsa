@@ -1,3 +1,4 @@
+import {tsa} from '../tsa_ns.ts';
 import {resolveJsr} from './private/resolve_jsr.ts';
 import {resolveNpm} from './private/resolve_npm.ts';
 
@@ -9,16 +10,16 @@ const enum Reg
 	Npm,
 }
 
-export async function resolveRegistry(specifier: string)
+export async function resolveRegistry(specifier: string, host: tsa.CompilerHost)
 {	const reg = specifier.startsWith('jsr:') ? Reg.Jsr : specifier.startsWith('npm:') ? Reg.Npm : Reg.None;
 	if (reg != Reg.None)
 	{	let result = known.get(specifier);
 		if (result == undefined)
 		{	if (reg == Reg.Jsr)
-			{	result = await resolveJsr(specifier);
+			{	result = await resolveJsr(specifier, host);
 			}
 			else
-			{	result = await resolveNpm(specifier);
+			{	result = await resolveNpm(specifier, host);
 			}
 			known.set(specifier, result ?? null);
 			if (result)

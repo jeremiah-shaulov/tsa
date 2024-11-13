@@ -1,8 +1,8 @@
-import {APP_GIT_TAG, indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
+import {indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
-import {escapeShellArg, isDeprecated} from './util.ts';
+import {isDeprecated} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
 const INDEX_N_COLUMNS = 4;
@@ -15,8 +15,8 @@ const RE_NO_NL = /[\r\n]/;
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
 
-export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
-{	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle);
+export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', mainPageStart='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
+{	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle, mainPageStart);
 }
 
 class NodesToMd
@@ -128,14 +128,14 @@ class NodesToMd
 								return {text, beforeNamePos: 0, afterNamePos: 0};
 							},
 							onProperty: m =>
-							{	return this.#convertPropertyOrAccessor('📄 ', m, !!isDeprecated(m));
+							{	return this.#convertPropertyOrAccessor('📄 ', m);
 							},
 							onMethod: (m, isDestructor) =>
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
 								const icon = isDestructor ? '🔨 ' : m.kind!='function' ? '⚙ ' : '';
-								return this.#convertFunction(icon, m.kind, m.name, !!isDeprecated(m), accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
+								return this.#convertFunction(icon, m.kind, m.name, isDeprecated(m), accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
 							},
 							onEnumMember: m =>
 							{	let text = '';
@@ -191,9 +191,9 @@ class NodesToMd
 		return this.#collection.getLink(node, nodeSubIndex, toDocDir);
 	}
 
-	*genFiles(mainTitle: string)
+	*genFiles(mainTitle: string, mainPageStart: string)
 	{	// Module doc
-		let code = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${Deno.args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
+		let code = mainPageStart;
 		if (mainTitle)
 		{	code += `# ${mdEscape(mainTitle)}\n\n`;
 		}
@@ -275,19 +275,19 @@ class NodesToMd
 		return code;
 	}
 
-	#convertPropertyOrAccessor(icon: string, p: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor, isDeprecated: boolean)
+	#convertPropertyOrAccessor(icon: string, p: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor)
 	{	if (!('getter' in p))
 		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
 			const isAbstract = 'isAbstract' in p && p.isAbstract;
 			const isStatic = 'isStatic' in p && p.isStatic;
-			return this.#convertProperty(icon, p.name, isDeprecated, accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
+			return this.#convertProperty(icon, p.name, isDeprecated(p), accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
 		{	const m = p.getter;
 			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 			const isAbstract = 'isAbstract' in m && m.isAbstract;
 			const isStatic = 'isStatic' in m && m.isStatic;
-			return this.#convertProperty(icon, m.name, isDeprecated, accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
+			return this.#convertProperty(icon, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
 		}
 		else
 		{	const m = p.getter ?? p.setter;
@@ -295,7 +295,7 @@ class NodesToMd
 			{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 				const isAbstract = 'isAbstract' in m && m.isAbstract;
 				const isStatic = 'isStatic' in m && m.isStatic;
-				return this.#convertFunction(icon, m.kind, m.name, isDeprecated, accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+				return this.#convertFunction(icon, m.kind, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
 			}
 		}
 		return {text: '', beforeNamePos: 0, afterNamePos: 0};

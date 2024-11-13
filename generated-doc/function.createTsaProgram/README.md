@@ -2,7 +2,7 @@
 
 [Documentation Index](../README.md)
 
-`function` createTsaProgram(entryPoints: ReadonlyArray\<`string` | URL>, compilerOptions?: [CompilerOptions](../interface.CompilerOptions/README.md), loadOptions?: [LoadOptions](../type.LoadOptions/README.md)): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>
+`function` createTsaProgram(entryPoints: ReadonlyArray\<`string` | URL>, compilerOptions?: [CompilerOptions](../interface.CompilerOptions/README.md), loadOptions?: [LoadOptions](../type.LoadOptions/README.md), host?: [tsa.CompilerHost](../interface.CompilerHost/README.md)): Promise\<[TsaProgram](../interface.TsaProgram/README.md)>
 
 ### Configuration options for the Typescript Compiler (tsa.CompilerOptions)
 

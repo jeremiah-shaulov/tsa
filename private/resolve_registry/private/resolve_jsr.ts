@@ -1,18 +1,20 @@
 import {cache, path, semver} from '../../deps.ts';
+import {tsa} from '../../tsa_ns.ts';
+import {readTextFile} from '../../util.ts';
 
 // deno-lint-ignore no-explicit-any
 type Any = any;
 
-export async function resolveJsr(specifier: string)
+export async function resolveJsr(specifier: string, host: tsa.CompilerHost)
 {	const parsed = parseJsrSpecifier(specifier);
 	if (parsed)
 	{	const {packageUrl, versionQuery, entryPointQuery} = parsed;
-		const meta = await getMeta(packageUrl);
+		const meta = await getMeta(host, packageUrl);
 		const version = metaChooseVersion(meta, versionQuery);
 		if (!version)
 		{	throw new Error(`Version ${version} is not found in: ${packageUrl}`);
 		}
-		const versionMeta = await getMeta(packageUrl, version);
+		const versionMeta = await getMeta(host, packageUrl, version);
 		const entryPoint = versionMetaChooseEntryPoint(versionMeta, entryPointQuery);
 		if (!entryPoint)
 		{	throw new Error(`Path ${JSON.stringify(entryPoint)} is not found in: ${packageUrl}${version}`);
@@ -47,10 +49,10 @@ function parseJsrSpecifier(specifier: string)
 	}
 }
 
-async function getMeta(packageUrl: string, version='')
+async function getMeta(host: tsa.CompilerHost, packageUrl: string, version='')
 {	const metaUrl = !version ? packageUrl+'meta.json' : packageUrl+version+'_meta.json';
 	const {path: metaPath} = await cache(metaUrl);
-	const metaText = await Deno.readTextFile(metaPath);
+	const metaText = readTextFile(host, metaPath);
 	return JSON.parse(metaText);
 }
 

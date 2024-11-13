@@ -27,9 +27,9 @@ const program = await tsa.createTsaProgram
 	{	declaration: true,
 		emitDeclarationOnly: true,
 	},
-	{	async load(specifier, isDynamic)
+	{	async load(specifier, isDynamic, host)
 		{	// Load the module contents
-			const result = await defaultLoad(specifier, isDynamic);
+			const result = await defaultLoad(specifier, isDynamic, host);
 			// If the module was found, substitute it's contents
 			if (result?.kind == 'module')
 			{	result.content =
@@ -84,11 +84,11 @@ const program = await tsa.createTsaProgram
 			}
 			return defaultResolve(specifier, referrer);
 		},
-		async load(specifier, isDynamic)
+		async load(specifier, isDynamic, host)
 		{	if (specifier == fakeInputFilename)
 			{	return {kind: 'module', specifier, content: INPUT, headers: {'content-type': 'application/typescript'}};
 			}
-			return await defaultLoad(specifier, isDynamic);
+			return await defaultLoad(specifier, isDynamic, host);
 		}
 	}
 );

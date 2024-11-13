@@ -1,11 +1,10 @@
-import {JsDoc, JsDocTagDoc} from "../../doc_node/mod.ts";
+import {JsDoc} from "../../doc_node/mod.ts";
 
 const RE_NLS = /\r?\n/g;
 const RE_MD_ESCAPE = /[`[{<*_~\\#]/g;
 const RE_MD_ESCAPE_LINK_TEXT = /[`[{<*_~\\#\]]/g;
 const RE_MD_ENCODE_URI = /[^\w\-$.';\/?:@&=+,#]+/g;
 const RE_MD_BLOCKQUOTE = /^>*/gm;
-const RE_BAD_SHELL_CHAR = /[^\w%+\-.\/:=@]/;
 const RE_PARSE_HEADER_ID = /([ ]|[\p{Letter}\p{Number}_]+)|\\.|<\/?\w+(?:[^"'>]+|"[^"]*"|'[^']*')*>|\[([^\]\r\n]+)\]\([^)\r\n]+\)/sug;
 
 const encoder = new TextEncoder;
@@ -52,21 +51,8 @@ export function mdBlockquote(text: string)
 
 /**	Returns true if the given node has attached doc-comment that contains `@`deprecated tag.
  **/
-export function isDeprecated(node: object | {jsDoc?: JsDoc}): JsDocTagDoc|undefined
-{	const tags = ('jsDoc' in node ? node.jsDoc : undefined)?.tags;
-	if (tags)
-	{	for (const t of tags)
-		{	if (t.kind == 'deprecated')
-			{	return t;
-			}
-		}
-	}
-}
-
-/**	Enclose text in apostrophs and/or add backslashes if the text contains characters that must be escaped in bash command line.
- **/
-export function escapeShellArg(arg: string)
-{	return RE_BAD_SHELL_CHAR.test(arg) ? "'" + arg.replaceAll("'", "'\\''") + "'" : arg;
+export function isDeprecated(node: object | {jsDoc?: JsDoc})
+{	return !('jsDoc' in node) ? false : !!node.jsDoc?.tags?.find(t => t.kind == 'deprecated');
 }
 
 /**	For given markdown header line (text after 1 or more `#` signs)

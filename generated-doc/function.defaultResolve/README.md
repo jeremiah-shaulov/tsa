@@ -6,5 +6,5 @@
 import {defaultResolve} from "https://deno.land/x/tsa@v0.0.39/mod.ts"
 ```
 
-`function` defaultResolve(specifier: `string`, referrer: `string`): Promise\<`string`>
+`function` defaultResolve(specifier: `string`, referrer: `string`, host: [tsa.CompilerHost](../interface.CompilerHost/README.md)): Promise\<`string`>
 

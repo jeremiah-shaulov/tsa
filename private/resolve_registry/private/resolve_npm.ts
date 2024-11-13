@@ -1,16 +1,18 @@
 import {cacheDirectory, path} from '../../deps.ts';
-import {exists} from '../../util.ts';
+import {tsa} from '../../tsa_ns.ts';
+import {readTextFile} from '../../util.ts';
 
 let npmRoots: string[] | undefined;
 
-async function getNpmRoots()
+async function getNpmRoots(host: tsa.CompilerHost)
 {	if (!npmRoots)
 	{	npmRoots = [];
 		try
 		{	const npmDir = path.join(cacheDirectory(), 'npm');
-			for await (const {name, isDirectory} of Deno.readDir(npmDir))
-			{	if (isDirectory)
-				{	npmRoots.push(path.join(npmDir, name));
+			for (const name of host.getDirectories!(npmDir))
+			{	const nameFull = path.join(npmDir, name);
+				if (host.directoryExists!(nameFull))
+				{	npmRoots.push(nameFull);
 				}
 			}
 		}
@@ -21,7 +23,7 @@ async function getNpmRoots()
 	return npmRoots;
 }
 
-export async function resolveNpm(specifier: string)
+export async function resolveNpm(specifier: string, host: tsa.CompilerHost)
 {	try
 	{	// Load the module to cache it
 		await import(specifier);
@@ -31,7 +33,7 @@ export async function resolveNpm(specifier: string)
 	}
 	try
 	{	// Can detect npm directory?
-		const npmRoots = await getNpmRoots();
+		const npmRoots = await getNpmRoots(host);
 		if (npmRoots.length)
 		{	// Split the specifier to parts
 			const posAt = specifier.indexOf('@', 4);
@@ -45,18 +47,18 @@ export async function resolveNpm(specifier: string)
 			{	try
 				{	if (!version)
 					{	const registryJsonPath = path.join(npmRoot, moduleName, 'registry.json');
-						const registryJson = JSON.parse(await Deno.readTextFile(registryJsonPath));
+						const registryJson = JSON.parse(readTextFile(host, registryJsonPath));
 						version = registryJson['dist-tags'].latest;
 					}
 					if (!modulePath)
 					{	const packageJsonPath = path.join(npmRoot, moduleName, version, 'package.json');
-						const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
+						const packageJson = JSON.parse(readTextFile(host, packageJsonPath));
 						modulePath = packageJson.types || packageJson.typings;
 						if (!modulePath)
 						{	modulePath = packageJson.main || 'index.js';
 							if (modulePath.slice(-3).toLowerCase() == '.js')
 							{	const modulePathDts = modulePath.slice(0, -2) + 'd.ts';
-								if (await exists(modulePathDts))
+								if (host.fileExists(modulePathDts))
 								{	modulePath = modulePathDts;
 								}
 							}
@@ -66,13 +68,15 @@ export async function resolveNpm(specifier: string)
 					const fileUrl = new URL(modulePath, dirUrl.href+'/');
 					if (fileUrl.href.startsWith(dirUrl.href))
 					{	// Stat to throw exception if not found, so will try another `npmRoot`
-						await Deno.stat(fileUrl);
+						if (!host.fileExists(path.fromFileUrl(fileUrl)))
+						{	throw new Deno.errors.NotFound(`File not found: ${fileUrl}`);
+						}
 						// Success
 						return {fileUrl, specifier: `npm:${moduleName}@${version}${fileUrl.href.slice(dirUrl.href.length)}`};
 					}
 				}
 				catch (e)
-				{	if (!(e instanceof Deno.errors.NotFound))
+				{	if (!(e instanceof Error) || !('code' in e) || e.code!=='ENOENT')
 					{	throw e;
 					}
 				}

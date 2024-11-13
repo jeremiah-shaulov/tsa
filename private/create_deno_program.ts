@@ -4,7 +4,7 @@ import {tsa} from './tsa_ns.ts';
 import {jstok, JstokTokenType, path} from './deps.ts';
 import {Converter, EmitDocOptions} from './convert/mod.ts';
 import {getExtendedLibs} from './dts/mod.ts';
-import {existsSync, isUrl} from './util.ts';
+import {isUrl, readTextFile} from './util.ts';
 import {LoadOptions, Loader} from './load_options.ts';
 import {resolveRegistry} from './resolve_registry/mod.ts';
 import {emitTsaBundle} from './emit_bundle/mod.ts';
@@ -26,7 +26,7 @@ const C_TIMES = '*'.charCodeAt(0);
 
 type SourceFileAndKind = {sourceFile?: tsa.SourceFile, scriptKind: tsa.ScriptKind};
 
-export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions)
+export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyArray<string|URL>, compilerOptions?: tsa.CompilerOptions, loadOptions?: LoadOptions, host?: tsa.CompilerHost)
 {	const ts = this;
 
 	const DEFAULT_COMPILER_OPTIONS =
@@ -41,12 +41,15 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	compilerOptions = {...DEFAULT_COMPILER_OPTIONS, ...compilerOptions};
 	delete compilerOptions.allowImportingTsExtensions;
 
-	const loader = await Loader.inst(loadOptions);
-	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, entryPoints, loader);
-	const host = ts.createCompilerHost(compilerOptions);
+	if (!host)
+	{	host = ts.createCompilerHost(compilerOptions);
+	}
+
+	const loader = await Loader.inst(loadOptions, host);
+	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, host, entryPoints, loader);
 	const libLocation = host.getDefaultLibLocation?.() ?? '';
 	const extendedLibs = await getExtendedLibs(this, libLocation);
-	const cwdHref = path.toFileUrl(Deno.cwd()).href;
+	const cwdHref = path.toFileUrl(host.getCurrentDirectory()).href;
 
 	if (parseFloat(this.versionMajorMinor) >= 5.0)
 	{	host.resolveModuleNameLiterals = function(moduleLiterals, containingFile)
@@ -121,10 +124,10 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 			else
 			{	fileUrl = path.toFileUrl(filename);
 			}
-			if (extendedLibs[fileUrl.href] && !existsSync(fileUrl))
+			if (extendedLibs[fileUrl.href] && !host.fileExists(path.fromFileUrl(fileUrl)))
 			{	filename = extendedLibs[fileUrl.href];
 			}
-			const content = Deno.readTextFileSync(filename);
+			const content = readTextFile(host, filename);
 			return createSourceFile(ts, loader, content, origSpecifier, filename).sourceFile;
 		}
 		catch (e)
@@ -147,10 +150,10 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	return program as tsa.TsaProgram;
 }
 
-async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|URL>, loader: Loader)
+async function readAllFiles(ts: typeof tsa, host: tsa.CompilerHost, entryPoints: ReadonlyArray<string|URL>, loader: Loader)
 {	const sourceFilesAndKinds = new Map<string, SourceFileAndKind>;
 	const entryPointsHrefs = new Array<string>;
-	const cwd = path.toFileUrl(await Deno.realPath(Deno.cwd())).href + '/';
+	const cwd = path.toFileUrl(host.realpath!(host.getCurrentDirectory())).href + '/';
 	await Promise.all
 	(	entryPoints.map
 		(	async (entryPoint, i) =>
@@ -158,7 +161,7 @@ async function readAllFiles(ts: typeof tsa, entryPoints: ReadonlyArray<string|UR
 				let entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : await loader.resolve(entryPoint, cwd);
 				// If this is `npm:` URL, resolve it to internal path to the main module, like `npm:typescript@5.1.5` -> `npm:typescript@5.1.5/lib/typescript.d.ts`
 				// This is needed, because tsc wants to see file extension
-				entryPointHref = (await resolveRegistry(entryPointHref))?.specifier || entryPointHref;
+				entryPointHref = (await resolveRegistry(entryPointHref, host))?.specifier || entryPointHref;
 				// Add to `entryPointsHrefs` array
 				entryPointsHrefs[i] = entryPointHref;
 				// Read the file contents, and scan it for `import from` and `export from`

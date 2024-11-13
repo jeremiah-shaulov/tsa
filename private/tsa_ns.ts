@@ -70,7 +70,7 @@ declare module 'npm:typescript@5.6.2'
 
 		To produce bundle no special options are needed, and you can leave the options blank.
 	 **/
-	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions): Promise<TsaProgram>;
+	function createTsaProgram(entryPoints: ReadonlyArray<string|URL>, compilerOptions?: CompilerOptions, loadOptions?: LoadOptions, host?: tsa.CompilerHost): Promise<TsaProgram>;
 }
 
 // 2. Reexport the `typescript`

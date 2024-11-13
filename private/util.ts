@@ -3,6 +3,17 @@ import {tsa} from './tsa_ns.ts';
 
 const RE_IS_URL = /^https?:\/\/|^file:\/\/|^npm:|^node:/;
 
+let tmpDirname = '';
+
+export async function getTmpDirname()
+{	if (!tmpDirname)
+	{	const tmpFilename = await Deno.makeTempFile();
+		tmpDirname = path.dirname(tmpFilename);
+		await Deno.remove(tmpFilename);
+	}
+	return tmpDirname;
+}
+
 export function isUrl(str: string)
 {	return RE_IS_URL.test(str);
 }
@@ -24,56 +35,20 @@ export function printDiagnostics(diagnostics: readonly tsa.Diagnostic[])
 	}
 }
 
-/**	File exists? If yes, return it's `stat`.
- **/
-export async function exists(filespec: string|URL)
-{	try
-	{	return await Deno.stat(filespec);
+export function readTextFile(host: tsa.CompilerHost, filename: string)
+{	const contents = host.readFile(filename);
+	if (contents == undefined)
+	{	throw new Deno.errors.NotFound(`Couldn't read file: ${filename}`);
 	}
-	catch (e)
-	{	if (!(e instanceof Deno.errors.NotFound))
-		{	throw e;
-		}
-	}
+	return contents;
 }
 
-/**	File exists? If yes, return it's `stat`.
- **/
-export function existsSync(filespec: string|URL)
-{	try
-	{	return Deno.statSync(filespec);
-	}
-	catch (e)
-	{	if (!(e instanceof Deno.errors.NotFound))
-		{	throw e;
-		}
-	}
-}
-
-/**	Remove the given file if it exists.
- **/
-/*export async function remove(filespec: string|URL)
-{	try
-	{	await Deno.remove(filespec);
-	}
-	catch (e)
-	{	if (!(e instanceof Deno.errors.NotFound))
-		{	throw e;
-		}
-	}
-}*/
-
-/**	Create file in temporary directory with given name, or ensure that such file already exists.
-	@param filename Name without path of the file that will be created or reused.
- **/
-export async function ensureTempFile(filename: string)
-{	const tmpTmpFilename = await Deno.makeTempFile();
-	const tmpFilename = path.join(path.dirname(tmpTmpFilename), filename);
-	if (await exists(tmpFilename))
-	{	await Deno.remove(tmpTmpFilename);
+export function writeTextFile(host: tsa.CompilerHost, filename: string, contents: string)
+{	if (filename == '/dev/stdout')
+	{	// Support Windows
+		console.log(contents);
 	}
 	else
-	{	await Deno.rename(tmpTmpFilename, tmpFilename);
+	{	host.writeFile(filename, contents, false, error => {throw new Error(error)});
 	}
-	return tmpFilename;
 }
