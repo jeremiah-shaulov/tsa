@@ -3,8 +3,8 @@ import {cache, LoadResponse, resolveImportMap, path, resolveModuleSpecifier} fro
 import {resolveRegistry} from './resolve_registry/mod.ts';
 import {isUrl, readTextFile} from './util.ts';
 
-type Resolve = (specifier: string, referrer: string, host: tsa.CompilerHost) => string | Promise<string>;
-type Load = (specifier: string, isDynamic: boolean, host: tsa.CompilerHost) => LoadResponse | undefined | Promise<LoadResponse|undefined>;
+type Resolve = (specifier: string, referrer: string, emitDeclarationOnly: boolean, host: tsa.CompilerHost) => string | Promise<string>;
+type Load = (specifier: string, isDynamic: boolean, emitDeclarationOnly: boolean, host: tsa.CompilerHost) => LoadResponse | undefined | Promise<LoadResponse|undefined>;
 type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind) => tsa.SourceFile;
 
 /**	You can pass `LoadOptions`
@@ -27,9 +27,9 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 		{	declaration: true,
 			emitDeclarationOnly: true,
 		},
-		{	async load(specifier, isDynamic, host)
+		{	async load(specifier, isDynamic, emitDeclarationOnly, host)
 			{	// Load the module contents
-				const result = await defaultLoad(specifier, isDynamic, host);
+				const result = await defaultLoad(specifier, isDynamic, emitDeclarationOnly, host);
 				// If the module was found, substitute it's contents
 				if (result?.kind == 'module')
 				{	result.content =
@@ -84,11 +84,11 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 				}
 				return defaultResolve(specifier, referrer);
 			},
-			async load(specifier, isDynamic, host)
+			async load(specifier, isDynamic, emitDeclarationOnly, host)
 			{	if (specifier == fakeInputFilename)
 				{	return {kind: 'module', specifier, content: INPUT, headers: {'content-type': 'application/typescript'}};
 				}
-				return await defaultLoad(specifier, isDynamic, host);
+				return await defaultLoad(specifier, isDynamic, emitDeclarationOnly, host);
 			}
 		}
 	);
@@ -140,10 +140,11 @@ export class Loader
 {	#useResolve;
 	#useLoad;
 	#useCreateSourceFile;
+	#emitDeclarationOnly;
 	#host;
 	#resolved = new Map<string, Map<string, string>>;
 
-	static async inst(loadOptions?: LoadOptions, host?: tsa.CompilerHost)
+	static async inst(loadOptions?: LoadOptions, emitDeclarationOnly=false, host?: tsa.CompilerHost)
 	{	if (!host)
 		{	host = tsa.createCompilerHost({});
 		}
@@ -154,15 +155,16 @@ export class Loader
 		}
 		const load = loadOptions?.load;
 		const useLoad = load ?? defaultLoad;
-		const useResolve = !importMap ? (resolve ?? defaultResolve) : await getResolveWithImportMap(importMap, useLoad, host);
+		const useResolve = !importMap ? (resolve ?? defaultResolve) : await getResolveWithImportMap(importMap, useLoad, emitDeclarationOnly, host);
 		const useCreateSourceFile = loadOptions?.createSourceFile ?? defaultCreateSourceFile;
-		return new Loader(useResolve, useLoad, useCreateSourceFile, host);
+		return new Loader(useResolve, useLoad, useCreateSourceFile, emitDeclarationOnly, host);
 	}
 
-	protected constructor(useResolve: Resolve, useLoad: Load, useCreateSourceFile: CreateSourceFile, host: tsa.CompilerHost)
+	protected constructor(useResolve: Resolve, useLoad: Load, useCreateSourceFile: CreateSourceFile, emitDeclarationOnly: boolean, host: tsa.CompilerHost)
 	{	this.#useResolve = useResolve;
 		this.#useLoad = useLoad;
 		this.#useCreateSourceFile = useCreateSourceFile;
+		this.#emitDeclarationOnly = emitDeclarationOnly;
 		this.#host = host;
 	}
 
@@ -177,20 +179,20 @@ export class Loader
 		}
 		let result = byReferrer.get(specifier);
 		if (!result)
-		{	result = await this.#useResolve(specifier, referrer, this.#host);
+		{	result = await this.#useResolve(specifier, referrer, this.#emitDeclarationOnly, this.#host);
 			byReferrer.set(specifier, result);
 		}
 		return result;
 	}
 
 	load(specifier: string, isDynamic: boolean)
-	{	return this.#useLoad(specifier, isDynamic, this.#host);
+	{	return this.#useLoad(specifier, isDynamic, this.#emitDeclarationOnly, this.#host);
 	}
 
 	/**	Synchronously get something that has already been resolved in the past with `resolve()`.
 	 **/
 	resolved(specifier: string, referrer: string)
-	{	return this.#resolved.get(referrer)?.get(specifier) ?? defaultResolveSync(specifier, referrer, this.#host);
+	{	return this.#resolved.get(referrer)?.get(specifier) ?? defaultResolveSync(specifier, referrer, this.#emitDeclarationOnly, this.#host);
 	}
 
 	createSourceFile(ts: typeof tsa, origSpecifier: string, content: string, scriptKind: tsa.ScriptKind)
@@ -200,10 +202,10 @@ export class Loader
 
 /**	Get function that will resolve things according to import map.
  **/
-async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load, host: tsa.CompilerHost)
+async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load, emitDeclarationOnly: boolean, host: tsa.CompilerHost)
 {	const cwd = path.toFileUrl(host.realpath!(host.getCurrentDirectory())).href + '/';
-	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : new URL(await defaultResolve(importMapUrlOrStr, cwd, host));
-	const importMapResult = await load(importMapUrl.href, false, host);
+	const importMapUrl = typeof(importMapUrlOrStr)!='string' ? importMapUrlOrStr : isUrl(importMapUrlOrStr) ? new URL(importMapUrlOrStr) : new URL(await defaultResolve(importMapUrlOrStr, cwd, emitDeclarationOnly, host));
+	const importMapResult = await load(importMapUrl.href, false, emitDeclarationOnly, host);
 	if (importMapResult?.kind != 'module')
 	{	throw new Deno.errors.NotFound(`Import map not found: ${importMapUrl.href}`);
 	}
@@ -213,20 +215,20 @@ async function getResolveWithImportMap(importMapUrlOrStr: string|URL, load: Load
 		{	return resolveModuleSpecifier(specifier, importMap, new URL(referrer));
 		}
 		catch
-		{	return defaultResolve(specifier, referrer, host);
+		{	return defaultResolve(specifier, referrer, emitDeclarationOnly, host);
 		}
 	};
 }
 
-export async function defaultResolve(specifier: string, referrer: string, host: tsa.CompilerHost)
-{	const result = await resolveRegistry(specifier, host);
+export async function defaultResolve(specifier: string, referrer: string, emitDeclarationOnly: boolean, host: tsa.CompilerHost)
+{	const result = await resolveRegistry(specifier, emitDeclarationOnly, host);
 	if (result)
 	{	return result.specifier;
 	}
-	return defaultResolveSync(specifier, referrer, host);
+	return defaultResolveSync(specifier, referrer, emitDeclarationOnly, host);
 }
 
-function defaultResolveSync(specifier: string, referrer: string, _host: tsa.CompilerHost)
+function defaultResolveSync(specifier: string, referrer: string, _emitDeclarationOnly: boolean, _host: tsa.CompilerHost)
 {	try
 	{	return new URL(specifier, new URL(referrer)).href;
 	}
@@ -238,11 +240,11 @@ function defaultResolveSync(specifier: string, referrer: string, _host: tsa.Comp
 	}
 }
 
-export async function defaultLoad(specifier: string, _isDynamic: boolean, host: tsa.CompilerHost): Promise<LoadResponse|undefined>
+export async function defaultLoad(specifier: string, _isDynamic: boolean, emitDeclarationOnly: boolean, host: tsa.CompilerHost): Promise<LoadResponse|undefined>
 {	let filename;
 	let headers;
 	if (specifier.startsWith('npm:'))
-	{	const result = await resolveRegistry(specifier, host);
+	{	const result = await resolveRegistry(specifier, emitDeclarationOnly, host);
 		if (!result)
 		{	return {kind: 'external', specifier};
 		}

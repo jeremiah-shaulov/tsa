@@ -45,8 +45,9 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	{	host = ts.createCompilerHost(compilerOptions);
 	}
 
-	const loader = await Loader.inst(loadOptions, host);
-	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, host, entryPoints, loader);
+	const emitDeclarationOnly = !!compilerOptions.emitDeclarationOnly;
+	const loader = await Loader.inst(loadOptions, emitDeclarationOnly, host);
+	const {sourceFilesAndKinds, entryPointsHrefs} = await readAllFiles(ts, host, entryPoints, emitDeclarationOnly, loader);
 	const libLocation = host.getDefaultLibLocation?.() ?? '';
 	const extendedLibs = await getExtendedLibs(this, libLocation);
 	const cwdHref = path.toFileUrl(host.getCurrentDirectory()).href;
@@ -150,7 +151,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 	return program as tsa.TsaProgram;
 }
 
-async function readAllFiles(ts: typeof tsa, host: tsa.CompilerHost, entryPoints: ReadonlyArray<string|URL>, loader: Loader)
+async function readAllFiles(ts: typeof tsa, host: tsa.CompilerHost, entryPoints: ReadonlyArray<string|URL>, emitDeclarationOnly: boolean, loader: Loader)
 {	const sourceFilesAndKinds = new Map<string, SourceFileAndKind>;
 	const entryPointsHrefs = new Array<string>;
 	const cwd = path.toFileUrl(host.realpath!(host.getCurrentDirectory())).href + '/';
@@ -161,7 +162,7 @@ async function readAllFiles(ts: typeof tsa, host: tsa.CompilerHost, entryPoints:
 				let entryPointHref = typeof(entryPoint)!='string' ? entryPoint.href : isUrl(entryPoint) ? entryPoint : await loader.resolve(entryPoint, cwd);
 				// If this is `npm:` URL, resolve it to internal path to the main module, like `npm:typescript@5.1.5` -> `npm:typescript@5.1.5/lib/typescript.d.ts`
 				// This is needed, because tsc wants to see file extension
-				entryPointHref = (await resolveRegistry(entryPointHref, host))?.specifier || entryPointHref;
+				entryPointHref = (await resolveRegistry(entryPointHref, emitDeclarationOnly, host))?.specifier || entryPointHref;
 				// Add to `entryPointsHrefs` array
 				entryPointsHrefs[i] = entryPointHref;
 				// Read the file contents, and scan it for `import from` and `export from`

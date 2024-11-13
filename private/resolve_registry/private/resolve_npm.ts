@@ -23,7 +23,7 @@ async function getNpmRoots(host: tsa.CompilerHost)
 	return npmRoots;
 }
 
-export async function resolveNpm(specifier: string, host: tsa.CompilerHost)
+export async function resolveNpm(specifier: string, emitDeclarationOnly: boolean, host: tsa.CompilerHost)
 {	try
 	{	// Load the module to cache it
 		await import(specifier);
@@ -53,13 +53,18 @@ export async function resolveNpm(specifier: string, host: tsa.CompilerHost)
 					if (!modulePath)
 					{	const packageJsonPath = path.join(npmRoot, moduleName, version, 'package.json');
 						const packageJson = JSON.parse(readTextFile(host, packageJsonPath));
-						modulePath = packageJson.types || packageJson.typings;
-						if (!modulePath)
-						{	modulePath = packageJson.main || 'index.js';
-							if (modulePath.slice(-3).toLowerCase() == '.js')
-							{	const modulePathDts = modulePath.slice(0, -2) + 'd.ts';
-								if (host.fileExists(modulePathDts))
-								{	modulePath = modulePathDts;
+						if (!emitDeclarationOnly)
+						{	modulePath = packageJson.main;
+						}
+						else
+						{	modulePath = packageJson.types || packageJson.typings;
+							if (!modulePath)
+							{	modulePath = packageJson.main || 'index.js';
+								if (modulePath.slice(-3).toLowerCase() == '.js')
+								{	const modulePathDts = modulePath.slice(0, -2) + 'd.ts';
+									if (host.fileExists(modulePathDts))
+									{	modulePath = modulePathDts;
+									}
 								}
 							}
 						}

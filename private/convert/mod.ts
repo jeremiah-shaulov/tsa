@@ -14,7 +14,7 @@
 	const emitOptions = {};
 	const host = ts.createCompilerHost(compilerOptions);
 	const program = ts.createProgram(entryPoints, compilerOptions, host);
-	const loader = await Loader.inst(loadOptions, host);
+	const loader = await Loader.inst(loadOptions, true, host);
 	const libLocation = host.getDefaultLibLocation?.() ?? '';
 	const converter = new Converter(ts, program, loader, libLocation, emitOptions);
 	const docs = converter.convertEntryPoints();

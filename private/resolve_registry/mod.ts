@@ -10,16 +10,16 @@ const enum Reg
 	Npm,
 }
 
-export async function resolveRegistry(specifier: string, host: tsa.CompilerHost)
+export async function resolveRegistry(specifier: string, emitDeclarationOnly: boolean, host: tsa.CompilerHost)
 {	const reg = specifier.startsWith('jsr:') ? Reg.Jsr : specifier.startsWith('npm:') ? Reg.Npm : Reg.None;
 	if (reg != Reg.None)
 	{	let result = known.get(specifier);
 		if (result == undefined)
 		{	if (reg == Reg.Jsr)
-			{	result = await resolveJsr(specifier, host);
+			{	result = await resolveJsr(specifier, emitDeclarationOnly, host);
 			}
 			else
-			{	result = await resolveNpm(specifier, host);
+			{	result = await resolveNpm(specifier, emitDeclarationOnly, host);
 			}
 			known.set(specifier, result ?? null);
 			if (result)

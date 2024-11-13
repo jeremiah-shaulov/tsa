@@ -5,7 +5,7 @@ import {readTextFile} from '../../util.ts';
 // deno-lint-ignore no-explicit-any
 type Any = any;
 
-export async function resolveJsr(specifier: string, host: tsa.CompilerHost)
+export async function resolveJsr(specifier: string, _emitDeclarationOnly: boolean, host: tsa.CompilerHost)
 {	const parsed = parseJsrSpecifier(specifier);
 	if (parsed)
 	{	const {packageUrl, versionQuery, entryPointQuery} = parsed;
