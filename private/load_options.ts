@@ -241,8 +241,8 @@ function defaultResolveSync(specifier: string, referrer: string, _emitDeclaratio
 }
 
 export async function defaultLoad(specifier: string, _isDynamic: boolean, emitDeclarationOnly: boolean, host: tsa.CompilerHost): Promise<LoadResponse|undefined>
-{	let filename;
-	let headers;
+{	let filename: string|undefined;
+	let headers: Record<string, string>|undefined;
 	if (specifier.startsWith('npm:'))
 	{	const result = await resolveRegistry(specifier, emitDeclarationOnly, host);
 		if (!result)

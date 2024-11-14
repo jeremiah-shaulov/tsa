@@ -114,7 +114,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 		// maybe a lib file (like `lib.esnext.d.ts`)
 		try
 		{	const origSpecifier = filename;
-			let fileUrl;
+			let fileUrl: URL|undefined;
 			if (filename.startsWith('file://'))
 			{	filename = path.fromFileUrl(filename);
 				fileUrl = new URL(filename);
@@ -125,7 +125,7 @@ export async function createTsaProgram(this: typeof tsa, entryPoints: ReadonlyAr
 			else
 			{	fileUrl = path.toFileUrl(filename);
 			}
-			if (extendedLibs[fileUrl.href] && !host.fileExists(path.fromFileUrl(fileUrl)))
+			if (extendedLibs[fileUrl.href] && !host.fileExists(filename))
 			{	filename = extendedLibs[fileUrl.href];
 			}
 			const content = readTextFile(host, filename);
