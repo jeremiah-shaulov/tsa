@@ -47,7 +47,7 @@ function setUsedTopLevelSymbols(ts: typeof tsa, checker: tsa.TypeChecker, knownS
 		else if (ts.isShorthandPropertyAssignment(node))
 		{	symbol = checker.getShorthandAssignmentValueSymbol(node);
 		}
-		if (symbol && !nodeIsNs(ts, checker, excludeLibDirectory, node, symbol))
+		if (symbol && !introduces.includes(symbol) && !nodeIsNs(ts, checker, excludeLibDirectory, node, symbol))
 		{	addRef(ts, checker, knownSymbols, excludeLibDirectory, symbol, introduces, refs);
 		}
 	}

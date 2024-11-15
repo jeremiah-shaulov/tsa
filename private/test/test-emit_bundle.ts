@@ -1,5 +1,5 @@
 import {tsa} from '../tsa_ns.ts';
-import {printDiagnostics, formatDiagnostics, getTmpDirname, writeTextFile} from '../util.ts';
+import {printDiagnostics, getTmpDirname, writeTextFile} from '../util.ts';
 import {path} from '../deps.ts';
 
 export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, testName: string, compilerOptions?: tsa.CompilerOptions)
@@ -19,10 +19,11 @@ export async function testEmitBundle(entryPoints: ReadonlyArray<string|URL>, tes
 		writeTextFile(host, filename, bundle.toTs());
 	}
 	// If there were errors during transpiling, throw exception
-	const diagnostics = tsa.getPreEmitDiagnostics(program2).concat(result2.diagnostics);
+	const preDiagnostics = tsa.getPreEmitDiagnostics(program2);
+	const diagnostics = preDiagnostics.concat(result2.diagnostics);
 	if (diagnostics.length)
 	{	printDiagnostics(diagnostics);
-		throw new Error(formatDiagnostics(diagnostics));
+		throw new Error(`${preDiagnostics.length} pre-emit errors, ${result2.diagnostics.length} post-emit errors`);
 	}
 	return outFile;
 }

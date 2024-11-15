@@ -14,7 +14,8 @@ export function step1FindToplevelDeclarations
 	sourceFiles: tsa.SourceFile[],
 	excludeLibDirectory: string
 )
-{	for (const sourceFile of sourceFiles)
+{	const nodeJsSymbolsImported = new Array<tsa.Symbol>;
+	for (const sourceFile of sourceFiles)
 	{	const isFirstEntryPoint = sourceFile == sourceFiles[0];
 		for (const node of sourceFile.statements)
 		{	if (ts.isExportDeclaration(node))
@@ -39,31 +40,32 @@ export function step1FindToplevelDeclarations
 					}
 				}
 			}
-			else if (!ts.isImportDeclaration(node))
+			else
 			{	const introduces = new Array<tsa.Symbol>;
 				const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces, nodeExportType: NodeExportType.NONE};
+				const names = new Array<tsa.Identifier | tsa.ModifierLike>;
+				let isAmbient = false;
+				let skipNodeJsImport = -1;
 				if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isVariableStatement(node))
 				{	const exportKeyword = node.modifiers?.find(m => m.kind == ts.SyntaxKind.ExportKeyword);
 					const defaultKeyword = exportKeyword && node.modifiers?.find(m => m.kind == ts.SyntaxKind.DefaultKeyword);
 					let nodeExportType = !exportKeyword ? NodeExportType.NONE : !defaultKeyword ? NodeExportType.EXPORT : NodeExportType.EXPORT_DEFAULT;
-					const names: Array<tsa.Identifier | tsa.ModifierLike> = ts.isVariableStatement(node) ? node.declarationList.declarations.flatMap(v => getNames(ts, v.name)) : node.name ? [node.name] : [];
+					if (ts.isVariableStatement(node))
+					{	for (const d of node.declarationList.declarations)
+						{	for (const name of getNames(ts, d.name))
+							{	names.push(name);
+							}
+						}
+					}
+					else if (node.name)
+					{	names.push(node.name);
+					}
 					if (names.length==0 && defaultKeyword)
 					{	names.push(defaultKeyword);
 						nodeExportType = NodeExportType.EXPORT_DEFAULT_UNNAMED;
 					}
 					nodeWithInfo.nodeExportType = nodeExportType;
-					for (const name of names)
-					{	const symbol = checker.getSymbolAtLocation(name);
-						if (symbol)
-						{	const isAmbient = !!node.modifiers?.find(m => m.kind == ts.SyntaxKind.DeclareKeyword);
-							knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol, isAmbient);
-							introduces.push(symbol);
-							nodesThatIntroduce.set(symbol, nodeWithInfo);
-							if (nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)
-							{	exportSymbols.addExport(ts, checker, excludeLibDirectory, symbol, undefined);
-							}
-						}
-					}
+					isAmbient = !!node.modifiers?.find(m => m.kind == ts.SyntaxKind.DeclareKeyword);
 				}
 				else if (ts.isExportAssignment(node) && !isFirstEntryPoint) // for the first entry point i'll leave the `export default ...` alone
 				{	if (ts.isIdentifier(node.expression))
@@ -71,13 +73,50 @@ export function step1FindToplevelDeclarations
 					}
 					const symbol = checker.getSymbolAtLocation(node.expression);
 					if (symbol)
-					{	knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol);
+					{	knownSymbols.add(ts, sourceFile, excludeLibDirectory, symbol, symbol.name);
 					}
 				}
-				nodesWithInfo.push(nodeWithInfo);
-			}
-			else if (ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text.startsWith('node:'))
-			{	const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces: [], nodeExportType: NodeExportType.NONE};
+				else if (ts.isImportDeclaration(node))
+				{	if (!ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith('node:'))
+					{	continue; // include in the output only 'node:...' imports
+					}
+					if (node.importClause?.name)
+					{	names.push(node.importClause.name);
+					}
+					if (node.importClause?.namedBindings)
+					{	if (ts.isNamespaceImport(node.importClause.namedBindings))
+						{	names.push(node.importClause.namedBindings.name);
+						}
+						else
+						{	for (const e of node.importClause.namedBindings.elements)
+							{	names.push(e.name);
+							}
+						}
+					}
+					skipNodeJsImport = 0;
+				}
+				for (const name of names)
+				{	const symbol = checker.getSymbolAtLocation(name);
+					if (symbol)
+					{	const resolvedSymbol = resolveSymbol(ts, checker, symbol);
+						if (skipNodeJsImport != -1)
+						{	if (nodeJsSymbolsImported.includes(resolvedSymbol))
+							{	skipNodeJsImport++;
+								continue;
+							}
+							nodeJsSymbolsImported.push(resolvedSymbol);
+						}
+						knownSymbols.add(ts, sourceFile, excludeLibDirectory, resolvedSymbol, symbol.name, isAmbient);
+						introduces.push(resolvedSymbol);
+						nodesThatIntroduce.set(resolvedSymbol, nodeWithInfo);
+						if (nodeWithInfo.nodeExportType!=NodeExportType.NONE && isFirstEntryPoint)
+						{	exportSymbols.addExport(ts, checker, excludeLibDirectory, resolvedSymbol, undefined);
+						}
+					}
+				}
+				if (skipNodeJsImport == names.length)
+				{	continue;
+				}
 				nodesWithInfo.push(nodeWithInfo);
 			}
 		}

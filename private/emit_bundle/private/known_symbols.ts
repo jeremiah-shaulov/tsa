@@ -17,7 +17,7 @@ export class KnownSymbols
 	namesSymbols = new Map<string, tsa.Symbol>; // the reverse of `symbolsNames`
 	ambientSymbols = new Set<tsa.Symbol>;
 
-	add(ts: typeof tsa, sourceFile: tsa.SourceFile, excludeLibDirectory: string, symbol: tsa.Symbol, isAmbient=false)
+	add(ts: typeof tsa, sourceFile: tsa.SourceFile, excludeLibDirectory: string, symbol: tsa.Symbol, recommendedName: string, isAmbient=false)
 	{	const {symbolsNames, namesSymbols, ambientSymbols} = this;
 		let name = symbolsNames.get(symbol);
 		if (name == undefined)
@@ -29,7 +29,7 @@ export class KnownSymbols
 			{	baseName = pathMaybeQuotedToModuleName(symbol.name) ?? 'ns';
 			}
 			else
-			{	baseName = getSymbolName(ts, symbol);
+			{	baseName = getSymbolName(ts, symbol, recommendedName);
 				if (!baseName)
 				{	baseName = pathMaybeQuotedToModuleName(sourceFile.fileName) ?? 'default';
 				}

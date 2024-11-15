@@ -32,7 +32,7 @@ export class ExportSymbols
 	getNamespaceAsValue(ts: typeof tsa, checker: tsa.TypeChecker, context: tsa.TransformationContext, sourceFile: tsa.SourceFile, excludeLibDirectory: string, knownSymbols: KnownSymbols, nodesWithInfo: NodeWithInfo[], moduleSymbol: tsa.Symbol, visited=new Map<tsa.Symbol, string>)
 	{	let nsName = knownSymbols.symbolsNames.get(moduleSymbol);
 		if (nsName == undefined)
-		{	nsName = knownSymbols.add(ts, sourceFile, excludeLibDirectory, moduleSymbol);
+		{	nsName = knownSymbols.add(ts, sourceFile, excludeLibDirectory, moduleSymbol, moduleSymbol.name);
 			visited.set(moduleSymbol, nsName);
 			const props = new Array<tsa.ObjectLiteralElementLike>;
 			const refs = new Set<tsa.Symbol>;
