@@ -76,6 +76,10 @@ export function step1FindToplevelDeclarations
 				}
 				nodesWithInfo.push(nodeWithInfo);
 			}
+			else if (ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text.startsWith('node:'))
+			{	const nodeWithInfo: NodeWithInfo = {sourceFile, node, refs: new Set, bodyRefs: new Set, introduces: [], nodeExportType: NodeExportType.NONE};
+				nodesWithInfo.push(nodeWithInfo);
+			}
 		}
 	}
 }
