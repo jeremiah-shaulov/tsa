@@ -1,7 +1,7 @@
 import {assertEquals, denoDoc, DenoDocNode, DocOptions} from './deps.ts';
 import {tsa} from '../tsa_ns.ts';
 import {getTmpDirname, printDiagnostics, writeTextFile} from '../util.ts';
-import {LoadOptions} from "../load_options.ts";
+import {LoadOptions} from '../load_options.ts';
 import {path} from '../deps.ts';
 
 // deno-lint-ignore no-explicit-any
