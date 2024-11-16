@@ -114,7 +114,7 @@ export function step1FindToplevelDeclarations
 						}
 					}
 				}
-				if (skipNodeJsImport == names.length)
+				if (skipNodeJsImport == names.length) // TODO: rename already mentioned symbols
 				{	continue;
 				}
 				nodesWithInfo.push(nodeWithInfo);
