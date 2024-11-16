@@ -18,9 +18,10 @@ const C_TAB = '\t'.charCodeAt(0);
 const C_TIMES = '*'.charCodeAt(0);
 
 const RE_TRIM_TAG = /\s*\*{0,2}$/;
-const RE_EXTRACT_DOC_COMMENT = /\s*\/\*\*+[ \t]*/y;
+const RE_EXTRACT_DOC_COMMENT = /\s*\/\*(\*)+[ \t]*/y;
 const RE_PARSE_DOC_COMMENT = /^\/\*+[ \t]*|\*+\/$/g;
 const RE_PARSE_DOC_COMMENT_2 = /^[ \t]*\*(?=\s)/mg;
+const RE_DOC_TAGS_START = /^[ \t]*@[A-Z]\w+(?:[ \t]|$)/mig;
 
 function tagToString(tag: tsa.JSDocTag)
 {	return tag.getText().replace(RE_TRIM_TAG, '');
@@ -65,19 +66,46 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 function extractJsDocComment(node?: tsa.Node)
 {	if (node)
 	{	const {text} = node.getSourceFile();
-		RE_EXTRACT_DOC_COMMENT.lastIndex = node.pos;
-		if (RE_EXTRACT_DOC_COMMENT.test(text))
-		{	const from = RE_EXTRACT_DOC_COMMENT.lastIndex;
-			const to = text.indexOf('**/', from);
-			if (to!=-1 && to<node.end)
-			{	let doc = text.slice(from, to);
-				doc = doc.replace(RE_PARSE_DOC_COMMENT_2, '');
-				doc = indentAndWrap(doc, {indent: '', ignoreFirstIndent: true});
-				return doc;
+		let {pos, end} = node;
+		let from = -1;
+		let to = -1;
+		while (true)
+		{	RE_EXTRACT_DOC_COMMENT.lastIndex = pos;
+			const m = RE_EXTRACT_DOC_COMMENT.exec(text);
+			if (!m)
+			{	break;
 			}
+			const textFrom = RE_EXTRACT_DOC_COMMENT.lastIndex;
+			pos = text.indexOf('*/', textFrom);
+			if (pos==-1 || pos>end)
+			{	break;
+			}
+			if (m[1])
+			{	from = textFrom;
+				to = pos;
+			}
+			pos += 2; // skip '*/'
+		}
+		if (from != -1)
+		{	while (to>from && text.charCodeAt(to-1)==C_TIMES)
+			{	to--;
+			}
+			let doc = text.slice(from, to);
+			doc = doc.replace(RE_PARSE_DOC_COMMENT_2, '');
+			return commentTillTags(doc);
 		}
 	}
 	return '';
+}
+
+function commentTillTags(doc: string)
+{	RE_DOC_TAGS_START.lastIndex = 0;
+	const tagsStart = RE_DOC_TAGS_START.exec(doc);
+	if (tagsStart)
+	{	doc = doc.slice(0, RE_DOC_TAGS_START.lastIndex - tagsStart[0].length);
+	}
+	doc = indentAndWrap(doc.trim(), {indent: '', ignoreFirstIndent: true});
+	return doc;
 }
 
 /**	Returns object with 2 properties:
@@ -114,7 +142,7 @@ export function convertJsDocComment(ts: typeof tsa, comment?: string|tsa.NodeArr
 			if (commentText)
 			{	commentText = commentText.replace(RE_PARSE_DOC_COMMENT, '').replace(RE_PARSE_DOC_COMMENT_2, '');
 				commentText = undoCommentPreprocessing(commentText);
-				commentText = indentAndWrap(commentText, {indent: '', ignoreFirstIndent: true});
+				commentText = commentTillTags(commentText);
 				correctIndentInTokensAccordingToText(docTokens, commentText);
 			}
 			else
