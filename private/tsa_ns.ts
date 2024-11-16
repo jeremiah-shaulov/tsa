@@ -1,4 +1,4 @@
-import typescript from 'npm:typescript@5.6.2';
+import typescript from 'npm:typescript@5.6.3';
 import {createTsaProgram} from './create_deno_program.ts';
 import {LoadOptions} from './load_options.ts';
 import {DocNodes} from './md_gen/mod.ts';
@@ -12,7 +12,7 @@ type Any = any;
 
 (typescript as Any).createTsaProgram = createTsaProgram;
 
-declare module 'npm:typescript@5.6.2'
+declare module 'npm:typescript@5.6.3'
 {	interface TsaProgram extends Program
 	{	/**	Generate
 			{@link DocNode} object for each symbol in the source code, which is subject to documentation.
