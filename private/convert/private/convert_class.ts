@@ -11,6 +11,7 @@ import {convertType} from './convert_type.ts';
 import {getHeritageTypes, setMemberName, getTypeNodeOfDeclaration, removeUndefined, resolveSymbol} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {Converter} from './converter.ts';
+import {JsDoc} from '../../doc_node/mod.ts';
 
 export function convertClass(ts: typeof tsa, converter: Converter, classDeclaration: tsa.ClassDeclaration, symbol: tsa.Symbol): ClassDef|undefined
 {	const instanceType = converter.checker.getDeclaredTypeOfSymbol(symbol);
@@ -25,7 +26,8 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 		for (const sig of staticType.getConstructSignatures())
 		{	const declaration = sig.getDeclaration();
 			if (declaration && !converter.ignoreDeclaration(declaration))
-			{	const modifiers = ts.getCombinedModifierFlags(declaration);
+			{	const jsDoc = convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration);
+				const modifiers = ts.getCombinedModifierFlags(declaration);
 				const accessibility = modifiers & ts.ModifierFlags.Private ? 'private' : modifiers & ts.ModifierFlags.Protected ? 'protected' : modifiers & ts.ModifierFlags.Public ? 'public' : undefined;
 				const params = new Array<ClassConstructorParamDef>;
 				const {parameters} = sig;
@@ -40,7 +42,16 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 							init = param.right;
 						}
 						if (param2.kind == 'identifier')
-						{	properties.push
+						{	const tags = jsDoc?.jsDoc.tags;
+							let paramJsDoc: JsDoc | undefined;
+							if (tags)
+							{	for (const t of tags)
+								{	if (t.kind=='param' && t.name==param2.name)
+									{	paramJsDoc = {doc: t.doc, docTokens: t.docTokens};
+									}
+								}
+							}
+							properties.push
 							(	{	tsType: param2.tsType,
 									readonly: param2.readonly ?? false,
 									accessibility: param2.accessibility,
@@ -52,7 +63,7 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 									decorators: param2.decorators,
 									location: convertLocation(ts, converter, paramDecl),
 									init,
-									...convertJsDoc(ts, converter, parameters[i].getDocumentationComment(converter.checker), declaration),
+									...(paramJsDoc && {jsDoc: paramJsDoc}),
 								}
 							);
 						}
@@ -62,7 +73,7 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 					params.push(param);
 				}
 				constructors.push
-				(	{	...convertJsDoc(ts, converter, sig.getDocumentationComment(converter.checker), declaration),
+				(	{	...jsDoc,
 						hasBody: true,
 						name: 'constructor',
 						params,

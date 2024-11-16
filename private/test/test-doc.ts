@@ -220,23 +220,59 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	dataDoc[k] = v;
 			}
 		}
-		// 5. Do recursive
+		// 5. Fix class properties declared in constructor parameters
+		if (dataDenoDoc.classDef?.constructors?.length>0 && dataDenoDoc.classDef.constructors.length===dataDoc.classDef?.constructors?.length)
+		{	const denoCtors = dataDenoDoc.classDef.constructors;
+			const ctors = dataDoc.classDef.constructors;
+			for (let i=0; i<ctors.length; i++)
+			{	if (denoCtors[i].params && denoCtors[i].params.length===ctors[i].params?.length)
+				{	const denoParams = denoCtors[i].params;
+					const params = ctors[i].params;
+					for (let j=0; j<denoParams.length; j++)
+					{	if (denoParams[j].readonly && !params[j].readonly || denoParams[j].accessibility && !params[j].accessibility)
+						{	if (!dataDenoDoc.classDef.properties)
+							{	dataDenoDoc.classDef.properties = [];
+							}
+							const prop = dataDoc.classDef.properties?.find((p: Any) => p.name == denoParams[j].name);
+							dataDenoDoc.classDef.properties.push
+							(	{	readonly: denoParams[j].readonly,
+									accessibility: denoParams[j].accessibility,
+									decorators: undefined,
+									init: undefined,
+									isOverride: undefined,
+									tsType: denoParams[j].tsType,
+									optional: denoParams[j].optional,
+									isAbstract: false,
+									isStatic: false,
+									name: denoParams[j].name,
+									...(prop?.location && {location: prop.location}),
+									...(prop?.jsDoc && {jsDoc: prop.jsDoc}),
+								}
+							);
+							denoParams[j].readonly = false;
+							denoParams[j].accessibility = undefined;
+						}
+					}
+				}
+			}
+		}
+		// 6. Do recursive
 		for (const [k, v] of Object.entries(dataDoc))
 		{	makeCompatible(v, dataDenoDoc[k], dataDoc.namespaceDef && dataDoc.location?.filename || subjHref, k);
 		}
-		// 6. Fix `location.line` and `location.col` (copy dataDenoDoc -> dataDoc)
+		// 7. Fix `location.line` and `location.col` (copy dataDenoDoc -> dataDoc)
 		if (dataDoc.location && dataDenoDoc.location)
 		{	dataDoc.location.line = dataDenoDoc.location.line;
 			dataDoc.location.col = dataDenoDoc.location.col;
 		}
-		// 7. Fix `tsType` and `returnType`: dataDenoDoc doesn't have `tsType` in many cases, so copy from dataDoc
+		// 8. Fix `tsType` and `returnType`: dataDenoDoc doesn't have `tsType` in many cases, so copy from dataDoc
 		if (dataDoc.tsType && dataDenoDoc.tsType==undefined)
 		{	dataDenoDoc.tsType = dataDoc.tsType;
 		}
 		if (dataDoc.returnType && dataDenoDoc.returnType==undefined)
 		{	dataDenoDoc.returnType = dataDoc.returnType;
 		}
-		// 8. Fix `nodeIndex`, `nameNodeIndex` and `nodeSubIndex` (copy from dataDoc to dataDenoDoc)
+		// 9. Fix `nodeIndex`, `nameNodeIndex` and `nodeSubIndex` (copy from dataDoc to dataDenoDoc)
 		if (dataDoc.nodeIndex != undefined)
 		{	dataDenoDoc.nodeIndex = dataDoc.nodeIndex;
 			if (dataDoc.nodeSubIndex != undefined)
@@ -246,11 +282,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		else if (dataDoc.nameNodeIndex != undefined)
 		{	dataDenoDoc.nameNodeIndex = dataDoc.nameNodeIndex;
 		}
-		// 9. Fix `converter.entryPointNumber` (copy from dataDoc to dataDenoDoc)
+		// 10. Fix `converter.entryPointNumber` (copy from dataDoc to dataDenoDoc)
 		if (dataDoc.entryPointNumber != undefined)
 		{	dataDenoDoc.entryPointNumber = dataDoc.entryPointNumber;
 		}
-		// 10. Fix unsupported initializers: if dataDenoDoc has an unsupported initializer, copy from dataDoc
+		// 11. Fix unsupported initializers: if dataDenoDoc has an unsupported initializer, copy from dataDoc
 		if (typeof(dataDoc.value)=='string' && dataDenoDoc.value==='[UNSUPPORTED]')
 		{	dataDenoDoc.value = dataDoc.value;
 		}
@@ -260,12 +296,12 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	dataDenoDoc.left.optional = true;
 			}
 		}
-		// 11. Fix intersections: sort
+		// 12. Fix intersections: sort
 		if (Array.isArray(dataDoc.intersection) && Array.isArray(dataDenoDoc.intersection) && dataDoc.intersection.length==dataDenoDoc.intersection.length)
 		{	dataDoc.intersection.sort((a: Any, b: Any) => a.repr > b.repr ? +1 : a.repr < b.repr ? -1 : 0);
 			dataDenoDoc.intersection.sort((a: Any, b: Any) => a.repr > b.repr ? +1 : a.repr < b.repr ? -1 : 0);
 		}
-		// 12. Fix unions: sort and convert `true|false` to `boolean`
+		// 13. Fix unions: sort and convert `true|false` to `boolean`
 		if (Array.isArray(dataDoc.union) && Array.isArray(dataDenoDoc.union))
 		{	// Sort
 			dataDoc.union.sort((a: Any, b: Any) => a.repr > b.repr ? +1 : a.repr < b.repr ? -1 : 0);
@@ -280,7 +316,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 13. When dataDenoDoc has type, but dataDoc is '...' (nesting level is too deep), mark as unsupported
+		// 14. When dataDenoDoc has type, but dataDoc is '...' (nesting level is too deep), mark as unsupported
 		if (dataDoc.kind=='typeRef' && dataDoc.typeRef.typeName=='...' && dataDenoDoc.kind!='typeRef')
 		{	for (const k of Object.keys(dataDoc))
 			{	delete dataDoc[k];
@@ -291,17 +327,17 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			dataDoc.IS_DOC_UNSUPPORTED = true;
 			dataDenoDoc.IS_DOC_UNSUPPORTED = true;
 		}
-		// 14. When dataDoc has typeParams on a function or class, and dataDoc doesn't, and there's @template tag, copy the typeParams from dataDoc to dataDenoDoc
+		// 15. When dataDoc has typeParams on a function or class, and dataDoc doesn't, and there's @template tag, copy the typeParams from dataDoc to dataDenoDoc
 		for (const name of ['functionDef', 'classDef'])
 		{	if (dataDoc[name]?.typeParams?.length && dataDenoDoc[name] && !dataDenoDoc[name].typeParams?.length && dataDoc.jsDoc?.tags?.find((t: Any) => t.kind=='template' && t.typeParams?.length))
 			{	dataDenoDoc[name].typeParams = dataDoc[name].typeParams;
 			}
 		}
-		// 15. Fix enum isConst: if dataDoc has it, copy also to dataDenoDoc
+		// 16. Fix enum isConst: if dataDoc has it, copy also to dataDenoDoc
 		if (dataDoc.enumDef?.isConst && dataDenoDoc.enumDef)
 		{	dataDenoDoc.enumDef.isConst = dataDoc.enumDef.isConst;
 		}
-		// 16. Fix `jsDoc`
+		// 17. Fix `jsDoc`
 		if (dataDoc.jsDoc && !dataDenoDoc.jsDoc)
 		{	// if dataDenoDoc doesn't have `jsDoc`, copy from dataDoc
 			dataDenoDoc.jsDoc = dataDoc.jsDoc;
@@ -319,7 +355,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		if (dataDenoDoc.doc?.endsWith('\n') && dataDoc.doc?.endsWith('\n')===false)
 		{	dataDenoDoc.doc = dataDenoDoc.doc.trimEnd();
 		}
-		// 17. Fix `repr`
+		// 18. Fix `repr`
 		if (dataDenoDoc.literal?.kind == 'string')
 		{	// dataDoc has string literals JSON-stringified, but dataDenoDoc doesn't
 			dataDenoDoc.repr = JSON.stringify(dataDenoDoc.repr);
@@ -336,7 +372,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 		{	// dataDenoDoc doesn't have `repr` in many cases, so copy from dataDoc
 			dataDenoDoc.repr = dataDoc.repr;
 		}
-		// 18. Fix properties[i].init: dataDenoDoc doesn't have `init` on properties, so copy from dataDoc
+		// 19. Fix properties[i].init: dataDenoDoc doesn't have `init` on properties, so copy from dataDoc
 		if (Array.isArray(dataDoc.properties) && Array.isArray(dataDenoDoc.properties) && dataDoc.properties.length==dataDenoDoc.properties.length)
 		{	for (let i=0; i<dataDoc.properties.length; i++)
 			{	if (dataDoc.properties[i].init != undefined)
@@ -344,7 +380,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 19. Fix `init` on enum members: if dataDenoDoc doesn't have it, copy from dataDoc
+		// 20. Fix `init` on enum members: if dataDenoDoc doesn't have it, copy from dataDoc
 		if (dataDoc.enumDef?.members && dataDoc.enumDef.members.length === dataDenoDoc.enumDef?.members?.length)
 		{	for (let i=0; i<dataDoc.enumDef.members.length; i++)
 			{	if (dataDoc.enumDef.members[i].init != undefined && dataDenoDoc.enumDef.members[i].init == undefined)
@@ -352,11 +388,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 20. Fix `docTokens`: dataDenoDoc doesn't have `docTokens`, so copy from dataDoc
+		// 21. Fix `docTokens`: dataDenoDoc doesn't have `docTokens`, so copy from dataDoc
 		if (dataDoc.docTokens != undefined) // leave the property if it's undefined (so will discover this bad situation)
 		{	dataDenoDoc.docTokens = dataDoc.docTokens;
 		}
-		// 21. Fix object keys order
+		// 22. Fix object keys order
 		if ([...Object.keys(dataDoc)].join('#') != [...Object.keys(dataDenoDoc)].join('#'))
 		{	const orig = {...dataDoc};
 			for (const k of Object.keys(dataDoc))
@@ -371,7 +407,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 			{	dataDoc[k] = orig[k];
 			}
 		}
-		// 22. Fix `classDef.constructors` and `classDef.indexSignatures`: if dataDoc has inherited constructors, add them to dataDenoDoc. And the same for `indexSignatures`
+		// 23. Fix `classDef.constructors` and `classDef.indexSignatures`: if dataDoc has inherited constructors, add them to dataDenoDoc. And the same for `indexSignatures`
 		for (const name of ['constructors', 'indexSignatures'])
 		{	if (dataDenoDoc.classDef?.[name] && dataDoc.classDef?.[name] && dataDenoDoc.classDef[name].length < dataDoc.classDef[name].length)
 			{	const ctors = dataDoc.classDef[name];
@@ -383,7 +419,7 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 23. Convert decorators args: if dataDoc has double-quoted string, and dataDenoDoc has an apostroph-quoted one, change apostrophs to quotes
+		// 24. Convert decorators args: if dataDoc has double-quoted string, and dataDenoDoc has an apostroph-quoted one, change apostrophs to quotes
 		if (dataDoc.decorators?.length && dataDenoDoc.decorators?.length)
 		{	for (let i=0; i<dataDoc.decorators.length; i++)
 			{	if (dataDoc.decorators[i].name == dataDenoDoc.decorators[i].name && dataDoc.decorators[i].args?.length == dataDenoDoc.decorators[i].args?.length)
@@ -397,11 +433,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 24. Fix doc-comments on imports: if dataDenoDoc has such comment, remove it (because dataDoc doesn't set doc-comments on imports)
+		// 25. Fix doc-comments on imports: if dataDenoDoc has such comment, remove it (because dataDoc doesn't set doc-comments on imports)
 		if (dataDenoDoc.importDef && dataDoc.importDef && dataDenoDoc.jsDoc && !dataDoc.jsDoc)
 		{	delete dataDenoDoc.jsDoc;
 		}
-		// 25. Fix optional function params: if a param on dataDenoDoc is not marked as optional, but the jsDoc on it (dataDenoDoc) has @param tag with 'optional', the set the param as optional
+		// 26. Fix optional function params: if a param on dataDenoDoc is not marked as optional, but the jsDoc on it (dataDenoDoc) has @param tag with 'optional', the set the param as optional
 		if (dataDenoDoc.functionDef?.params && dataDenoDoc.jsDoc?.tags)
 		{	for (const param of dataDenoDoc.functionDef.params)
 			{	if (!param.optional && dataDenoDoc.jsDoc.tags.some((tag : Any) => tag.kind=='param' && tag.optional && tag.name==param.name))
@@ -409,18 +445,18 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 26. Fix doc-comments: when dataDoc has comment combined from several declarations, and dataDenoDoc has only the comment from the first declaration, copy from dataDoc
+		// 27. Fix doc-comments: when dataDoc has comment combined from several declarations, and dataDenoDoc has only the comment from the first declaration, copy from dataDoc
 		if (parentKey=='jsDoc' && typeof(dataDenoDoc.doc)=='string' && typeof(dataDoc.doc)=='string' && dataDenoDoc.doc!=dataDoc.doc && dataDoc.doc.startsWith(dataDenoDoc.doc) && dataDoc.docTokens?.[0]?.text==dataDenoDoc.doc && dataDoc.docTokens[1]?.kind=='lineBreak')
 		{	dataDenoDoc.doc = dataDoc.doc;
 		}
-		// 27. Fix tsType: when dataDenoDoc has `string`, and dataDoc has specific string literal, copy from dataDoc
+		// 28. Fix tsType: when dataDenoDoc has `string`, and dataDoc has specific string literal, copy from dataDoc
 		if (parentKey=='tsType' && dataDenoDoc.keyword==='string' && dataDoc.literal?.kind==='string')
 		{	dataDenoDoc.repr = dataDoc.repr;
 			dataDenoDoc.kind = dataDoc.kind;
 			dataDenoDoc.literal = dataDoc.literal;
 			delete dataDenoDoc.keyword;
 		}
-		// 28. Fix accessibility and readonly: if they come from doc-comments tags, set them on dataDenoDoc
+		// 29. Fix accessibility and readonly: if they come from doc-comments tags, set them on dataDenoDoc
 		if (dataDenoDoc.properties && dataDoc.properties)
 		{	for (let i=0; i<dataDenoDoc.properties.length && dataDoc.properties.length; i++)
 			{	if (dataDenoDoc.properties[i].accessibility==undefined && dataDoc.properties[i].accessibility!=undefined && dataDoc.properties[i].jsDoc?.tags)
@@ -436,11 +472,11 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
-		// 29. Fix `exports`: if dataDoc has them, copy to dataDenoDoc
+		// 30. Fix `exports`: if dataDoc has them, copy to dataDenoDoc
 		if (parentKey=='' && Array.isArray(dataDoc.exports) && !dataDenoDoc.exports)
 		{	dataDenoDoc.exports = dataDoc.exports;
 		}
-		// 30. Fix computed properties: if dataDenoDoc has `['name']: type` (with constant name), and dataDoc has `name: type`, then copy the property name from dataDoc
+		// 31. Fix computed properties: if dataDenoDoc has `['name']: type` (with constant name), and dataDoc has `name: type`, then copy the property name from dataDoc
 		if (dataDenoDoc.properties && dataDoc.properties)
 		{	for (let i=0; i<dataDenoDoc.properties.length && dataDoc.properties.length; i++)
 			{	if (dataDenoDoc.properties[i].name != dataDoc.properties[i].name && dataDenoDoc.properties[i].name[0]=='[' && (dataDenoDoc.properties[i].name==`['${dataDoc.properties[i].name}']` || dataDenoDoc.properties[i].name==`["${dataDoc.properties[i].name}"]`))
