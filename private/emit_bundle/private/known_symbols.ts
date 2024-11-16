@@ -29,9 +29,12 @@ export class KnownSymbols
 			{	baseName = pathMaybeQuotedToModuleName(symbol.name) ?? 'ns';
 			}
 			else
-			{	baseName = getSymbolName(ts, symbol, recommendedName);
-				if (!baseName)
-				{	baseName = pathMaybeQuotedToModuleName(sourceFile.fileName) ?? 'default';
+			{	baseName = getSymbolName(ts, symbol);
+				if (!baseName || baseName=='unknown')
+				{	baseName = recommendedName;
+					if (!baseName || baseName=='unknown')
+					{	baseName = pathMaybeQuotedToModuleName(sourceFile.fileName) ?? 'default';
+					}
 				}
 			}
 			name = this.#getUniqueName(baseName, isAmbient);

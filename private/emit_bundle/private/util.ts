@@ -25,8 +25,8 @@ export function resolveSymbol<T extends tsa.Symbol|undefined>(ts: typeof tsa, ch
 	return symbol;
 }
 
-export function getSymbolName(ts: typeof tsa, symbol: tsa.Symbol, recommendedName: string)
-{	let name = recommendedName;
+export function getSymbolName(ts: typeof tsa, symbol: tsa.Symbol)
+{	let {name} = symbol;
 	if (name == 'default')
 	{	name = '';
 		const declarations = symbol.getDeclarations();
