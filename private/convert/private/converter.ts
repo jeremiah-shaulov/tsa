@@ -337,7 +337,7 @@ export class Converter
 		const node = this.#symbolDone(resolvedSymbol, true)?.node;
 		if (!node)
 		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExportedFromEntryPointNumber!=undefined, this.checker) : isExportedFromEntryPointNumber!=undefined || isDeclarationFile)
-			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment || isDeclarationFile);
+			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment, isDeclarationFile);
 				if (result)
 				{	if (exports?.length && !onlyResolvedIsExported)
 					{	result.node.exports = exports;
@@ -417,7 +417,7 @@ export class Converter
 					}
 				}
 				if (nodeIndex == -1)
-				{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment);
+				{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment, false);
 					if (result)
 					{	if (exports?.length && !onlyResolvedIsExported)
 						{	result.node.exports = exports;

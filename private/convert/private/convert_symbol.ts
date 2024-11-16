@@ -11,7 +11,7 @@ import {convertVar} from './convert_var.ts';
 import {Converter} from './converter.ts';
 import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 
-export function convertSymbol(ts: typeof tsa, converter: Converter, name: string, symbol: tsa.Symbol, origSymbol: tsa.Symbol, forceExport: boolean): {declaration: tsa.Declaration, node: DocNode} | undefined
+export function convertSymbol(ts: typeof tsa, converter: Converter, name: string, symbol: tsa.Symbol, origSymbol: tsa.Symbol, isExportAssignment: boolean, isDeclarationFile: boolean): {declaration: tsa.Declaration, node: DocNode} | undefined
 {	const declarations = symbol.getDeclarations();
 	if (declarations)
 	{	for (const declaration of declarations)
@@ -25,7 +25,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'class',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								classDef,
 							}
@@ -68,7 +68,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'interface',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								interfaceDef,
 							}
@@ -85,7 +85,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								enumDef,
 							}
 						};
@@ -100,7 +100,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 							{	kind: 'typeAlias',
 								name,
 								location: convertLocation(ts, converter, declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
 								typeAliasDef,
 							}
@@ -119,7 +119,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 									name,
 									location: convertLocation(ts, converter, useDeclaration),
 									...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), useDeclaration),
-									declarationKind: getDeclarationKind(ts, useDeclaration, forceExport),
+									declarationKind: getDeclarationKind(ts, useDeclaration, isExportAssignment, isDeclarationFile),
 									functionDef,
 								}
 							};
@@ -136,7 +136,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								variableDef,
 							}
 						};
@@ -152,7 +152,7 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 								name,
 								location: convertLocation(ts, converter, declaration),
 								...convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration),
-								declarationKind: getDeclarationKind(ts, declaration, forceExport),
+								declarationKind: getDeclarationKind(ts, declaration, isExportAssignment, isDeclarationFile),
 								typeAliasDef:
 								{	tsType,
 									typeParams: [],
@@ -189,9 +189,12 @@ function getDocumentationComment(converter: Converter, symbol: tsa.Symbol, origS
 	}
 }
 
-function getDeclarationKind(ts: typeof tsa, declaration: tsa.Declaration, forceExport: boolean)
-{	if (forceExport)
+function getDeclarationKind(ts: typeof tsa, declaration: tsa.Declaration, isExportAssignment: boolean, isDeclarationFile: boolean)
+{	if (isExportAssignment)
 	{	return 'export';
+	}
+	if (isDeclarationFile)
+	{	return 'declare';
 	}
 	const flags = ts.getCombinedModifierFlags(declaration);
 	return flags & ts.ModifierFlags.Export ? 'export' : flags & ts.ModifierFlags.Ambient ? 'declare' : 'private';
