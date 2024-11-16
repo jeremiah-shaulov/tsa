@@ -4,7 +4,7 @@ import {convertType, TYPE_NOT_DETECTED} from './convert_type.ts';
 import {convertTypeParamNode} from './convert_type_parameter.ts';
 import {Converter} from './converter.ts';
 import {indentAndWrap} from '../../deps.ts';
-import {undoCommentPreprocessing} from '../../create_deno_program.ts';
+import {undoCommentPreprocessing} from '../../create_tsa_program.ts';
 
 const C_BRACE_OPEN = '{'.charCodeAt(0);
 const C_BRACE_CLOSE = '}'.charCodeAt(0);

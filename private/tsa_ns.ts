@@ -1,5 +1,5 @@
 import typescript from 'npm:typescript@5.6.3';
-import {createTsaProgram} from './create_deno_program.ts';
+import {createTsaProgram} from './create_tsa_program.ts';
 import {LoadOptions} from './load_options.ts';
 import {DocNodes} from './md_gen/mod.ts';
 import {EmitDocOptions} from './convert/mod.ts';
