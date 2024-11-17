@@ -400,7 +400,7 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 		};
 	}
 	else if (ts.isThisTypeNode(node))
-	{	return {repr: 'this', kind: 'keyword', keyword: 'this'};
+	{	return {repr: 'this', kind: 'this', this: true};
 	}
 	else if (ts.isTypeOperatorNode(node))
 	{	let operator = '';
