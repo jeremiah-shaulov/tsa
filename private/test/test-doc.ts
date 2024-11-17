@@ -484,6 +484,10 @@ N:			for (let i=0; i<dataDoc.length && i<dataDenoDoc.length; i++)
 				}
 			}
 		}
+		// 32. If dataDenoDoc reported `[Sym]: Type` property as `Sym: Type`, correct it
+		if (parentKey=='' && dataDoc.name==='['+dataDenoDoc.name+']')
+		{	dataDenoDoc.name = dataDoc.name;
+		}
 	}
 }
 
