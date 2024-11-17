@@ -239,29 +239,29 @@ class NodesToMd
 		for (const node of nodes)
 		{	switch (node.kind)
 			{	case 'namespace':
-					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	namespaces.push(node);
 					}
 					break;
 				case 'variable':
-					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	variables.push(node);
 					}
 					break;
 				case 'function':
-					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	functions.push(node);
 					}
 					break;
 				case 'class':
-					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	classes.push(node);
 					}
 					break;
 				case 'enum':
 				case 'typeAlias':
 				case 'interface':
-					if (node.declarationKind=='export' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
 					{	types.push(node);
 					}
 			}

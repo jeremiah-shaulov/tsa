@@ -36,7 +36,7 @@ export class NodeToMdCollection
 			const {name, kind} = node;
 			if (kind != 'moduleDoc')
 			{	const kindName = kind=='typeAlias' ? 'type.' : kind+'.';
-				const fullName = node.declarationKind=='export' ? kindName+name : 'private.'+kindName+name;
+				const fullName = node.declarationKind=='private' ? 'private.'+kindName+name : kindName+name;
 				for (let i=1; true; i++)
 				{	const curName = i==1 ? fullName : fullName+'.'+i;
 					if (!this.#pathNames.has(curName))

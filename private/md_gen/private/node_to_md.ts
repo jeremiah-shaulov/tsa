@@ -499,7 +499,7 @@ export class NodeToMd
 
 function getImportCode(node: DocNode, importUrls: string[])
 {	let code = '';
-	if (node.declarationKind == 'export')
+	if (node.declarationKind != 'private')
 	{	// Find shortest export URL, assuming this is the module root
 		let {name, location: {filename, entryPointNumber}} = node.exports?.filter(e => e.location.entryPointNumber != undefined).sort((a, b) => a.location.filename.length - b.location.filename.length)[0] ?? node;
 		if (entryPointNumber != undefined)

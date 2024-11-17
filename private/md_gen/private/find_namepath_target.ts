@@ -44,7 +44,7 @@ L:	for (let i=0; i<branches.length; i++) // `branches` array will be expanded du
 			pos = RE_LINK_PATH.lastIndex;
 			if (!found)
 			{	// Find public symbol
-				const node = nodes.find(n => n.name==name && n.declarationKind=='export');
+				const node = nodes.find(n => n.name==name && n.declarationKind!='private');
 				if (node)
 				{	found = {node, member: undefined};
 				}

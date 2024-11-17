@@ -60,9 +60,9 @@ L:		for (let i=0; i<dataDenoDoc.length; i++)
 		{	const v = dataDoc[i];
 			if (v.exports)
 			{	for (const e of v.exports)
-				{	const j = dataDenoDoc.findIndex(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind=='export');
+				{	const j = dataDenoDoc.findIndex(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind!='private');
 					if (j != -1)
-					{	if (!dataDoc.some(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind=='export'))
+					{	if (!dataDoc.some(n => n.name==e.name && n.location.filename==e.location.filename && n.kind==v.kind && n.declarationKind!='private'))
 						{	dataDenoDoc.splice(j, 1);
 						}
 					}

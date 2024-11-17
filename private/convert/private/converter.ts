@@ -146,7 +146,7 @@ export class Converter
 		}
 		// 3. If a symbol is added as private, but it's actually exported from different places (has `exports`), change it to exported (this is particularly needed for compatibility with `x/deno_doc`)
 		for (const node of this.outNodes)
-		{	if (node.declarationKind!='export' && node.exports)
+		{	if (node.declarationKind=='private' && node.exports)
 			{	const e = node.exports.find(e => e.location.filename == node.location.filename) ?? node.exports[0];
 				if (e)
 				{	node.declarationKind = 'export';
