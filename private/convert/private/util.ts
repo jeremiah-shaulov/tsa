@@ -10,7 +10,7 @@ export function resolveSymbol(ts: typeof tsa, checker: tsa.TypeChecker, symbol?:
 	return symbol;
 }
 
-export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, symbol?: tsa.Symbol, isExportedFromEntryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
+export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, symbol?: tsa.Symbol, entryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
 {	let exports: Array<Export> | undefined;
 	let onlyResolvedIsExported = false;
 	let isExportAssignment = false;
@@ -28,8 +28,8 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 			{	exports = [];
 			}
 			const location = convertLocation(ts, converter, declaration);
-			if (location.entryPointNumber === isExportedFromEntryPointNumber)
-			{	isExportedFromEntryPointNumber = undefined;
+			if (location.entryPointNumber === entryPointNumber)
+			{	entryPointNumber = undefined;
 			}
 			exports.push({name: symbol.name, location});
 		}
@@ -44,7 +44,7 @@ export function resolveSymbolWithTrace(ts: typeof tsa, converter: Converter, sym
 				onlyResolvedIsExported = true;
 			}
 			const location = convertLocation(ts, converter, declaration);
-			if (isExportedFromEntryPointNumber!=undefined && location.entryPointNumber!==isExportedFromEntryPointNumber)
+			if (entryPointNumber!=undefined && location.entryPointNumber!==entryPointNumber)
 			{	const location = convertLocation(ts, converter, entryPointSourceFile);
 				exports.push({name: symbol.name, location});
 				onlyResolvedIsExported = false;

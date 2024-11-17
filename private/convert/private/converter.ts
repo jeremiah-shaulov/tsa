@@ -249,7 +249,7 @@ export class Converter
 		{	const {isDeclarationFile} = sourceFile;
 			for (const symbol of this.checker.getExportsOfModule(mainSymbol))
 			{	exportedSymbols?.add(symbol);
-				this.#convertSymbol(symbol, isDeclarationFile, entryPointNumber, sourceFile);
+				this.#convertSymbol(symbol, isDeclarationFile, true, entryPointNumber, sourceFile);
 			}
 		}
 	}
@@ -261,7 +261,7 @@ export class Converter
 			{	for (const declaration of this.#getDeclarations(statement))
 				{	const symbol = declaration.name && this.checker.getSymbolAtLocation(declaration.name);
 					if (symbol && !this.#symbolDone(symbol) && !exportedSymbols.has(symbol))
-					{	this.#convertSymbol(symbol, isDeclarationFile);
+					{	this.#convertSymbol(symbol, isDeclarationFile, false);
 					}
 				}
 			}
@@ -330,13 +330,13 @@ export class Converter
 		}
 	}
 
-	#convertSymbol(symbol: tsa.Symbol, isDeclarationFile: boolean, isExportedFromEntryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
+	#convertSymbol(symbol: tsa.Symbol, isDeclarationFile: boolean, isExported: boolean, entryPointNumber?: number, entryPointSourceFile?: tsa.SourceFile)
 	{	const {ts} = this;
-		let {resolvedSymbol, exports, isExportAssignment, onlyResolvedIsExported} = resolveSymbolWithTrace(ts, this, symbol, isExportedFromEntryPointNumber, entryPointSourceFile);
+		let {resolvedSymbol, exports, isExportAssignment, onlyResolvedIsExported} = resolveSymbolWithTrace(ts, this, symbol, entryPointNumber, entryPointSourceFile);
 		resolvedSymbol ??= symbol;
 		const node = this.#symbolDone(resolvedSymbol, true)?.node;
 		if (!node)
-		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExportedFromEntryPointNumber!=undefined, this.checker) : isExportedFromEntryPointNumber!=undefined || isDeclarationFile)
+		{	if (this.#includeSymbol ? this.#includeSymbol(resolvedSymbol, isExported, this.checker) : isExported || isDeclarationFile)
 			{	const result = convertSymbol(ts, this, symbol.name, resolvedSymbol, symbol, isExportAssignment, isDeclarationFile);
 				if (result)
 				{	if (exports?.length && !onlyResolvedIsExported)
