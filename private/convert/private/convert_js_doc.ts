@@ -114,9 +114,19 @@ function commentTillTags(doc: string)
  **/
 export function convertJsDocComment(ts: typeof tsa, comment?: string|tsa.NodeArray<tsa.JSDocComment>, commentText=''): {doc?: string, docTokens?: JsDocToken[]} | undefined
 {	if (comment)
-	{	if (typeof(comment) == 'string')
+	{	if (commentText)
+		{	commentText = commentText.replace(RE_PARSE_DOC_COMMENT, '').replace(RE_PARSE_DOC_COMMENT_2, '');
+			commentText = undoCommentPreprocessing(commentText);
+			commentText = commentTillTags(commentText);
+		}
+		if (typeof(comment) == 'string')
 		{	if (comment!='*' && comment!='**')
-			{	return {doc: comment, docTokens: [{kind: 'text', text: comment || ''}]};
+			{	if (!commentText)
+				{	commentText = comment;
+				}
+				if (commentText)
+				{	return {doc: commentText, docTokens: [{kind: 'text', text: commentText}]};
+				}
 			}
 		}
 		else
@@ -140,10 +150,7 @@ export function convertJsDocComment(ts: typeof tsa, comment?: string|tsa.NodeArr
 				}
 			);
 			if (commentText)
-			{	commentText = commentText.replace(RE_PARSE_DOC_COMMENT, '').replace(RE_PARSE_DOC_COMMENT_2, '');
-				commentText = undoCommentPreprocessing(commentText);
-				commentText = commentTillTags(commentText);
-				correctIndentInTokensAccordingToText(docTokens, commentText);
+			{	correctIndentInTokensAccordingToText(docTokens, commentText);
 			}
 			else
 			{	commentText = docTokens.map(c => c.text).join('');
