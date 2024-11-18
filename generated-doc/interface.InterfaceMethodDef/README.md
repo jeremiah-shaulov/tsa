@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.41/mod.ts"
+import {InterfaceMethodDef} from "https://deno.land/x/tsa@v0.0.42/mod.ts"
 ```
 
 ## This interface has

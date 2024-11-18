@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNode} from "https://deno.land/x/tsa@v0.0.41/mod.ts"
+import {DocNode} from "https://deno.land/x/tsa@v0.0.42/mod.ts"
 ```
 
 This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
