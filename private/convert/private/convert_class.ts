@@ -11,7 +11,6 @@ import {convertType} from './convert_type.ts';
 import {getHeritageTypes, setMemberName, getTypeNodeOfDeclaration, removeUndefined, resolveSymbol} from './util.ts';
 import {convertIndexSignature, convertSignatureReturnType} from './convert_index_signature.ts';
 import {Converter} from './converter.ts';
-import {JsDoc} from '../../doc_node/mod.ts';
 
 export function convertClass(ts: typeof tsa, converter: Converter, classDeclaration: tsa.ClassDeclaration, symbol: tsa.Symbol): ClassDef|undefined
 {	const instanceType = converter.checker.getDeclaredTypeOfSymbol(symbol);

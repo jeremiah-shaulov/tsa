@@ -22,7 +22,7 @@ export {Client} from 'https://deno.land/x/mysql@v2.12.1/mod.ts';
 function defaultHello(a: number) {return a+''}
 export default defaultHello;
 
-import data from './private/data.json' assert {type: 'json'};
+import data from './private/data.json' with {type: 'json'};
 const JSON_DATA = data;
 export {JSON_DATA};
 export {JSON_DATA as JSON_DATA_2};
