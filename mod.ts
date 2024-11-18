@@ -15,7 +15,7 @@
 	To install this tool do:
 
 	```bash
-	deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.41/tsa.ts
+	deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.42/tsa.ts
 	```
 
 	The command supports 5 operations:
@@ -62,6 +62,9 @@
 	mkdir -p /tmp/tsa-test
 	tsa doc-md --mainTitle 'Standard bytes library' --outFile=/tmp/tsa-test/README.md jsr:@std/bytes
 	```
+
+	This tool has 1 noncommon feature: if `{‎@linkcode Symbol}` tag lays on it's own line, and has no display text (like `[Display text]{‎@linkcode Symbol}` or `{‎@linkcode Symbol|Display text}`),
+	it produces typescript declaration of the symbol with links to another symbols that appear in the declaration.
 
 	### tsa bundle-js [options] <file1.ts> [fileN.ts...]
 
@@ -160,7 +163,7 @@ export
 		// To run this example:
 		// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-		import {tsa} from 'https://deno.land/x/tsa@v0.0.41/mod.ts';
+		import {tsa} from 'https://deno.land/x/tsa@v0.0.42/mod.ts';
 		console.log(tsa.version);
 		```
 
@@ -170,7 +173,7 @@ export
 		// To run this example:
 		// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-		import {tsa} from 'https://deno.land/x/tsa@v0.0.41/mod.ts';
+		import {tsa} from 'https://deno.land/x/tsa@v0.0.42/mod.ts';
 
 		// Different version of typescript
 		import tsaSubstitute from 'npm:typescript@3.9.3';
