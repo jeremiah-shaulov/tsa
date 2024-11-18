@@ -42,12 +42,15 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 							init = param.right;
 						}
 						if (param2.kind == 'identifier')
-						{	const tags = jsDoc?.jsDoc.tags;
-							let paramJsDoc: JsDoc | undefined;
-							if (tags)
-							{	for (const t of tags)
-								{	if (t.kind=='param' && t.name==param2.name)
-									{	paramJsDoc = {doc: t.doc, docTokens: t.docTokens};
+						{	let doc = convertJsDoc(ts, converter, parameters[i].getDocumentationComment(converter.checker), declaration);
+							if (!doc)
+							{	const tags = jsDoc?.jsDoc.tags;
+								if (tags)
+								{	for (const t of tags)
+									{	if (t.kind=='param' && t.name==param2.name)
+										{	doc = {jsDoc: {doc: t.doc, docTokens: t.docTokens}};
+											break;
+										}
 									}
 								}
 							}
@@ -63,7 +66,7 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 									decorators: param2.decorators,
 									location: convertLocation(ts, converter, paramDecl),
 									init,
-									...(paramJsDoc && {jsDoc: paramJsDoc}),
+									...doc,
 								}
 							);
 						}
