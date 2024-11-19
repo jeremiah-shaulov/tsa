@@ -8,7 +8,7 @@ import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 ## This interface has
 
-- 13 properties:
+- 14 properties:
 [jsDoc](#-jsdoc-jsdoc),
 [tsType](#-tstype-tstypedef),
 [readonly](#-readonly-boolean),
@@ -21,6 +21,7 @@ import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 [name](#-name-string),
 [decorators](#-decorators-decoratordef),
 [location](#-location-location),
+[isAccessor](#-isaccessor-boolean),
 [nameNodeIndex](#-namenodeindex-number)
 
 
@@ -71,6 +72,10 @@ import {ClassPropertyDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 
 #### 📄 location: [Location](../interface.Location/README.md)
+
+
+
+#### 📄 isAccessor?: `boolean`
 
 
 
