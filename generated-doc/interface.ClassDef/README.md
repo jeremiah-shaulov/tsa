@@ -8,7 +8,8 @@ import {ClassDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 ## This interface has
 
-- 11 properties:
+- 12 properties:
+[defName](#-defname-string),
 [isAbstract](#-isabstract-boolean),
 [constructors](#-constructors-classconstructordef),
 [properties](#-properties-classpropertydef),
@@ -20,6 +21,10 @@ import {ClassDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 [superTypeParams](#-supertypeparams-tstypedef),
 [superNodeIndex](#-supernodeindex-number),
 [decorators](#-decorators-decoratordef)
+
+
+#### 📄 defName?: `string`
+
 
 
 #### 📄 isAbstract: `boolean`

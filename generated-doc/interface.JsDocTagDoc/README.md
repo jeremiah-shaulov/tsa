@@ -9,12 +9,12 @@ import {JsDocTagDoc} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 ## This interface has
 
 - 3 properties:
-[kind](#-kind-category--deprecated--example),
+[kind](#-kind-deprecated),
 [doc](#-doc-string),
 [docTokens](#-doctokens-jsdoctoken)
 
 
-#### 📄 kind: <mark>"category"</mark> | <mark>"deprecated"</mark> | <mark>"example"</mark>
+#### 📄 kind: <mark>"deprecated"</mark>
 
 
 

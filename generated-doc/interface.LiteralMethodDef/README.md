@@ -8,7 +8,7 @@ import {LiteralMethodDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 ## This interface has
 
-- 9 properties:
+- 10 properties:
 [name](#-name-string),
 [kind](#-kind-methodkind),
 [params](#-params-paramdef),
@@ -17,6 +17,7 @@ import {LiteralMethodDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 [returnType](#-returntype-tstypedef),
 [typeParams](#-typeparams-tstypeparamdef),
 [jsDoc](#-jsdoc-jsdoc),
+[location](#-location-location),
 [nameNodeIndex](#-namenodeindex-number)
 
 
@@ -49,6 +50,10 @@ import {LiteralMethodDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 
 #### 📄 jsDoc?: [JsDoc](../interface.JsDoc/README.md)
+
+
+
+#### 📄 location?: [Location](../interface.Location/README.md)
 
 
 

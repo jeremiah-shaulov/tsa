@@ -6,7 +6,7 @@
 import {DocNode} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 ```
 
-This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
+This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.125.0) with several additions:
 
 - [Location](../interface.Location/README.md) has additional [entryPointNumber](../interface.Location/README.md#-entrypointnumber-number) field.
 You can pass relative paths to [createTsaProgram()](../function.createTsaProgram/README.md) as entry points, but [Location.filename](../interface.Location/README.md#-filename-string) always contains corresponding absolute URL.
@@ -26,5 +26,6 @@ but also additional [nodeIndex](../interface.TsTypeRefDef/README.md#-nodeindex-n
 If the type is an enum member, also [nodeSubIndex](../interface.TsTypeRefDef/README.md#-nodesubindex-number) will be set to member number. See [EmitDocOptions.includeReferenced](../type.EmitDocOptions/README.md#-includereferenced-boolean).
 - [ClassDef](../interface.ClassDef/README.md) has additional `superNodeIndex` field, that contains node index in the results for the super class. See [EmitDocOptions.includeReferenced](../type.EmitDocOptions/README.md#-includereferenced-boolean).
 - [TsTypeDef.repr](../private.interface.TsTypeDefBase/README.md#-repr-string) field for string literals (`kind == 'string'`) contains quotes, for string template literals (`kind == 'template'`) contains backticks, and for bigint literals (`kind == 'bigInt'`) has trailing `n`.
+- In [LiteralMethodDef](../interface.LiteralMethodDef/README.md), [LiteralPropertyDef](../interface.LiteralPropertyDef/README.md), [LiteralCallSignatureDef](../interface.LiteralCallSignatureDef/README.md), [LiteralIndexSignatureDef](../interface.LiteralIndexSignatureDef/README.md), [ClassIndexSignatureDef](../interface.ClassIndexSignatureDef/README.md) and [InterfaceIndexSignatureDef](../interface.InterfaceIndexSignatureDef/README.md) there're [LiteralMethodDef.jsDoc](../interface.LiteralMethodDef/README.md#-jsdoc-jsdoc) and [LiteralMethodDef.location](../interface.LiteralMethodDef/README.md#-location-location) fields.
 
 `type` DocNode = [DocNodeModuleDoc](../interface.DocNodeModuleDoc/README.md) | [DocNodeFunction](../interface.DocNodeFunction/README.md) | [DocNodeVariable](../interface.DocNodeVariable/README.md) | [DocNodeEnum](../interface.DocNodeEnum/README.md) | [DocNodeClass](../interface.DocNodeClass/README.md) | [DocNodeTypeAlias](../interface.DocNodeTypeAlias/README.md) | [DocNodeNamespace](../interface.DocNodeNamespace/README.md) | [DocNodeInterface](../interface.DocNodeInterface/README.md) | [DocNodeImport](../interface.DocNodeImport/README.md)

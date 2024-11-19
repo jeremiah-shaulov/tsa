@@ -8,7 +8,8 @@ import {FunctionDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 
 ## This interface has
 
-- 7 properties:
+- 8 properties:
+[defName](#-defname-string),
 [params](#-params-paramdef),
 [returnType](#-returntype-tstypedef),
 [hasBody](#-hasbody-boolean),
@@ -16,6 +17,10 @@ import {FunctionDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 [isGenerator](#-isgenerator-boolean),
 [typeParams](#-typeparams-tstypeparamdef),
 [decorators](#-decorators-decoratordef)
+
+
+#### 📄 defName?: `string`
+
 
 
 #### 📄 params: [ParamDef](../type.ParamDef/README.md)\[]
