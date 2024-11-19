@@ -4,7 +4,7 @@
     In brief:
     - Added `entryPointNumber` to `Location`.
     - Added interface `Export`, and added `exports: Export[]` to `DocNodeBase`.
-    - Added `init` to `ClassPropertyDef`.
+    - Added `init` and `isAccessor` to `ClassPropertyDef`.
     - Added `isConst` to `EnumDef`.
     - Added interface `JsDocToken`, and added `docTokens?: JsDocToken[]` everywhere near `doc`.
     - Added `tsType` to `JsDocTagTyped` and `JsDocTagParam`.
@@ -25,7 +25,7 @@
     You can pass relative paths to [createTsaProgram()]{@link tsa.createTsaProgram} as entry points, but {@link Location.filename} always contains corresponding absolute URL.
     If this filename is one of the entry points, the {@link Location.entryPointNumber} field will contain the index in `entryPoints` array provided to [createTsaProgram()]{@link tsa.createTsaProgram}.
     - `DocNode` has additional [exports]{@link DocNode.exports} field. If a symbol is reexported from several places, those places will be recorded here (including current location).
-    - {@link ClassPropertyDef} has additional [init]{@link ClassPropertyDef.init} field that contains property initializer (if any).
+    - {@link ClassPropertyDef} has additional [init]{@link ClassPropertyDef.init} field that contains property initializer (if any), and [isAccessor]{@link ClassPropertyDef.isAccessor} field.
     - {@link EnumDef} has additional [isConst]{@link EnumDef.isConst} field for `const enum`s.
     - Doc-comments are returned not only as [doc]{@link JsDoc.doc} string, but also [docTokens]{@link JsDoc.docTokens}, that have separate parts for comment text and `@link` tags.
     - {@link JsDocTagTyped} (for `@enum`, `@extends`, `@this` and `@type` tags) and {@link JsDocTagParam} (for `@param`) have additional `tsType` field for the object type.
@@ -200,6 +200,7 @@ export interface ClassPropertyDef {
   name: string;
   decorators?: DecoratorDef[];
   location: Location;
+  isAccessor?: boolean;
   nameNodeIndex?: number;
 }
 

@@ -200,6 +200,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 				const tsType = removeUndefined(convertType(ts, converter, symbol.valueDeclaration && (getTypeNodeOfDeclaration(ts, symbol.valueDeclaration) ?? converter.checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration))), optional);
 				const isOverride = !!(modifiers & ts.ModifierFlags.Override);
 				const isAbstract = !!(modifiers & ts.ModifierFlags.Abstract);
+				const isAccessor = !!(modifiers & ts.ModifierFlags.Accessor);
 				if (readonly && tsType?.kind==='fnOrConstructor') // if is readonly property assigned to a function or lambda instance: treat as method
 				{	outMethods.push
 					(	setMemberName
@@ -245,6 +246,7 @@ function convertClassProperty(ts: typeof tsa, converter: Converter, symbol: tsa.
 								...(isOverride && {isOverride}),
 								name: symbol.name,
 								location: convertLocation(ts, converter, declaration),
+								...(isAccessor && {isAccessor}),
 								...(init && {init}),
 							},
 							propertyName

@@ -280,7 +280,8 @@ class NodesToMd
 		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
 			const isAbstract = 'isAbstract' in p && p.isAbstract;
 			const isStatic = 'isStatic' in p && p.isStatic;
-			return this.#convertProperty(icon, p.name, isDeprecated(p), accessibility, isAbstract, isStatic, p.readonly, false, p.optional, p.tsType);
+			const isAccessor = 'isAccessor' in p && p.isAccessor;
+			return this.#convertProperty(icon, p.name, isDeprecated(p), accessibility, isAbstract, isStatic, p.readonly, isAccessor ?? false, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
 		{	const m = p.getter;
