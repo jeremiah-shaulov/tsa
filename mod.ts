@@ -7,7 +7,7 @@
 	However `tsc` cannot load files from HTTP URLs as Deno does.
 
 	This library solves this issue by adding custom file loader. Also it adds facility to generate syntax nodes in less raw format, so the project structure
-	can be easily analyzed. The nodes this library produces are compatible with [x/deno_doc@0.62.0]{@link https://deno.land/x/deno_doc@0.62.0}.
+	can be easily analyzed. The nodes this library produces are compatible with [x/deno_doc@0.125.0]{@link https://deno.land/x/deno_doc@0.125.0}.
 	Also this library can bundle Typescript project to single Typescript file (not only Javascript), and to generate project documentation in Markdown format.
 
 	## Using as command-line tool

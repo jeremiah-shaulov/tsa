@@ -3,6 +3,8 @@ import {TsTypeTypePredicateDef, ClassIndexSignatureDef} from '../../doc_node/mod
 import {convertType} from './convert_type.ts';
 import {getText} from './util.ts';
 import {Converter} from './converter.ts';
+import {convertJsDoc} from './convert_js_doc.ts';
+import {convertLocation} from './convert_location.ts';
 
 export function convertSignatureReturnType(ts: typeof tsa, converter: Converter, sig?: tsa.Signature)
 {	const predicate = sig && converter.checker.getTypePredicateOfSignature(sig);
@@ -34,7 +36,10 @@ export function createPredicate(ts: typeof tsa, converter: Converter, asserts: b
 }
 
 export function convertIndexSignature(ts: typeof tsa, converter: Converter, index: tsa.IndexInfo): ClassIndexSignatureDef
-{	return {
+{	const symbol = index.declaration && 'symbol' in index.declaration && index.declaration.symbol as tsa.Symbol;
+	const jsDoc = symbol && convertJsDoc(ts, converter, symbol.getDocumentationComment(converter.checker), index.declaration);
+	const location = convertLocation(ts, converter, index.declaration);
+	return {
 		readonly: index.isReadonly,
 		params:
 		[	{	kind: 'identifier',
@@ -44,5 +49,7 @@ export function convertIndexSignature(ts: typeof tsa, converter: Converter, inde
 			}
 		],
 		tsType: convertType(ts, converter, index.type),
+		...jsDoc,
+		...(location && {location}),
 	};
 }

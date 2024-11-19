@@ -58,12 +58,12 @@ export class Class3<T> extends Base1
 	}
 }
 export class Class4<T, U> extends Class3<T> implements Inter1, Inter3<bigint>
-{	name1 = '';
+{	override name1 = '';
 	name2 = '';
 	value3 = 0n;
 	accessor3 = '';
 	setAccessor3 = '';
-	name3 = '';
+	override name3 = '';
 	name4 = '';
 	name5?: string;
 

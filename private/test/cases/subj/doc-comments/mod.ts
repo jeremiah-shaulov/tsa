@@ -15,7 +15,7 @@
 
 /**	The Class 1.
 	@since 1.0.0
-	@see {Interface1}
+	@see Interface1
  **/
 export class Class1
 {
@@ -55,7 +55,9 @@ export class Class1
 	{
 	}
 
-	/**	The method 1.
+	/**
+	 * The method 1.
+	 * @see {@link method2}
 	 **/
 	method1
 	(	/**	A first argument of method 1.

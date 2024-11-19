@@ -350,11 +350,25 @@ function convertJsDocTag(ts: typeof tsa, converter: Converter, tag: tsa.JSDocTag
 	}
 	else if (ts.isJSDocSeeTag?.(tag)) // isJSDocOverloadTag is since typescript 4.2
 	{	const name = tag.name?.getText();
-		const text = tag.comment && ts.getTextOfJSDocComment(tag.comment);
-		return {
-			kind: 'unsupported',
-			value: '@see' + (!name ? '' : ' '+name + (!text || text=='**' ? '' : ' '+text)),
-		};
+		const jsDoc = convertJsDocComment(ts, tag.comment);
+		let doc = jsDoc?.doc ?? '';
+		let docTokens = jsDoc?.docTokens ?? [];
+		if (name)
+		{	doc = name + (doc ? ' ' + doc : '');
+			if (!docTokens)
+			{	docTokens = [{kind: 'text', text: name}];
+			}
+			else if (!docTokens[0])
+			{	docTokens[0] = {kind: 'text', text: name};
+			}
+			else if (!docTokens[0].text)
+			{	docTokens[0].text = name;
+			}
+			else
+			{	docTokens[0].text = name + ' ' + docTokens[0].text;
+			}
+		}
+		return {kind: 'see', doc, docTokens};
 	}
 	else if (ts.isJSDocOverrideTag?.(tag)) // isJSDocOverloadTag is since typescript 4.3
 	{	return {kind: 'unsupported', value: tagToString(tag)};
@@ -375,12 +389,16 @@ function convertJsDocTag(ts: typeof tsa, converter: Converter, tag: tsa.JSDocTag
 	switch (kind)
 	{	case 'ignore':
 		case 'module':
-			return {kind};
+		{	return {kind};
+		}
+		case 'default':
+		{	return {kind, value: convertJsDocComment(ts, tag.comment)?.doc ?? ''};
+		}
 		case 'category':
 		case 'example':
-			return {kind, ...convertJsDocComment(ts, tag.comment)};
-		case 'default':
-			return {kind, value: convertJsDocComment(ts, tag.comment)?.doc ?? ''};
+		{	const jsDoc = convertJsDocComment(ts, tag.comment);
+			return {kind, doc: jsDoc?.doc ?? '', docTokens: jsDoc?.docTokens ?? []};
+		}
 	}
 	return {kind: 'unsupported', value: tagToString(tag)};
 }

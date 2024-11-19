@@ -1,4 +1,4 @@
-/** This file is downloaded from: `https://github.com/denoland/deno_doc/blob/0.69.2/js/types.d.ts`.
+/** This file is downloaded from: `https://github.com/denoland/deno_doc/blob/0.125.0/js/types.d.ts`.
     Then modified. Use file comparator to find what's changed.
 
     In brief:
@@ -9,17 +9,17 @@
     - Added interface `JsDocToken`, and added `docTokens?: JsDocToken[]` everywhere near `doc`.
     - Added `tsType` to `JsDocTagTyped` and `JsDocTagParam`.
     - Added `tsType` and `typeParams` to `JsDocTagNamed`.
-    - Added `nodeIndex` to `DecoratorDef`.
+    - Added `nameNodeIndex` to `DecoratorDef`, `ClassPropertyDef`, `ClassMethodDef`, `InterfaceMethodDef`, `InterfacePropertyDef`, `LiteralPropertyDef` and `LiteralMethodDef`.
     - Added `nodeIndex` and `nodeSubIndex` to `TsTypeRefDef`.
     - Added `superNodeIndex` to `ClassDef`.
-    - Added `jsDoc` to `LiteralMethodDef`, `LiteralPropertyDef`, `LiteralCallSignatureDef` and `LiteralIndexSignatureDef`
+    - Added `jsDoc` and `location` to `LiteralMethodDef`, `LiteralPropertyDef`, `LiteralCallSignatureDef`, `LiteralIndexSignatureDef`, `ClassIndexSignatureDef` and `InterfaceIndexSignatureDef`.
 
     @module
  **/
 
-// Copyright 2020-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 
-/** This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.62.0) with several additions:
+/** This type matches `DocNode` type from [x/deno_doc](https://deno.land/x/deno_doc@0.125.0) with several additions:
 
     - {@link Location} has additional [entryPointNumber]{@link Location.entryPointNumber} field.
     You can pass relative paths to [createTsaProgram()]{@link tsa.createTsaProgram} as entry points, but {@link Location.filename} always contains corresponding absolute URL.
@@ -39,6 +39,7 @@
     If the type is an enum member, also [nodeSubIndex]{@link TsTypeRefDef.nodeSubIndex} will be set to member number. See {@link EmitDocOptions.includeReferenced}.
     - {@link ClassDef} has additional `superNodeIndex` field, that contains node index in the results for the super class. See {@link EmitDocOptions.includeReferenced}.
     - {@link TsTypeDef.repr} field for string literals (`kind == 'string'`) contains quotes, for string template literals (`kind == 'template'`) contains backticks, and for bigint literals (`kind == 'bigInt'`) has trailing `n`.
+    - In {@link LiteralMethodDef}, {@link LiteralPropertyDef}, {@link LiteralCallSignatureDef}, {@link LiteralIndexSignatureDef}, {@link ClassIndexSignatureDef} and {@link InterfaceIndexSignatureDef} there're {@link LiteralMethodDef.jsDoc} and {@link LiteralMethodDef.location} fields.
  **/
 export type DocNode =
   | DocNodeModuleDoc
@@ -132,6 +133,7 @@ export interface DocNodeImport extends DocNodeBase {
 export type Accessibility = "public" | "protected" | "private";
 
 export interface ClassDef {
+  defName?: string;
   isAbstract: boolean;
   constructors: ClassConstructorDef[];
   properties: ClassPropertyDef[];
@@ -162,6 +164,8 @@ export interface ClassConstructorDef {
 }
 
 export interface ClassIndexSignatureDef {
+  jsDoc?: JsDoc;
+  location?: Location;
   readonly: boolean;
   params: ParamDef[];
   tsType?: TsTypeDef;
@@ -221,6 +225,7 @@ export interface EnumMemberDef {
 }
 
 export interface FunctionDef {
+  defName?: string;
   params: ParamDef[];
   returnType?: TsTypeDef;
   hasBody?: boolean;
@@ -236,6 +241,7 @@ export interface ImportDef {
 }
 
 export interface InterfaceDef {
+  defName?: string;
   extends: TsTypeDef[];
   methods: InterfaceMethodDef[];
   properties: InterfacePropertyDef[];
@@ -253,6 +259,8 @@ export interface InterfaceCallSignatureDef {
 }
 
 export interface InterfaceIndexSignatureDef {
+  jsDoc?: JsDoc;
+  location?: Location;
   readonly: boolean;
   params: ParamDef[];
   tsType?: TsTypeDef;
@@ -324,11 +332,13 @@ export type JsDocTagKind =
   | "this"
   | "typedef"
   | "type"
+  | "see"
   | "unsupported";
 
 export type JsDocTag =
   | JsDocTagOnly
   | JsDocTagDoc
+  | JsDocTagDocRequired
   | JsDocTagNamed
   | JsDocTagValued
   | JsDocTagTyped
@@ -354,9 +364,15 @@ export interface JsDocTagOnly extends JsDocTagBase {
 }
 
 export interface JsDocTagDoc extends JsDocTagBase {
-  kind: "category" | "deprecated" | "example";
+  kind: "deprecated";
   doc?: string;
   docTokens?: JsDocToken[];
+}
+
+export interface JsDocTagDocRequired extends JsDocTagBase {
+  kind: "category" | "example" | "see";
+  doc: string;
+  docTokens: JsDocToken[];
 }
 
 export interface JsDocTagNamed extends JsDocTagBase {
@@ -424,6 +440,7 @@ export interface LiteralCallSignatureDef {
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
   jsDoc?: JsDoc;
+  location?: Location;
 }
 
 export type LiteralDefKind =
@@ -474,6 +491,7 @@ export interface LiteralIndexSignatureDef {
   params: ParamDef[];
   tsType?: TsTypeDef;
   jsDoc?: JsDoc;
+  location?: Location;
 }
 
 export interface LiteralMethodDef {
@@ -485,6 +503,7 @@ export interface LiteralMethodDef {
   returnType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
   jsDoc?: JsDoc;
+  location?: Location;
   nameNodeIndex?: number;
 }
 
@@ -497,6 +516,7 @@ export interface LiteralPropertyDef {
   tsType?: TsTypeDef;
   typeParams: TsTypeParamDef[];
   jsDoc?: JsDoc;
+  location?: Location;
   nameNodeIndex?: number;
 }
 
