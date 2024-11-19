@@ -193,12 +193,26 @@ class NodesToMd
 
 	*genFiles(mainTitle: string, mainPageStart: string)
 	{	// Module doc
+		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		let code = mainPageStart;
+		if (!mainTitle)
+		{	const tags = moduleDoc?.jsDoc.tags;
+			if (tags)
+			{	for (const tag of tags)
+				{	if (tag.kind=='unsupported' && tag.value.startsWith('@summary'))
+					{	const summary = tag.value.slice('@summary'.length).trim();
+						if (!summary.includes('\n'))
+						{	mainTitle = summary;
+						}
+						break;
+					}
+				}
+			}
+		}
 		if (mainTitle)
 		{	code += `# ${mdEscape(mainTitle)}\n\n`;
 		}
 		code += mdLink('Documentation Index', this.#docDirBasename+'/README.md')+'\n\n';
-		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		if (moduleDoc)
 		{	code += this.#convertJsDoc(moduleDoc?.jsDoc, moduleDoc, '', 0, this.#docDirBasename+'/');
 		}
@@ -844,7 +858,7 @@ class NodesToMd
 		{	return false;
 		}
 		if ('jsDoc' in node)
-		{	if ((node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value=='@internal') ?? -1) != -1)
+		{	if ((node.jsDoc?.tags?.findIndex(v => v.kind=='private' || v.kind=='unsupported' && v.value.startsWith('@internal')) ?? -1) != -1)
 			{	return false;
 			}
 		}
