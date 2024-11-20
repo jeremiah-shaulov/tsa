@@ -162,11 +162,11 @@ export function convertSymbol(ts: typeof tsa, converter: Converter, name: string
 					}
 				}
 				else if (ts.isSourceFile(declaration))
-				{	const node = converter.convertNamespace(declaration.fileName, name, convertLocation(ts, converter, declaration));
+				{	const node = converter.convertNamespace(declaration, declaration.fileName, name, convertLocation(ts, converter, declaration));
 					return {declaration, node};
 				}
 				else if (ts.isModuleDeclaration(declaration))
-				{	const node = converter.convertNamespace(declaration.getSourceFile().fileName, name, convertLocation(ts, converter, declaration));
+				{	const node = converter.convertNamespace(declaration, '', name, convertLocation(ts, converter, declaration));
 					node.jsDoc = convertJsDoc(ts, converter, getDocumentationComment(converter, symbol, origSymbol), declaration)?.jsDoc;
 					return {declaration, node};
 				}

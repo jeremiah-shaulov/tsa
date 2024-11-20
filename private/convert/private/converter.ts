@@ -106,13 +106,13 @@ export class Converter
 
 	/**	When `export * as nsName from '...'` is encountered, i add record here, and later i'll copy relevant nodes to it.
 	 **/
-	#namespaces = new Map<string, {elements: DocNode[], forJsDoc: {jsDoc?: JsDoc}[]}>;
+	#namespaces = new Map<tsa.SourceFile|tsa.ModuleDeclaration, {isFilename: string, elements: DocNode[], forJsDoc: {jsDoc?: JsDoc}[]}>;
 
 	/**	When all entry points and other related files are converted, and there are still not converted namespaces,
 		i'll start converting namespaces without adding nodes to `outNodes`.
 		`#doingNamespace` will contain namspace filename being converted, and the nodes will be added to `#namespaces.get(#doingNamespace).elements`.
 	 **/
-	#doingNamespace = '';
+	#doingNamespace: tsa.SourceFile|tsa.ModuleDeclaration|undefined;
 
 	constructor(private ts: typeof tsa, private program: tsa.Program, public loader: Loader, private libLocation: string, options?: EmitDocOptions)
 	{	this.checker = program.getTypeChecker();
@@ -133,7 +133,7 @@ export class Converter
 		{	const entryPointHref = entryPointsHrefs[i];
 			const sourceFile = this.program.getSourceFile(entryPointHref);
 			if (sourceFile)
-			{	this.#convertSourceFile(sourceFile, i, exportedSymbols, this.#followModuleImports ? entryPointsHrefs : undefined);
+			{	this.#convertSourceFile(sourceFile, i, exportedSymbols, this.#followModuleImports ? entryPointsHrefs : undefined, sourceFile.fileName);
 			}
 		}
 		// 2. Convert private symbols
@@ -159,21 +159,21 @@ export class Converter
 			}
 		}
 		// 4. Copy nodes that are exported from namespaces to corresponding elements in `#namespaces`.
-		for (const [filename, {elements, forJsDoc}] of this.#namespaces)
-		{	if (entryPointsHrefs.includes(filename))
+		for (const {isFilename, elements, forJsDoc} of this.#namespaces.values())
+		{	if (isFilename && entryPointsHrefs.includes(isFilename))
 			{	for (const node of this.outNodes)
 				{	if (node.kind == 'moduleDoc')
-					{	if (node.location.filename == filename)
+					{	if (node.location.filename == isFilename)
 						{	for (const j of forJsDoc)
 							{	j.jsDoc = node.jsDoc;
 							}
 						}
 					}
-					else if (node.declarationKind!='private' && node.location.filename==filename)
+					else if (node.declarationKind!='private' && node.location.filename==isFilename)
 					{	elements.push(node);
 					}
 					else
-					{	const exp = node.exports?.find(e => e.location.filename == filename);
+					{	const exp = node.exports?.find(e => e.location.filename == isFilename);
 						if (exp)
 						{	elements.push({...node, ...exp});
 						}
@@ -182,14 +182,13 @@ export class Converter
 			}
 		}
 		// 5. Convert namespaces (something like `export * as nsName from '...'`)
-		for (const [filename] of this.#namespaces)
-		{	if (!entryPointsHrefs.includes(filename))
-			{	entryPointsHrefs.push(filename);
-				const sourceFile = this.program.getSourceFile(filename);
-				if (sourceFile)
-				{	this.#doingNamespace = filename;
-					this.#convertSourceFile(sourceFile);
+		for (const [namespaceDecl, {isFilename}] of this.#namespaces)
+		{	if (!isFilename || !entryPointsHrefs.includes(isFilename))
+			{	if (isFilename)
+				{	entryPointsHrefs.push(isFilename);
 				}
+				this.#doingNamespace = namespaceDecl;
+				this.#convertSourceFile(namespaceDecl);
 			}
 		}
 		// 6. Done
@@ -197,17 +196,17 @@ export class Converter
 		this.outNodes = [];
 		this.#declarations.clear();
 		this.#namespaces.clear();
-		this.#doingNamespace = '';
+		this.#doingNamespace = undefined;
 		return outNodes;
 	}
 
 	/**	Remember namespace (something like `export * as nsName from '...'`), and copy relevant nodes to it later, at the end of entry points conversion.
 	 **/
-	convertNamespace(filename: string, name: string, location: Location)
-	{	let record = this.#namespaces.get(filename);
+	convertNamespace(namespaceDecl: tsa.SourceFile|tsa.ModuleDeclaration, isFilename: string, name: string, location: Location)
+	{	let record = this.#namespaces.get(namespaceDecl);
 		if (!record)
-		{	record = {elements: [], forJsDoc: []};
-			this.#namespaces.set(filename, record);
+		{	record = {isFilename, elements: [], forJsDoc: []};
+			this.#namespaces.set(namespaceDecl, record);
 		}
 		const node: DocNodeNamespace =
 		{	kind: 'namespace',
@@ -222,21 +221,36 @@ export class Converter
 		return node;
 	}
 
-	#convertSourceFile(sourceFile: tsa.SourceFile, entryPointNumber?: number, exportedSymbols?: Set<tsa.Symbol>, addToEntryPoints?: string[])
-	{	// 1. Add the first doc-comment in the file, if it contains @module tag
-		this.#convertModuleDoc(sourceFile);
+	#convertSourceFile(namespaceDecl: tsa.SourceFile|tsa.ModuleDeclaration, entryPointNumber?: number, exportedSymbols?: Set<tsa.Symbol>, addToEntryPoints?: string[], addToEntryPointsBaseFilename='')
+	{	let statements: tsa.NodeArray<tsa.Statement>|undefined;
+		let namespaceSymbol: tsa.Symbol|undefined;
+		let sourceFile: tsa.SourceFile|undefined;
+		if (this.ts.isSourceFile(namespaceDecl))
+		{	// 1. Add the first doc-comment in the file, if it contains @module tag
+			this.#convertModuleDoc(namespaceDecl);
+			statements = namespaceDecl.statements;
+			namespaceSymbol = this.checker.getSymbolAtLocation(namespaceDecl);
+			sourceFile = namespaceDecl;
+		}
+		else
+		{	statements = namespaceDecl.body && 'statements' in namespaceDecl.body ? namespaceDecl.body.statements : undefined;
+			namespaceSymbol = this.checker.getSymbolAtLocation(namespaceDecl.name);
+			sourceFile = namespaceDecl.getSourceFile();
+		}
 
 		// 2. Add import statements, and collect imported and reexported modules
-		for (const statement of sourceFile.statements)
-		{	if (!this.#noImportNodes && this.ts.isImportDeclaration(statement))
-			{	this.#convertImport(statement);
-			}
-			if (addToEntryPoints)
-			{	if (this.ts.isImportDeclaration(statement) || this.ts.isExportDeclaration(statement))
-				{	if (statement.moduleSpecifier && this.ts.isStringLiteral(statement.moduleSpecifier))
-					{	const importHref = this.loader.resolved(statement.moduleSpecifier.text, sourceFile.fileName);
-						if (!addToEntryPoints.includes(importHref))
-						{	addToEntryPoints.push(importHref);
+		if (statements)
+		{	for (const statement of statements)
+			{	if (!this.#noImportNodes && this.ts.isImportDeclaration(statement))
+				{	this.#convertImport(statement);
+				}
+				if (addToEntryPoints)
+				{	if (this.ts.isImportDeclaration(statement) || this.ts.isExportDeclaration(statement))
+					{	if (statement.moduleSpecifier && this.ts.isStringLiteral(statement.moduleSpecifier))
+						{	const importHref = this.loader.resolved(statement.moduleSpecifier.text, addToEntryPointsBaseFilename);
+							if (!addToEntryPoints.includes(importHref))
+							{	addToEntryPoints.push(importHref);
+							}
 						}
 					}
 				}
@@ -244,10 +258,9 @@ export class Converter
 		}
 
 		// 3. Add exported symbols
-		const mainSymbol = this.checker.getSymbolAtLocation(sourceFile);
-		if (mainSymbol)
+		if (namespaceSymbol)
 		{	const {isDeclarationFile} = sourceFile;
-			for (const symbol of this.checker.getExportsOfModule(mainSymbol))
+			for (const symbol of this.checker.getExportsOfModule(namespaceSymbol))
 			{	exportedSymbols?.add(symbol);
 				this.#convertSymbol(symbol, isDeclarationFile, true, entryPointNumber, sourceFile);
 			}
