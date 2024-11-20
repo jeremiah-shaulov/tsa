@@ -72,7 +72,7 @@ class NodesToMd
 									// Extends
 									code += !classDef.extends ? '' : ' `extends` ' + this.#getTypeName(classDef.extends, classDef.superNodeIndex) + this.#convertActualTypeParams(classDef.superTypeParams);
 									// Implements
-									code += classDef.implements.length==0 ? '' : ' `implements` ' + this.#convertActualTypeParams(classDef.implements);
+									code += classDef.implements.length==0 ? '' : ' `implements` ' + classDef.implements.map(t => this.#convertTsType(t)).join(', ');
 								}
 								else if (node.kind == 'interface')
 								{	const {interfaceDef} = node;
