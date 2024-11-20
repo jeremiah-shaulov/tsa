@@ -33,7 +33,7 @@ export function convertClass(ts: typeof tsa, converter: Converter, classDeclarat
 				for (let i=0, iEnd=parameters.length; i<iEnd; i++)
 				{	const paramDecl = declaration.parameters[i];
 					const param = convertParameter(ts, converter, parameters[i], paramDecl, true);
-					if (param.accessibility || param.readonly)
+					if ((param.accessibility || param.readonly) && declaration.parent==classDeclaration)
 					{	let init: string|undefined;
 						let param2 = param;
 						if (param.kind == 'assign')
