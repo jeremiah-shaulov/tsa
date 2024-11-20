@@ -40,6 +40,8 @@
     - {@link ClassDef} has additional `superNodeIndex` field, that contains node index in the results for the super class. See {@link EmitDocOptions.includeReferenced}.
     - {@link TsTypeDef.repr} field for string literals (`kind == 'string'`) contains quotes, for string template literals (`kind == 'template'`) contains backticks, and for bigint literals (`kind == 'bigInt'`) has trailing `n`.
     - In {@link LiteralMethodDef}, {@link LiteralPropertyDef}, {@link LiteralCallSignatureDef}, {@link LiteralIndexSignatureDef}, {@link ClassIndexSignatureDef} and {@link InterfaceIndexSignatureDef} there're {@link LiteralMethodDef.jsDoc} and {@link LiteralMethodDef.location} fields.
+
+    @category Documentation Nodes
  **/
 export type DocNode =
   | DocNodeModuleDoc
@@ -54,9 +56,12 @@ export type DocNode =
 
 /** Indicates how the documentation node was declared. `"private"` indicates
  * the node is un-exported. `"export"` indicates it is exported from the current
- * module. `"declare"` indicates that it is a type only declaration. */
+ * module. `"declare"` indicates that it is a type only declaration.
+ * @category Documentation Nodes
+ **/
 export type DeclarationKind = "private" | "export" | "declare";
 
+/** @category Documentation Nodes */
 interface DocNodeBase {
   kind: DocNodeKind;
   name: string;
@@ -69,11 +74,13 @@ interface DocNodeBase {
   exports?: Export[];
 }
 
+/** @category Documentation Nodes */
 export interface Export {
   name: string;
   location: Location;
 }
 
+/** @category Documentation Nodes */
 export type DocNodeKind =
   | "moduleDoc"
   | "function"
@@ -85,53 +92,64 @@ export type DocNodeKind =
   | "interface"
   | "import";
 
+/** @category Documentation Nodes */
 export interface DocNodeModuleDoc extends DocNodeBase {
   kind: "moduleDoc";
   jsDoc: JsDoc;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeFunction extends DocNodeBase {
   kind: "function";
   functionDef: FunctionDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeVariable extends DocNodeBase {
   kind: "variable";
   variableDef: VariableDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeEnum extends DocNodeBase {
   kind: "enum";
   enumDef: EnumDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeClass extends DocNodeBase {
   kind: "class";
   classDef: ClassDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeTypeAlias extends DocNodeBase {
   kind: "typeAlias";
   typeAliasDef: TypeAliasDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeNamespace extends DocNodeBase {
   kind: "namespace";
   namespaceDef: NamespaceDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeInterface extends DocNodeBase {
   kind: "interface";
   interfaceDef: InterfaceDef;
 }
 
+/** @category Documentation Nodes */
 export interface DocNodeImport extends DocNodeBase {
   kind: "import";
   importDef: ImportDef;
 }
 
+/** @category Documentation Nodes */
 export type Accessibility = "public" | "protected" | "private";
 
+/** @category Documentation Nodes */
 export interface ClassDef {
   defName?: string;
   isAbstract: boolean;
@@ -147,12 +165,14 @@ export interface ClassDef {
   decorators?: DecoratorDef[];
 }
 
+/** @category Documentation Nodes */
 export type ClassConstructorParamDef = ParamDef & {
   accessibility?: Accessibility;
   isOverride?: boolean;
   readonly?: boolean;
 };
 
+/** @category Documentation Nodes */
 export interface ClassConstructorDef {
   jsDoc?: JsDoc;
   accessibility?: Accessibility;
@@ -163,6 +183,7 @@ export interface ClassConstructorDef {
   location: Location;
 }
 
+/** @category Documentation Nodes */
 export interface ClassIndexSignatureDef {
   jsDoc?: JsDoc;
   location?: Location;
@@ -171,6 +192,7 @@ export interface ClassIndexSignatureDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface ClassMethodDef {
   jsDoc?: JsDoc;
   accessibility?: Accessibility;
@@ -185,6 +207,7 @@ export interface ClassMethodDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface ClassPropertyDef {
   jsDoc?: JsDoc;
   tsType?: TsTypeDef;
@@ -204,6 +227,7 @@ export interface ClassPropertyDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface DecoratorDef {
   name: string;
   args?: string[];
@@ -211,6 +235,7 @@ export interface DecoratorDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface EnumDef {
   members: EnumMemberDef[];
   /** Is `const enum`?
@@ -218,6 +243,7 @@ export interface EnumDef {
   isConst?: boolean;
 }
 
+/** @category Documentation Nodes */
 export interface EnumMemberDef {
   name: string;
   init?: TsTypeDef;
@@ -225,6 +251,7 @@ export interface EnumMemberDef {
   location: Location;
 }
 
+/** @category Documentation Nodes */
 export interface FunctionDef {
   defName?: string;
   params: ParamDef[];
@@ -236,11 +263,13 @@ export interface FunctionDef {
   decorators?: DecoratorDef[];
 }
 
+/** @category Documentation Nodes */
 export interface ImportDef {
   src: string;
   imported?: string;
 }
 
+/** @category Documentation Nodes */
 export interface InterfaceDef {
   defName?: string;
   extends: TsTypeDef[];
@@ -251,6 +280,7 @@ export interface InterfaceDef {
   typeParams: TsTypeParamDef[];
 }
 
+/** @category Documentation Nodes */
 export interface InterfaceCallSignatureDef {
   location: Location;
   jsDoc?: JsDoc;
@@ -259,6 +289,7 @@ export interface InterfaceCallSignatureDef {
   typeParams: TsTypeParamDef[];
 }
 
+/** @category Documentation Nodes */
 export interface InterfaceIndexSignatureDef {
   jsDoc?: JsDoc;
   location?: Location;
@@ -267,6 +298,7 @@ export interface InterfaceIndexSignatureDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface InterfaceMethodDef {
   name: string;
   kind: MethodKind;
@@ -280,6 +312,7 @@ export interface InterfaceMethodDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface InterfacePropertyDef {
   name: string;
   location: Location;
@@ -296,12 +329,14 @@ export interface InterfacePropertyDef {
 /** Doc-comment string split to tokens.
  *
  * `lineBreak` token separates several concatenated doc-comments.
+ * @category Documentation Nodes
  **/
 export interface JsDocToken {
   text: string;
   kind: 'text' | 'lineBreak' | 'link' | 'linkText' | 'linkName';
 }
 
+/** @category Documentation Nodes */
 export interface JsDoc {
   doc?: string;
   /** Doc-comment string split to tokens.
@@ -310,6 +345,7 @@ export interface JsDoc {
   tags?: JsDocTag[];
 }
 
+/** @category Documentation Nodes */
 export type JsDocTagKind =
   | "callback"
   | "category"
@@ -336,6 +372,7 @@ export type JsDocTagKind =
   | "see"
   | "unsupported";
 
+/** @category Documentation Nodes */
 export type JsDocTag =
   | JsDocTagOnly
   | JsDocTagDoc
@@ -349,10 +386,12 @@ export type JsDocTag =
   | JsDocTagTags
   | JsDocTagUnsupported;
 
+/** @category Documentation Nodes */
 export interface JsDocTagBase {
   kind: JsDocTagKind;
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagOnly extends JsDocTagBase {
   kind:
     | "constructor"
@@ -364,18 +403,21 @@ export interface JsDocTagOnly extends JsDocTagBase {
     | "readonly";
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagDoc extends JsDocTagBase {
   kind: "deprecated";
   doc?: string;
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagDocRequired extends JsDocTagBase {
   kind: "category" | "example" | "see";
   doc: string;
   docTokens: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagNamed extends JsDocTagBase {
   kind: "callback" | "template";
   name: string;
@@ -385,6 +427,7 @@ export interface JsDocTagNamed extends JsDocTagBase {
   typeParams?: TsTypeParamDef[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagValued extends JsDocTagBase {
   kind: "default";
   value: string;
@@ -392,6 +435,7 @@ export interface JsDocTagValued extends JsDocTagBase {
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagTyped extends JsDocTagBase {
   kind: "enum" | "extends" | "this" | "type";
   type: string;
@@ -400,6 +444,7 @@ export interface JsDocTagTyped extends JsDocTagBase {
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagNamedTyped extends JsDocTagBase {
   kind: "property" | "typedef";
   name: string;
@@ -408,6 +453,7 @@ export interface JsDocTagNamedTyped extends JsDocTagBase {
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagParam extends JsDocTagBase {
   kind: "param";
   name: string;
@@ -419,6 +465,7 @@ export interface JsDocTagParam extends JsDocTagBase {
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagReturn extends JsDocTagBase {
   kind: "return";
   type?: string;
@@ -426,16 +473,19 @@ export interface JsDocTagReturn extends JsDocTagBase {
   docTokens?: JsDocToken[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagTags extends JsDocTagBase {
   kind: "tags";
   tags: string[];
 }
 
+/** @category Documentation Nodes */
 export interface JsDocTagUnsupported extends JsDocTagBase {
   kind: "unsupported";
   value: string;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralCallSignatureDef {
   params: ParamDef[];
   tsType?: TsTypeDef;
@@ -444,6 +494,7 @@ export interface LiteralCallSignatureDef {
   location?: Location;
 }
 
+/** @category Documentation Nodes */
 export type LiteralDefKind =
   | "number"
   | "string"
@@ -451,6 +502,7 @@ export type LiteralDefKind =
   | "boolean"
   | "bigInt";
 
+/** @category Documentation Nodes */
 export type LiteralDef =
   | LiteralDefNumber
   | LiteralDefBigInt
@@ -458,35 +510,42 @@ export type LiteralDef =
   | LiteralDefTemplate
   | LiteralDefBoolean;
 
+/** @category Documentation Nodes */
 interface LiteralDefBase {
   kind: LiteralDefKind;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralDefNumber extends LiteralDefBase {
   kind: "number";
   number: number;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralDefBigInt extends LiteralDefBase {
   kind: "bigInt";
   string: string;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralDefString extends LiteralDefBase {
   kind: "string";
   string: string;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralDefTemplate extends LiteralDefBase {
   kind: "template";
   tsTypes: TsTypeDef[];
 }
 
+/** @category Documentation Nodes */
 export interface LiteralDefBoolean extends LiteralDefBase {
   kind: "boolean";
   boolean: boolean;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralIndexSignatureDef {
   readonly: boolean;
   params: ParamDef[];
@@ -495,6 +554,7 @@ export interface LiteralIndexSignatureDef {
   location?: Location;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralMethodDef {
   name: string;
   kind: MethodKind;
@@ -508,6 +568,7 @@ export interface LiteralMethodDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface LiteralPropertyDef {
   name: string;
   params: ParamDef[];
@@ -521,6 +582,7 @@ export interface LiteralPropertyDef {
   nameNodeIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface Location {
   filename: string;
   line: number;
@@ -531,34 +593,41 @@ export interface Location {
   entryPointNumber?: number;
 }
 
+/** @category Documentation Nodes */
 export type MethodKind = "method" | "getter" | "setter";
 
+/** @category Documentation Nodes */
 export interface NamespaceDef {
   elements: DocNode[];
 }
 
+/** @category Documentation Nodes */
 export type ObjectPatPropDef =
   | ObjectPatPropAssignDef
   | ObjectPatPropKeyValueDef
   | ObjectPatPropRestDef;
 
+/** @category Documentation Nodes */
 export interface ObjectPatPropAssignDef {
   kind: "assign";
   key: string;
   value?: string;
 }
 
+/** @category Documentation Nodes */
 export interface ObjectPatPropKeyValueDef {
   kind: "keyValue";
   key: string;
   value: ParamDef;
 }
 
+/** @category Documentation Nodes */
 export interface ObjectPatPropRestDef {
   kind: "rest";
   arg: ParamDef;
 }
 
+/** @category Documentation Nodes */
 export type ParamDef =
   | ParamArrayDef
   | ParamAssignDef
@@ -566,6 +635,7 @@ export type ParamDef =
   | ParamObjectDef
   | ParamRestDef;
 
+/** @category Documentation Nodes */
 export interface ParamArrayDef {
   kind: "array";
   elements: (ParamDef | undefined)[];
@@ -574,6 +644,7 @@ export interface ParamArrayDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface ParamAssignDef {
   kind: "assign";
   left: ParamDef;
@@ -582,6 +653,7 @@ export interface ParamAssignDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface ParamIdentifierDef {
   kind: "identifier";
   name: string;
@@ -590,6 +662,7 @@ export interface ParamIdentifierDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface ParamObjectDef {
   kind: "object";
   props: ObjectPatPropDef[];
@@ -598,6 +671,7 @@ export interface ParamObjectDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface ParamRestDef {
   kind: "rest";
   arg: ParamDef;
@@ -605,8 +679,10 @@ export interface ParamRestDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export type TruePlusMinus = true | "+" | "-";
 
+/** @category Documentation Nodes */
 export interface TsConditionalDef {
   checkType: TsTypeDef;
   extendsType: TsTypeDef;
@@ -614,6 +690,7 @@ export interface TsConditionalDef {
   falseType: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsFnOrConstructorDef {
   constructor: boolean;
   tsType: TsTypeDef;
@@ -621,22 +698,26 @@ export interface TsFnOrConstructorDef {
   typeParams: TsTypeParamDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsImportTypeDef {
   specifier: string;
   qualifier?: string;
   typeParams?: TsTypeDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsIndexedAccessDef {
   readonly: boolean;
   objType: TsTypeDef;
   indexType: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsInferDef {
   typeParam: TsTypeParamDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsMappedTypeDef {
   readonly?: TruePlusMinus;
   typeParam: TsTypeParamDef;
@@ -645,6 +726,7 @@ export interface TsMappedTypeDef {
   tsType?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeLiteralDef {
   methods: LiteralMethodDef[];
   properties: LiteralPropertyDef[];
@@ -652,23 +734,27 @@ export interface TsTypeLiteralDef {
   indexSignatures: LiteralIndexSignatureDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeOperatorDef {
   operator: string;
   tsType: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeParamDef {
   name: string;
   constraint?: TsTypeDef;
   default?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypePredicateDef {
   asserts: boolean;
   param: { type: "this" | "identifier"; name?: string };
   type?: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export type TsTypeDef =
   | TsTypeKeywordDef
   | TsTypeDefLiteral
@@ -692,116 +778,139 @@ export type TsTypeDef =
   | TsTypeTypeLiteralDef
   | TsTypeTypePredicateDef;
 
+/** @category Documentation Nodes */
 interface TsTypeDefBase {
   repr: string;
   kind: TsTypeDefKind;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeKeywordDef extends TsTypeDefBase {
   kind: "keyword";
   keyword: string;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeDefLiteral extends TsTypeDefBase {
   kind: "literal";
   literal: LiteralDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeTypeRefDef extends TsTypeDefBase {
   kind: "typeRef";
   typeRef: TsTypeRefDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeUnionDef extends TsTypeDefBase {
   kind: "union";
   union: TsTypeDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeIntersectionDef extends TsTypeDefBase {
   kind: "intersection";
   intersection: TsTypeDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeArrayDef extends TsTypeDefBase {
   kind: "array";
   array: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeTupleDef extends TsTypeDefBase {
   kind: "tuple";
   tuple: TsTypeDef[];
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeTypeOperatorDef extends TsTypeDefBase {
   kind: "typeOperator";
   typeOperator: TsTypeOperatorDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeParenthesizedDef extends TsTypeDefBase {
   kind: "parenthesized";
   parenthesized: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeRestDef extends TsTypeDefBase {
   kind: "rest";
   rest: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeOptionalDef extends TsTypeDefBase {
   kind: "optional";
   optional: TsTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeQueryDef extends TsTypeDefBase {
   kind: "typeQuery";
   typeQuery: string;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeThisDef extends TsTypeDefBase {
   kind: "this";
   this: boolean;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeFnOrConstructorDef extends TsTypeDefBase {
   kind: "fnOrConstructor";
   fnOrConstructor: TsFnOrConstructorDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeConditionalDef extends TsTypeDefBase {
   kind: "conditional";
   conditionalType: TsConditionalDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeInferDef extends TsTypeDefBase {
   kind: "infer";
   infer: TsInferDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeMappedDef extends TsTypeDefBase {
   kind: "mapped";
   mappedType: TsMappedTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeImportTypeDef extends TsTypeDefBase {
   kind: "importType";
   importType: TsImportTypeDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeIndexedAccessDef extends TsTypeDefBase {
   kind: "indexedAccess";
   indexedAccess: TsIndexedAccessDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeTypeLiteralDef extends TsTypeDefBase {
   kind: "typeLiteral";
   typeLiteral: TsTypeLiteralDef;
 }
 
+/** @category Documentation Nodes */
 export interface TsTypeTypePredicateDef extends TsTypeDefBase {
   kind: "typePredicate";
   typePredicate: TsTypePredicateDef;
 }
 
+/** @category Documentation Nodes */
 export type TsTypeDefKind =
   | "keyword"
   | "literal"
@@ -825,6 +934,7 @@ export type TsTypeDefKind =
   | "typeLiteral"
   | "typePredicate";
 
+/** @category Documentation Nodes */
 export interface TsTypeRefDef {
   typeParams?: TsTypeDef[];
   typeName: string;
@@ -832,13 +942,16 @@ export interface TsTypeRefDef {
   nodeSubIndex?: number;
 }
 
+/** @category Documentation Nodes */
 export interface TypeAliasDef {
   tsType: TsTypeDef;
   typeParams: TsTypeParamDef[];
 }
 
+/** @category Documentation Nodes */
 export type VariableDeclKind = "var" | "let" | "const";
 
+/** @category Documentation Nodes */
 export interface VariableDef {
   tsType?: TsTypeDef;
   kind: VariableDeclKind;

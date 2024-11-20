@@ -1,11 +1,12 @@
 import {indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef, ClassDef, TsTypeTypeLiteralDef, ClassMethodDef, InterfaceMethodDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef, TsTypeTypeLiteralDef, ClassMethodDef, InterfaceMethodDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
 import {isDeprecated} from './util.ts';
 import {mdEscape, mdLink} from './util.ts';
 
-const INDEX_N_COLUMNS = 4;
+const DEFAULT_CATEGORY_NAME = 'Main Category';
+const INDEX_N_COLUMNS = 6;
 const EXAMPLE = 'example.ts';
 
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
@@ -14,9 +15,6 @@ const RE_NO_NL = /[\r\n]/;
 
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
-
-// deno-lint-ignore no-explicit-any
-type Any = any;
 
 export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', mainPageStart='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
 {	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle, mainPageStart);
@@ -251,48 +249,77 @@ class NodesToMd
 	}
 
 	#convertNamespace(nodes: DocNode[], toDocDir='../')
-	{	const isMain = nodes == this.#nodes;
-		const namespaces = new Array<DocNodeNamespace>;
-		const variables = new Array<DocNodeVariable>;
-		const functions = new Array<DocNodeFunction>;
-		const classes = new Array<DocNodeClass>;
-		const types = new Array<DocNodeTypeAlias | DocNodeEnum | DocNodeInterface>;
+	{	class Category
+		{	namespaces = new Array<DocNodeNamespace>;
+			variables = new Array<DocNodeVariable>;
+			functions = new Array<DocNodeFunction>;
+			classes = new Array<DocNodeClass>;
+			types = new Array<DocNodeTypeAlias | DocNodeEnum | DocNodeInterface>;
+
+			add(node: DocNode)
+			{	switch (node.kind)
+				{	case 'namespace':
+						this.namespaces.push(node);
+						return true;
+					case 'variable':
+						this.variables.push(node);
+						return true;
+					case 'function':
+						this.functions.push(node);
+						return true;
+					case 'class':
+						this.classes.push(node);
+						return true;
+					case 'enum':
+					case 'typeAlias':
+					case 'interface':
+						this.types.push(node);
+						return true;
+				}
+				return false;
+			}
+
+			toMd(onLink: (node: DocNode) => string)
+			{	let code = '';
+				code += mdGrid('Namespaces', this.namespaces.map(onLink), INDEX_N_COLUMNS);
+				code += mdGrid('Variables', this.variables.map(onLink), INDEX_N_COLUMNS);
+				code += mdGrid('Functions', this.functions.map(onLink), INDEX_N_COLUMNS);
+				code += mdGrid('Classes', this.classes.map(onLink), INDEX_N_COLUMNS);
+				code += mdGrid('Types', this.types.map(onLink), INDEX_N_COLUMNS);
+				return code;
+			}
+		}
+		const isMain = nodes == this.#nodes;
+		const categories = new Map<string, Category>;
 		for (const node of nodes)
-		{	switch (node.kind)
-			{	case 'namespace':
-					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
-					{	namespaces.push(node);
+		{	if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
+			{	const categoryTag = node.jsDoc?.tags?.find(t => t.kind == 'category');
+				const categoryName = categoryTag?.kind=='category' && categoryTag.doc || '';
+				let category = categories.get(categoryName);
+				if (category)
+				{	category.add(node);
+				}
+				else
+				{	category = new Category;
+					if (category.add(node))
+					{	categories.set(categoryName, category);
 					}
-					break;
-				case 'variable':
-					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
-					{	variables.push(node);
-					}
-					break;
-				case 'function':
-					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
-					{	functions.push(node);
-					}
-					break;
-				case 'class':
-					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
-					{	classes.push(node);
-					}
-					break;
-				case 'enum':
-				case 'typeAlias':
-				case 'interface':
-					if (node.declarationKind!='private' && this.#isPublicOrProtectedMember(node) && (!isMain || isExportFromEntryPoint(node)))
-					{	types.push(node);
-					}
+				}
 			}
 		}
 		let code = '';
-		code += mdGrid('Namespaces', namespaces.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Variables', variables.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Functions', functions.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Classes', classes.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
-		code += mdGrid('Types', types.map(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir))), INDEX_N_COLUMNS);
+		for (const categoryName of [...categories.keys()].sort())
+		{	const category = categories.get(categoryName);
+			if (category)
+			{	const categoryCode = category.toMd(n => mdLink(n.name, this.#getLink(n, undefined, toDocDir)));
+				if (categoryCode)
+				{	if (categories.size > 1)
+					{	code += `\n## ${categoryName || DEFAULT_CATEGORY_NAME}\n\n`;
+					}
+					code += categoryCode;
+				}
+			}
+		}
 		return code;
 	}
 
