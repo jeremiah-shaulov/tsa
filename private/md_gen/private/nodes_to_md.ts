@@ -118,21 +118,25 @@ class NodesToMd
 										else
 										{	const link = this.#getLink(fromNode);
 											const name = !link ? fromNode.name : mdLink(fromNode.name, link);
-											if (!code)
-											{	code = `${nMembers} inherited members from ${name}`;
+											if (code)
+											{	code += `, ${nMembers} from ${name}`;
+											}
+											else if (nMembers == 1)
+											{	code = `${nMembers} inherited member from ${name}`;
 											}
 											else
-											{	code += `, ${nMembers} from ${name}`;
+											{	code = `${nMembers} inherited members from ${name}`;
 											}
 										}
 									}
 									if (nFromTypeLiterals > 0)
-									{	if (!code)
-										{	code = `${nFromTypeLiterals} inherited members`;
+									{	if (code)
+										{	code += ` and more ${nFromTypeLiterals} `;
 										}
 										else
-										{	code += ` and more ${nFromTypeLiterals} members`;
+										{	code = `${nFromTypeLiterals} inherited `;
 										}
+										code += nFromTypeLiterals==1 ? 'member' : 'members';
 									}
 								}
 								else if (node.kind=='class' && node.classDef.extends)
