@@ -9,6 +9,7 @@
 [reportsDeprecated](#-reportsdeprecated-),
 [source](#-source-string),
 [relatedInformation](#-relatedinformation-diagnosticrelatedinformation)
+- 6 inherited members from [DiagnosticRelatedInformation](../interface.DiagnosticRelatedInformation/README.md)
 
 
 #### 📄 reportsUnnecessary?: \{}

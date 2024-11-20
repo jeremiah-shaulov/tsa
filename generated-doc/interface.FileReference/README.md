@@ -8,6 +8,7 @@
 [fileName](#-filename-string),
 [resolutionMode](#-resolutionmode-resolutionmode),
 [preserve](#-preserve-boolean)
+- 2 inherited members from [TextRange](../interface.TextRange/README.md)
 
 
 #### 📄 fileName: `string`

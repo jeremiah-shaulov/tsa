@@ -6,6 +6,7 @@
 
 - [index signature](#-readonly-n-number-t)
 - property [hasTrailingComma](#-readonly-hastrailingcomma-boolean)
+- base types
 
 
 #### 🔍 `readonly` [n: `number`]: T

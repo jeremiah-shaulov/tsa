@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindclassdeclaration),
 [modifiers](#-readonly-modifiers-nodearraymodifierlike),
 [name](#-readonly-name-identifier)
+- 3 inherited members from [ClassLikeDeclarationBase](../interface.ClassLikeDeclarationBase/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Statement](../interface.Statement/README.md), 1 from [Declaration](../interface.Declaration/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.ClassDeclaration](../enum.SyntaxKind/README.md#classdeclaration--263)

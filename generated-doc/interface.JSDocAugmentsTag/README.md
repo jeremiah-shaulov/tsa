@@ -10,6 +10,7 @@ Both tags are represented by this interface.
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindjsdocaugmentstag),
 [class](#-readonly-class-expressionwithtypearguments--readonly-expression-identifier--propertyaccessentitynameexpression)
+- 3 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocAugmentsTag](../enum.SyntaxKind/README.md#jsdocaugmentstag--328)

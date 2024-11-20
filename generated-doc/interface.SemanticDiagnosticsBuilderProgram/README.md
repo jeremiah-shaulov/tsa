@@ -7,6 +7,7 @@ The builder that caches the semantic diagnostics for the program and handles the
 ## This interface has
 
 - method [getSemanticDiagnosticsOfNextAffectedFile](#-getsemanticdiagnosticsofnextaffectedfilecancellationtoken-cancellationtoken-ignoresourcefile-sourcefile-sourcefile--boolean-result-readonly-diagnostic-affected-sourcefile--program)
+- 13 inherited members from [BuilderProgram](../interface.BuilderProgram/README.md)
 
 
 #### ⚙ getSemanticDiagnosticsOfNextAffectedFile(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), ignoreSourceFile?: (sourceFile: [SourceFile](../interface.SourceFile/README.md)) => `boolean`): \{result: readonly Diagnostic\[], affected: SourceFile | Program}

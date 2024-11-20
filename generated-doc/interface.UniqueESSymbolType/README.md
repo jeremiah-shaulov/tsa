@@ -7,6 +7,7 @@
 - 2 properties:
 [symbol](#-symbol-symbol),
 [escapedName](#-escapedname-__string)
+- 27 inherited members from [Type](../interface.Type/README.md)
 
 
 #### 📄 symbol: [Symbol](../interface.Symbol/README.md)

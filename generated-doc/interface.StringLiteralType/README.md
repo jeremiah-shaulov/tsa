@@ -5,6 +5,7 @@
 ## This interface has
 
 - property [value](#-value-string)
+- 2 inherited members from [FreshableType](../interface.FreshableType/README.md), 28 from [Type](../interface.Type/README.md)
 
 
 #### 📄 value: `string`

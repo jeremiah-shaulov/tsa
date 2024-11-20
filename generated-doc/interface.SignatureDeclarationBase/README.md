@@ -10,6 +10,7 @@
 [typeParameters](#-readonly-typeparameters-nodearraytypeparameterdeclaration),
 [parameters](#-readonly-parameters-nodearrayparameterdeclaration),
 [type](#-readonly-type-typenode)
+- 1 inherited member from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Declaration](../interface.Declaration/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SignatureDeclaration](../type.SignatureDeclaration/README.md)\[<mark>"kind"</mark>]

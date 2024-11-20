@@ -26,6 +26,7 @@
 [createHash](#-createhashdata-string-string),
 [getParsedCommandLine](#-getparsedcommandlinefilename-string-parsedcommandline)
 - [2 deprecated symbols](#-deprecated-resolvemodulenamesmodulenames-string-containingfile-string-reusednames-string--undefined-redirectedreference-resolvedprojectreference--undefined-options-compileroptions-containingsourcefile-sourcefile-resolvedmodule)
+- 6 inherited members from [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)
 
 
 #### 📄 writeFile: [WriteFileCallback](../type.WriteFileCallback/README.md)

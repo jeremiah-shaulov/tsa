@@ -11,6 +11,7 @@
 [typeParameters](#-readonly-typeparameters-nodearraytypeparameterdeclaration),
 [heritageClauses](#-readonly-heritageclauses-nodearrayheritageclause),
 [members](#-readonly-members-nodearraytypeelement)
+- 1 inherited member from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Statement](../interface.Statement/README.md), 17 from [Node](../interface.Node/README.md), 1 from [Declaration](../interface.Declaration/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.InterfaceDeclaration](../enum.SyntaxKind/README.md#interfacedeclaration--264)

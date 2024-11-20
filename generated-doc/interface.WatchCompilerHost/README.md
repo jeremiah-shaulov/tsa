@@ -8,6 +8,7 @@
 [useSourceOfProjectReferenceRedirect](#-usesourceofprojectreferenceredirect-boolean),
 [getParsedCommandLine](#-getparsedcommandlinefilename-string-parsedcommandline),
 [afterProgramCreate](#-afterprogramcreateprogram-t-void)
+- 22 inherited members from [ProgramHost](../interface.ProgramHost/README.md), 6 from [WatchHost](../interface.WatchHost/README.md)
 
 
 #### ⚙ useSourceOfProjectReferenceRedirect?(): `boolean`

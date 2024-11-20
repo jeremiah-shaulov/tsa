@@ -9,6 +9,7 @@ Used by services to specify the minimum host area required to set up source file
 - 2 methods:
 [getCompilationSettings](#-getcompilationsettings-compileroptions),
 [getCompilerHost](#-getcompilerhost-compilerhost)
+- 8 inherited members from [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)
 
 
 #### ⚙ getCompilationSettings(): [CompilerOptions](../interface.CompilerOptions/README.md)

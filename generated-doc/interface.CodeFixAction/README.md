@@ -8,6 +8,7 @@
 [fixName](#-fixname-string),
 [fixId](#-fixid-),
 [fixAllDescription](#-fixalldescription-string)
+- 3 inherited members from [CodeAction](../interface.CodeAction/README.md)
 
 
 #### 📄 fixName: `string`

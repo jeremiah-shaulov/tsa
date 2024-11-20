@@ -18,6 +18,7 @@
 [getSemanticDiagnostics](#-getsemanticdiagnosticssourcefile-sourcefile-cancellationtoken-cancellationtoken-readonly-diagnostic),
 [getSemanticDiagnosticsOfNextAffectedFile](#-getsemanticdiagnosticsofnextaffectedfilecancellationtoken-cancellationtoken-ignoresourcefile-sourcefile-sourcefile--boolean-result-readonly-diagnostic-affected-sourcefile--program),
 [emit](#-emittargetsourcefile-sourcefile-writefile-writefilecallback-cancellationtoken-cancellationtoken-emitonlydtsfiles-boolean-customtransformers-customtransformers-emitresult)
+- 4 inherited members from [InvalidatedProjectBase](../interface.InvalidatedProjectBase/README.md)
 
 
 #### 📄 `readonly` kind: [InvalidatedProjectKind.Build](../enum.InvalidatedProjectKind/README.md#build--0)

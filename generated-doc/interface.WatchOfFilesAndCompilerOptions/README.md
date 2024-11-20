@@ -7,6 +7,7 @@ Creates the watch that generates program using the root files and compiler optio
 ## This interface has
 
 - method [updateRootFileNames](#-updaterootfilenamesfilenames-string-void)
+- 2 inherited members from [Watch](../interface.Watch/README.md)
 
 
 #### ⚙ updateRootFileNames(fileNames: `string`\[]): `void`

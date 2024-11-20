@@ -11,6 +11,7 @@ If changing this, remember to change `moduleResolutionIsEqualTo`.
 - 2 properties:
 [extension](#-extension-string),
 [packageId](#-packageid-packageid)
+- 3 inherited members from [ResolvedModule](../interface.ResolvedModule/README.md)
 
 
 #### 📄 extension: `string`

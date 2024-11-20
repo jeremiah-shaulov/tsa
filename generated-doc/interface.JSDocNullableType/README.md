@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindjsdocnullabletype),
 [type](#-readonly-type-typenode),
 [postfix](#-readonly-postfix-boolean)
+- 1 inherited member from [JSDocType](../interface.JSDocType/README.md), 1 from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocNullableType](../enum.SyntaxKind/README.md#jsdocnullabletype--314)

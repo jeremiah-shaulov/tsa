@@ -9,6 +9,7 @@
 [parent](#-readonly-parent-interfacedeclaration--classlikedeclaration),
 [token](#-readonly-token-syntaxkindextendskeyword--syntaxkindimplementskeyword),
 [types](#-readonly-types-nodearrayexpressionwithtypearguments)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.HeritageClause](../enum.SyntaxKind/README.md#heritageclause--298)

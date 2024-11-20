@@ -5,6 +5,7 @@
 ## This interface has
 
 - property [\_typeNodeBrand](#-_typenodebrand-any)
+- 18 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 \_typeNodeBrand: `any`

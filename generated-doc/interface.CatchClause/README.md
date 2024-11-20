@@ -9,6 +9,7 @@
 [parent](#-readonly-parent-trystatement),
 [variableDeclaration](#-readonly-variabledeclaration-variabledeclaration),
 [block](#-readonly-block-block)
+- 16 inherited members from [Node](../interface.Node/README.md), 1 from [LocalsContainer](../interface.LocalsContainer/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.CatchClause](../enum.SyntaxKind/README.md#catchclause--299)

@@ -8,6 +8,7 @@ The semantic diagnostics are cached per file and managed by clearing for the cha
 ## This interface has
 
 - method [emitNextAffectedFile](#-emitnextaffectedfilewritefile-writefilecallback-cancellationtoken-cancellationtoken-emitonlydtsfiles-boolean-customtransformers-customtransformers-result-emitresult-affected-sourcefile--program)
+- 1 inherited member from [SemanticDiagnosticsBuilderProgram](../interface.SemanticDiagnosticsBuilderProgram/README.md), 13 from [BuilderProgram](../interface.BuilderProgram/README.md)
 
 
 #### ⚙ emitNextAffectedFile(writeFile?: [WriteFileCallback](../type.WriteFileCallback/README.md), cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), emitOnlyDtsFiles?: `boolean`, customTransformers?: [CustomTransformers](../interface.CustomTransformers/README.md)): \{result: EmitResult, affected: SourceFile | Program}

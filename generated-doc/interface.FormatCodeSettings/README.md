@@ -25,6 +25,7 @@
 [indentMultiLineObjectLiteralBeginningOnBlankLine](#-readonly-indentmultilineobjectliteralbeginningonblankline-boolean),
 [semicolons](#-readonly-semicolons-semicolonpreference),
 [indentSwitchCase](#-readonly-indentswitchcase-boolean)
+- 7 inherited members from [EditorSettings](../interface.EditorSettings/README.md)
 
 
 #### 📄 `readonly` insertSpaceAfterCommaDelimiter?: `boolean`

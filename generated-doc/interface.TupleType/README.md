@@ -12,6 +12,7 @@
 [readonly](#-readonly-boolean),
 [labeledElementDeclarations](#-labeledelementdeclarations-readonly-namedtuplemember--parameterdeclaration--undefined)
 - [deprecated symbol](#-deprecated-hasrestelement-boolean)
+- 4 inherited members from [InterfaceType](../interface.InterfaceType/README.md), 3 from [TypeReference](../interface.TypeReference/README.md), 1 from [ObjectType](../interface.ObjectType/README.md), 28 from [Type](../interface.Type/README.md)
 
 
 #### 📄 elementFlags: readonly [ElementFlags](../enum.ElementFlags/README.md)\[]

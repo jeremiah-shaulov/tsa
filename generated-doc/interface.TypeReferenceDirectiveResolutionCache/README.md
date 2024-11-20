@@ -2,3 +2,8 @@
 
 [Documentation Index](../README.md)
 
+## This interface has
+
+- 2 inherited members from [NonRelativeNameResolutionCache](../interface.NonRelativeNameResolutionCache/README.md)
+
+

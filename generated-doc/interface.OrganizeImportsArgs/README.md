@@ -6,6 +6,7 @@
 
 - property [mode](#-mode-organizeimportsmode)
 - [deprecated symbol](#-deprecated-skipdestructivecodeactions-boolean)
+- 2 inherited members from [CombinedCodeFixScope](../interface.CombinedCodeFixScope/README.md)
 
 
 #### 📄 mode?: [OrganizeImportsMode](../enum.OrganizeImportsMode/README.md)

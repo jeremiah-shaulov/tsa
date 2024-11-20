@@ -7,6 +7,7 @@
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindjsdoctypetag),
 [typeExpression](#-readonly-typeexpression-jsdoctypeexpression)
+- 3 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocTypeTag](../enum.SyntaxKind/README.md#jsdoctypetag--344)

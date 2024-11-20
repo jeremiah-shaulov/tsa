@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindjsdoctypeliteral),
 [jsDocPropertyTags](#-readonly-jsdocpropertytags-readonly-jsdocpropertyliketag),
 [isArrayType](#-readonly-isarraytype-boolean)
+- 1 inherited member from [JSDocType](../interface.JSDocType/README.md), 1 from [Declaration](../interface.Declaration/README.md), 1 from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocTypeLiteral](../enum.SyntaxKind/README.md#jsdoctypeliteral--322)

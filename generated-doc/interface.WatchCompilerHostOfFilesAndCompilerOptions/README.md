@@ -11,6 +11,7 @@ Host to create watch with root files and options
 [options](#-options-compileroptions),
 [watchOptions](#-watchoptions-watchoptions),
 [projectReferences](#-projectreferences-readonly-projectreference)
+- 3 inherited members from [WatchCompilerHost](../interface.WatchCompilerHost/README.md), 22 from [ProgramHost](../interface.ProgramHost/README.md), 6 from [WatchHost](../interface.WatchHost/README.md)
 
 
 #### 📄 rootFiles: `string`\[]

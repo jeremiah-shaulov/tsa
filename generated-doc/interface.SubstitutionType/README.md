@@ -8,6 +8,7 @@
 [objectFlags](#-objectflags-objectflags),
 [baseType](#-basetype-type),
 [constraint](#-constraint-type)
+- 28 inherited members from [Type](../interface.Type/README.md)
 
 
 #### 📄 objectFlags: [ObjectFlags](../enum.ObjectFlags/README.md)

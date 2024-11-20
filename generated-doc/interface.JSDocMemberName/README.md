@@ -10,6 +10,7 @@ Class#method reference in JSDoc
 [kind](#-readonly-kind-syntaxkindjsdocmembername),
 [left](#-readonly-left-entityname--jsdocmembername),
 [right](#-readonly-right-identifier)
+- 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocMemberName](../enum.SyntaxKind/README.md#jsdocmembername--311)

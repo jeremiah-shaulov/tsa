@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindcaseblock),
 [parent](#-readonly-parent-switchstatement),
 [clauses](#-readonly-clauses-nodearraycaseordefaultclause)
+- 16 inherited members from [Node](../interface.Node/README.md), 1 from [LocalsContainer](../interface.LocalsContainer/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.CaseBlock](../enum.SyntaxKind/README.md#caseblock--269)

@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindexternalmodulereference),
 [parent](#-readonly-parent-importequalsdeclaration),
 [expression](#-readonly-expression-expression)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.ExternalModuleReference](../enum.SyntaxKind/README.md#externalmodulereference--283)

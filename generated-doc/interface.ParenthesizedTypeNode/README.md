@@ -7,6 +7,7 @@
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindparenthesizedtype),
 [type](#-readonly-type-typenode)
+- 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.ParenthesizedType](../enum.SyntaxKind/README.md#parenthesizedtype--196)

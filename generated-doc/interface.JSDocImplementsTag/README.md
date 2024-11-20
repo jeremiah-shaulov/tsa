@@ -7,6 +7,7 @@
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindjsdocimplementstag),
 [class](#-readonly-class-expressionwithtypearguments--readonly-expression-identifier--propertyaccessentitynameexpression)
+- 3 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocImplementsTag](../enum.SyntaxKind/README.md#jsdocimplementstag--329)

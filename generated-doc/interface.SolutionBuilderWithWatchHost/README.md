@@ -2,3 +2,8 @@
 
 [Documentation Index](../README.md)
 
+## This interface has
+
+- 6 inherited members from [WatchHost](../interface.WatchHost/README.md), 22 from [ProgramHost](../interface.ProgramHost/README.md)
+
+

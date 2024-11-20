@@ -24,6 +24,7 @@
 [getFirstToken](#-getfirsttokensourcefile-sourcefile-node),
 [getLastToken](#-getlasttokensourcefile-sourcefile-node),
 [forEachChild](#-foreachchildtcbnode-node-node--t--undefined-cbnodearray-nodes-nodearraynode--t--undefined-t)
+- 2 inherited members from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind](../enum.SyntaxKind/README.md)

@@ -9,6 +9,7 @@
 [parent](#-readonly-parent-importtypenode),
 [multiLine](#-readonly-multiline-boolean)
 - [deprecated symbol](#-deprecated-readonly-assertclause-assertclause)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.ImportTypeAssertionContainer](../enum.SyntaxKind/README.md#deprecated-importtypeassertioncontainer--302)

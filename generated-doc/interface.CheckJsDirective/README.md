@@ -5,6 +5,7 @@
 ## This interface has
 
 - property [enabled](#-enabled-boolean)
+- 2 inherited members from [TextRange](../interface.TextRange/README.md)
 
 
 #### 📄 enabled: `boolean`

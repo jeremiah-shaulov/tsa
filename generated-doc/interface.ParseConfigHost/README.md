@@ -10,6 +10,7 @@
 [fileExists](#-fileexistspath-string-boolean),
 [readFile](#-readfilepath-string-string),
 [trace](#-traces-string-void)
+- 4 inherited members from [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)
 
 
 #### 📄 useCaseSensitiveFileNames: `boolean`

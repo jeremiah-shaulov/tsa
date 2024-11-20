@@ -9,6 +9,7 @@
 [parent](#-readonly-parent-templateexpression),
 [expression](#-readonly-expression-expression),
 [literal](#-readonly-literal-templatemiddle--templatetail)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.TemplateSpan](../enum.SyntaxKind/README.md#templatespan--239)

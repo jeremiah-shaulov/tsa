@@ -8,6 +8,7 @@
 [file](#-file-sourcefile),
 [start](#-start-number),
 [length](#-length-number)
+- 4 inherited members from [Diagnostic](../interface.Diagnostic/README.md), 3 from [DiagnosticRelatedInformation](../interface.DiagnosticRelatedInformation/README.md)
 
 
 #### 📄 file: [SourceFile](../interface.SourceFile/README.md)

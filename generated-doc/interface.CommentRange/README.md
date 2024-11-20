@@ -7,6 +7,7 @@
 - 2 properties:
 [hasTrailingNewLine](#-hastrailingnewline-boolean),
 [kind](#-kind-commentkind)
+- 2 inherited members from [TextRange](../interface.TextRange/README.md)
 
 
 #### 📄 hasTrailingNewLine?: `boolean`

@@ -9,6 +9,7 @@
 [pos](#-pos-1),
 [end](#-end-1),
 [hasLeadingNewline](#-hasleadingnewline-boolean)
+- 2 inherited members from [CommentRange](../interface.CommentRange/README.md)
 
 
 #### 📄 text: `string`

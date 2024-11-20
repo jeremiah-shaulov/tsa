@@ -7,6 +7,7 @@
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindbundle),
 [sourceFiles](#-readonly-sourcefiles-readonly-sourcefile)
+- 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.Bundle](../enum.SyntaxKind/README.md#bundle--308)

@@ -28,6 +28,7 @@
 [getModeForResolutionAtIndex](#-getmodeforresolutionatindexfile-sourcefile-index-number-resolutionmode),
 [getProjectReferences](#-getprojectreferences-readonly-projectreference),
 [getResolvedProjectReferences](#-getresolvedprojectreferences-readonly-resolvedprojectreference)
+- 3 inherited members from [ScriptReferenceHost](../interface.ScriptReferenceHost/README.md)
 
 
 #### ⚙ getCurrentDirectory(): `string`

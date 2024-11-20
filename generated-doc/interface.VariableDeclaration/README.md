@@ -11,6 +11,7 @@
 [exclamationToken](#-readonly-exclamationtoken-exclamationtoken),
 [type](#-readonly-type-typenode),
 [initializer](#-readonly-initializer-expression)
+- 1 inherited member from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Declaration](../interface.Declaration/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.VariableDeclaration](../enum.SyntaxKind/README.md#variabledeclaration--260)

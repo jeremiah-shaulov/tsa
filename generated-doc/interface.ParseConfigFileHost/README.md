@@ -7,6 +7,7 @@ Interface extending ParseConfigHost to support ParseConfigFile that reads config
 ## This interface has
 
 - method [getCurrentDirectory](#-getcurrentdirectory-string)
+- 5 inherited members from [ParseConfigHost](../interface.ParseConfigHost/README.md), 1 from [ConfigFileDiagnosticsReporter](../interface.ConfigFileDiagnosticsReporter/README.md), 3 from [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)
 
 
 #### ⚙ getCurrentDirectory(): `string`

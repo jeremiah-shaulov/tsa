@@ -7,6 +7,7 @@
 - 2 methods:
 [emitDoc](#-emitdocoptions-emitdocoptions-docnodes),
 [emitTsaBundle](#-emittsabundle-tsabundle)
+- 23 inherited members from [Program](../interface.Program/README.md), 3 from [ScriptReferenceHost](../interface.ScriptReferenceHost/README.md)
 
 
 #### ⚙ emitDoc(options?: [EmitDocOptions](../type.EmitDocOptions/README.md)): [DocNodes](../class.DocNodes/README.md)
@@ -24,10 +25,10 @@
 > 
 > ```ts
 > // To download and run this example:
-> // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.43/generated-doc/interface.TsaProgram/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-g8c4>~)' > /tmp/example-g8c4.ts
+> // curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.44/generated-doc/interface.TsaProgram/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-g8c4>~)' > /tmp/example-g8c4.ts
 > // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-g8c4.ts
 > 
-> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.43/mod.ts';
+> import {tsa, printDiagnostics} from 'https://deno.land/x/tsa@v0.0.44/mod.ts';
 > 
 > const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 > 

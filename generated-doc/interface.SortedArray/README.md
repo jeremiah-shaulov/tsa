@@ -6,6 +6,7 @@
 
 - [index signature](#-n-number-t)
 - property [ \_\_sortedArrayBrand](#--__sortedarraybrand-any)
+- base type
 
 
 #### 🔍 [n: `number`]: T

@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {TsTypeImportTypeDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
+import {TsTypeImportTypeDef} from "https://deno.land/x/tsa@v0.0.44/mod.ts"
 ```
 
 ## This interface has
@@ -11,6 +11,7 @@ import {TsTypeImportTypeDef} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 - 2 properties:
 [kind](#-kind-importtype),
 [importType](#-importtype-tsimporttypedef)
+- 1 inherited member from [TsTypeDefBase](../private.interface.TsTypeDefBase/README.md)
 
 
 #### 📄 kind: <mark>"importType"</mark>

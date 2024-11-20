@@ -25,6 +25,7 @@
 [PlaceOpenBraceOnNewLineForFunctions](#-placeopenbraceonnewlineforfunctions-boolean),
 [PlaceOpenBraceOnNewLineForControlBlocks](#-placeopenbraceonnewlineforcontrolblocks-boolean),
 [insertSpaceBeforeTypeAnnotation](#-insertspacebeforetypeannotation-boolean)
+- 6 inherited members from [EditorOptions](../interface.EditorOptions/README.md)
 
 
 #### 📄 InsertSpaceAfterCommaDelimiter: `boolean`

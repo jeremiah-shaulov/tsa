@@ -16,6 +16,7 @@
 [deleteFile](#-deletefilefilename-string-void),
 [getParsedCommandLine](#-getparsedcommandlinefilename-string-parsedcommandline),
 [afterProgramEmitAndDiagnostics](#-afterprogramemitanddiagnosticsprogram-t-void)
+- 22 inherited members from [ProgramHost](../interface.ProgramHost/README.md)
 
 
 #### 📄 getCustomTransformers?: (project: `string`) => [CustomTransformers](../interface.CustomTransformers/README.md) | `undefined`

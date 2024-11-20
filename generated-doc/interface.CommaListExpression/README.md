@@ -9,6 +9,7 @@ A list of comma-separated expressions. This node is only created by transformati
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindcommalistexpression),
 [elements](#-readonly-elements-nodearrayexpression)
+- 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.CommaListExpression](../enum.SyntaxKind/README.md#commalistexpression--355)

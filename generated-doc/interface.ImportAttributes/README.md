@@ -10,6 +10,7 @@
 [parent](#-readonly-parent-importdeclaration--exportdeclaration),
 [elements](#-readonly-elements-nodearrayimportattribute),
 [multiLine](#-readonly-multiline-boolean)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` token: [SyntaxKind.WithKeyword](../enum.SyntaxKind/README.md#withkeyword--118) | [SyntaxKind.AssertKeyword](../enum.SyntaxKind/README.md#assertkeyword--132)

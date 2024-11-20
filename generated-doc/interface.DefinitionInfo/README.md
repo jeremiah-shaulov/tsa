@@ -10,6 +10,7 @@
 [containerKind](#-containerkind-scriptelementkind),
 [containerName](#-containername-string),
 [unverified](#-unverified-boolean)
+- 6 inherited members from [DocumentSpan](../interface.DocumentSpan/README.md)
 
 
 #### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)

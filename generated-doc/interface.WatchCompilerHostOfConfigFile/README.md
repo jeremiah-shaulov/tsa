@@ -12,6 +12,7 @@ Host to create watch with config file
 [watchOptionsToExtend](#-watchoptionstoextend-watchoptions),
 [extraFileExtensions](#-extrafileextensions-readonly-fileextensioninfo)
 - method [readDirectory](#-readdirectorypath-string-extensions-readonly-string-exclude-readonly-string-include-readonly-string-depth-number-string)
+- 3 inherited members from [WatchCompilerHost](../interface.WatchCompilerHost/README.md), 1 from [ConfigFileDiagnosticsReporter](../interface.ConfigFileDiagnosticsReporter/README.md), 21 from [ProgramHost](../interface.ProgramHost/README.md), 6 from [WatchHost](../interface.WatchHost/README.md)
 
 
 #### 📄 configFileName: `string`

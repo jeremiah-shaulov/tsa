@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkindyieldexpression),
 [asteriskToken](#-readonly-asterisktoken-asterisktoken),
 [expression](#-readonly-expression-expression)
+- 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.YieldExpression](../enum.SyntaxKind/README.md#yieldexpression--229)

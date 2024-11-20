@@ -10,6 +10,7 @@
 [constraint](#-constraint-type),
 [simplifiedForReading](#-simplifiedforreading-type),
 [simplifiedForWriting](#-simplifiedforwriting-type)
+- 28 inherited members from [Type](../interface.Type/README.md)
 
 
 #### 📄 objectType: [Type](../interface.Type/README.md)

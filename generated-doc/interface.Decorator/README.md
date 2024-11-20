@@ -8,6 +8,7 @@
 [kind](#-readonly-kind-syntaxkinddecorator),
 [parent](#-readonly-parent-nameddeclaration),
 [expression](#-readonly-expression-lefthandsideexpression)
+- 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.Decorator](../enum.SyntaxKind/README.md#decorator--170)

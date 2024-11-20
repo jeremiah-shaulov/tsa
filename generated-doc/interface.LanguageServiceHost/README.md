@@ -37,6 +37,7 @@
 [writeFile](#-writefilefilename-string-content-string-void),
 [getParsedCommandLine](#-getparsedcommandlinefilename-string-parsedcommandline)
 - [2 deprecated symbols](#-deprecated-resolvemodulenamesmodulenames-string-containingfile-string-reusednames-string--undefined-redirectedreference-resolvedprojectreference--undefined-options-compileroptions-containingsourcefile-sourcefile-resolvedmodule)
+- 1 inherited member from [MinimalResolutionCacheHost](../interface.MinimalResolutionCacheHost/README.md), 1 from [ModuleResolutionHost](../interface.ModuleResolutionHost/README.md)
 
 
 #### 📄 jsDocParsingMode?: [JSDocParsingMode](../enum.JSDocParsingMode/README.md)

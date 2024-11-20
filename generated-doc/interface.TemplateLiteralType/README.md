@@ -7,6 +7,7 @@
 - 2 properties:
 [texts](#-texts-readonly-string),
 [types](#-types-readonly-type)
+- 28 inherited members from [Type](../interface.Type/README.md)
 
 
 #### 📄 texts: readonly `string`\[]

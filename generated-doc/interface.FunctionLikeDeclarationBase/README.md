@@ -17,6 +17,7 @@ Examples:
 [questionToken](#-readonly-questiontoken-questiontoken),
 [exclamationToken](#-readonly-exclamationtoken-exclamationtoken),
 [body](#-readonly-body-block--expression)
+- 5 inherited members from [SignatureDeclarationBase](../interface.SignatureDeclarationBase/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Declaration](../interface.Declaration/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 \_functionLikeDeclarationBrand: `any`

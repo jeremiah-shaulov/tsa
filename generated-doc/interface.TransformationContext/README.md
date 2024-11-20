@@ -14,6 +14,7 @@
 [isSubstitutionEnabled](#-issubstitutionenablednode-node-boolean),
 [enableEmitNotification](#-enableemitnotificationkind-syntaxkind-void),
 [isEmitNotificationEnabled](#-isemitnotificationenablednode-node-boolean)
+- 8 inherited members from [CoreTransformationContext](../interface.CoreTransformationContext/README.md)
 
 
 #### 📄 onSubstituteNode: (hint: [EmitHint](../enum.EmitHint/README.md), node: [Node](../interface.Node/README.md)) => [Node](../interface.Node/README.md)

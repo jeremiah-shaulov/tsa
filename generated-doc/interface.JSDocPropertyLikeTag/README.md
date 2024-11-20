@@ -10,6 +10,7 @@
 [typeExpression](#-readonly-typeexpression-jsdoctypeexpression),
 [isNameFirst](#-readonly-isnamefirst-boolean),
 [isBracketed](#-readonly-isbracketed-boolean)
+- 2 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 1 from [Declaration](../interface.Declaration/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` parent: [JSDoc](../interface.JSDoc/README.md)

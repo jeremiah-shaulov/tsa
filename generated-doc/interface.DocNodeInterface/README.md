@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNodeInterface} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
+import {DocNodeInterface} from "https://deno.land/x/tsa@v0.0.44/mod.ts"
 ```
 
 ## This interface has
@@ -11,6 +11,7 @@ import {DocNodeInterface} from "https://deno.land/x/tsa@v0.0.43/mod.ts"
 - 2 properties:
 [kind](#-kind-interface),
 [interfaceDef](#-interfacedef-interfacedef)
+- 5 inherited members from [DocNodeBase](../private.interface.DocNodeBase/README.md)
 
 
 #### 📄 kind: <mark>"interface"</mark>

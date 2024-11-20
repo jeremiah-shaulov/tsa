@@ -8,6 +8,7 @@ We support only non-relative module names because resolution of relative module 
 ## This interface has
 
 - [deprecated symbol](#-deprecated-getorcreatecacheformodulenamenonrelativemodulename-string-mode-resolutionmode-redirectedreference-resolvedprojectreference-permodulenamecacheresolvedmodulewithfailedlookuplocations)
+- 4 inherited members from [NonRelativeNameResolutionCache](../interface.NonRelativeNameResolutionCache/README.md)
 
 
 <div style="opacity:0.6">

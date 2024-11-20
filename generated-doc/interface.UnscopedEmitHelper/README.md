@@ -7,6 +7,7 @@
 - 2 properties:
 [scoped](#-readonly-scoped-false),
 [text](#-readonly-text-string)
+- 3 inherited members from [EmitHelperBase](../interface.EmitHelperBase/README.md)
 
 
 #### 📄 `readonly` scoped: `false`

@@ -11,6 +11,7 @@
 [whenTrue](#-readonly-whentrue-expression),
 [colonToken](#-readonly-colontoken-colontoken),
 [whenFalse](#-readonly-whenfalse-expression)
+- 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.ConditionalExpression](../enum.SyntaxKind/README.md#conditionalexpression--227)

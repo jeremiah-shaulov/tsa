@@ -5,6 +5,7 @@
 ## This interface has
 
 - property [scoped](#-readonly-scoped-true)
+- 4 inherited members from [EmitHelperBase](../interface.EmitHelperBase/README.md)
 
 
 #### 📄 `readonly` scoped: `true`

@@ -7,6 +7,7 @@
 - 2 properties:
 [kind](#-readonly-kind-syntaxkindjsdoctext),
 [text](#-text-string)
+- 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.JSDocText](../enum.SyntaxKind/README.md#jsdoctext--321)

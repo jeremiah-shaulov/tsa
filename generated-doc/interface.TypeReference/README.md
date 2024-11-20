@@ -17,6 +17,7 @@ explicit "this" argument.
 [target](#-target-generictype),
 [node](#-node-typereferencenode--arraytypenode--tupletypenode),
 [typeArguments](#-typearguments-readonly-type)
+- 1 inherited member from [ObjectType](../interface.ObjectType/README.md), 28 from [Type](../interface.Type/README.md)
 
 
 #### 📄 target: [GenericType](../interface.GenericType/README.md)

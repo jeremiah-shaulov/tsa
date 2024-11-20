@@ -10,6 +10,7 @@
 [extendsType](#-extendstype-type),
 [resolvedTrueType](#-resolvedtruetype-type),
 [resolvedFalseType](#-resolvedfalsetype-type)
+- 28 inherited members from [Type](../interface.Type/README.md)
 
 
 #### 📄 root: [ConditionalRoot](../interface.ConditionalRoot/README.md)

@@ -9,6 +9,7 @@
 [parent](#-readonly-parent-templateliteraltypenode),
 [type](#-readonly-type-typenode),
 [literal](#-readonly-literal-templatemiddle--templatetail)
+- 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
 #### 📄 `readonly` kind: [SyntaxKind.TemplateLiteralTypeSpan](../enum.SyntaxKind/README.md#templateliteraltypespan--204)

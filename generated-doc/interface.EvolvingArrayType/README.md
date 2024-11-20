@@ -7,6 +7,7 @@
 - 2 properties:
 [elementType](#-elementtype-type),
 [finalArrayType](#-finalarraytype-type)
+- 1 inherited member from [ObjectType](../interface.ObjectType/README.md), 28 from [Type](../interface.Type/README.md)
 
 
 #### 📄 elementType: [Type](../interface.Type/README.md)
