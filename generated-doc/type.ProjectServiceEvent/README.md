@@ -1,0 +1,5 @@
+# `type` ProjectServiceEvent
+
+[Documentation Index](../README.md)
+
+`type` ProjectServiceEvent = [LargeFileReferencedEvent](../variable.LargeFileReferencedEvent/README.md) | [ProjectsUpdatedInBackgroundEvent](../variable.ProjectsUpdatedInBackgroundEvent/README.md) | [ProjectLoadingStartEvent](../variable.ProjectLoadingStartEvent/README.md) | [ProjectLoadingFinishEvent](../variable.ProjectLoadingFinishEvent/README.md) | [ConfigFileDiagEvent](../variable.ConfigFileDiagEvent/README.md) | [ProjectLanguageServiceStateEvent](../variable.ProjectLanguageServiceStateEvent/README.md) | [ProjectInfoTelemetryEvent](../variable.ProjectInfoTelemetryEvent/README.md) | [OpenFileInfoTelemetryEvent](../variable.OpenFileInfoTelemetryEvent/README.md) | [CreateFileWatcherEvent](../variable.CreateFileWatcherEvent/README.md) | [CreateDirectoryWatcherEvent](../variable.CreateDirectoryWatcherEvent/README.md) | [CloseFileWatcherEvent](../variable.CloseFileWatcherEvent/README.md)

@@ -1,0 +1,5 @@
+# `type` CompilerOptions
+
+[Documentation Index](../README.md)
+
+`type` CompilerOptions = [ChangePropertyTypes](../type.ChangePropertyTypes/README.md)\<[ChangeStringIndexSignature](../type.ChangeStringIndexSignature/README.md)\<[ts.CompilerOptions](../interface.CompilerOptions/README.md), [CompilerOptionsValue](../type.CompilerOptionsValue/README.md)>, \{jsx: [JsxEmit](../enum.JsxEmit.2/README.md) | [ts.JsxEmit](../enum.JsxEmit/README.md), module: [ModuleKind](../enum.ModuleKind.2/README.md) | [ts.ModuleKind](../enum.ModuleKind/README.md), moduleResolution: [ModuleResolutionKind](../enum.ModuleResolutionKind.2/README.md) | [ts.ModuleResolutionKind](../enum.ModuleResolutionKind/README.md), newLine: [NewLineKind](../enum.NewLineKind.2/README.md) | [ts.NewLineKind](../enum.NewLineKind/README.md), target: [ScriptTarget](../enum.ScriptTarget.2/README.md) | [ts.ScriptTarget](../enum.ScriptTarget/README.md)}>
