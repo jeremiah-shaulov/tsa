@@ -10,6 +10,7 @@ export type Accessor =
 	setter: ClassMethodDef|InterfaceMethodDef|LiteralMethodDef|undefined;
 	name: string;
 	isStatic: boolean;
+	isOverride: boolean;
 	accessibility: Accessibility|undefined;
 	location: Location|undefined;
 	jsDoc: JsDoc|undefined;
@@ -24,7 +25,6 @@ type HeaderLine =
 type ClassConverter =
 {	onDecorators(m: DecoratorDef[]): string;
 	onTopHeader(): string;
-	onSuperInfo(): string;
 	onConstructor(m: ClassConstructorDef): HeaderLine;
 	onIndexSignature(m: ClassIndexSignatureDef): HeaderLine;
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): HeaderLine;
@@ -67,6 +67,7 @@ const enum What
  **/
 export class NodeToMd
 {	#node;
+	#heritageInfo;
 	#converter;
 	#constructors = new Array<ClassConstructorDef>;
 	#destructors = new Array<ClassMethodDef|InterfaceMethodDef|LiteralMethodDef>;
@@ -78,8 +79,9 @@ export class NodeToMd
 	#memberHeaders = new Map<Member, MemberHeader>;
 	#memberHeadersByKey = new Map<string, MemberHeader>;
 
-	constructor(node: DocNode, converter: ClassConverter)
+	constructor(node: DocNode, heritageInfo: string, converter: ClassConverter)
 	{	this.#node = node;
+		this.#heritageInfo = heritageInfo;
 		this.#converter = converter;
 		const {onConstructor, onMethod, onIndexSignature, onProperty, onEnumMember} = this.#converter;
 		if (node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
@@ -276,7 +278,7 @@ export class NodeToMd
 	}
 
 	getCode(importUrls: string[])
-	{	const {onDecorators, onTopHeader, onSuperInfo, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+	{	const {onDecorators, onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
 		let sectionsCode = '';
@@ -349,11 +351,9 @@ export class NodeToMd
 			{	const memberHeader = memberHeaders.get(m);
 				sections.add(sectionIndex(m), What.Method, memberHeader,  mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)));
 			}
-			// super
-			const superInfo = onSuperInfo();
 			// done
 			sectionsCode = sections+'';
-			outline = sections.getOutline(superInfo);
+			outline = sections.getOutline(this.#heritageInfo);
 		}
 		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
 		const topHeader = onTopHeader();
@@ -393,6 +393,7 @@ export class NodeToMd
 			{	const m = methodsAndAccessors[i];
 				if (isPublicOrProtectedMember(m))
 				{	const isStatic = 'isStatic' in m && m.isStatic;
+					const isOverride = 'isOverride' in m && m.isOverride || false;
 					const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 					switch (m.kind)
 					{	case 'method':
@@ -420,6 +421,7 @@ export class NodeToMd
 								setter: undefined,
 								name: m.name,
 								isStatic,
+								isOverride,
 								accessibility,
 								location: 'location' in m ? m.location : undefined,
 								jsDoc: m.jsDoc,
@@ -451,12 +453,14 @@ export class NodeToMd
 			// Add `settersOnly` and `def.properties` to propertiesAndAccessors
 			for (const m of settersOnly)
 			{	const isStatic = 'isStatic' in m && m.isStatic;
+				const isOverride = 'isOverride' in m && m.isOverride || false;
 				const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 				propertiesAndAccessors.push
 				(	{	getter: undefined,
 						setter: m,
 						name: m.name,
 						isStatic,
+						isOverride,
 						accessibility,
 						location: 'location' in m ? m.location : undefined,
 						jsDoc: m.jsDoc,

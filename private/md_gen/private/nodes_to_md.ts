@@ -15,6 +15,9 @@ const RE_NO_NL = /[\r\n]/;
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
 
+// deno-lint-ignore no-explicit-any
+type Any = any;
+
 export function nodesToMd(nodes: DocNode[], outFileBasename: string, docDirBasename: string, mainTitle='', mainPageStart='', entryPoints=new Array<string>, importUrls=new Array<string>, baseDirUrl='')
 {	return new NodesToMd(nodes, outFileBasename, docDirBasename, entryPoints, importUrls, baseDirUrl).genFiles(mainTitle, mainPageStart);
 }
@@ -41,8 +44,10 @@ class NodesToMd
 		(	nodes,
 			node =>
 			{	if (node.kind=='class' || node.kind=='interface' || node.kind=='typeAlias' || node.kind=='enum' || node.kind=='function' || node.kind=='variable' || node.kind=='namespace')
-				{	return new NodeToMd
+				{	const heritageInfo = this.#getHeritageInfoAsString(node); // this function call can modify `node` to set `isOverride`
+					return new NodeToMd
 					(	node,
+						heritageInfo,
 						{	onDecorators: decorators =>
 							{	let code = '';
 								for (const d of decorators)
@@ -104,49 +109,6 @@ class NodesToMd
 								}
 								return code;
 							},
-							onSuperInfo: () =>
-							{	let code = '';
-								const heritage = this.#getHeritageInfo(node);
-								if (heritage)
-								{	let nFromTypeLiterals = 0;
-									for (let i=1; i<heritage.length; i++)
-									{	const fromNode = heritage[i].node;
-										const nMembers = heritage[i].nMembers;
-										if (fromNode.kind == 'typeLiteral')
-										{	nFromTypeLiterals += nMembers;
-										}
-										else
-										{	const link = this.#getLink(fromNode);
-											const name = !link ? fromNode.name : mdLink(fromNode.name, link);
-											if (code)
-											{	code += `, ${nMembers} from ${name}`;
-											}
-											else if (nMembers == 1)
-											{	code = `${nMembers} inherited member from ${name}`;
-											}
-											else
-											{	code = `${nMembers} inherited members from ${name}`;
-											}
-										}
-									}
-									if (nFromTypeLiterals > 0)
-									{	if (code)
-										{	code += ` and more ${nFromTypeLiterals} `;
-										}
-										else
-										{	code = `${nFromTypeLiterals} inherited `;
-										}
-										code += nFromTypeLiterals==1 ? 'member' : 'members';
-									}
-								}
-								else if (node.kind=='class' && node.classDef.extends)
-								{	code = 'base class';
-								}
-								else if (node.kind=='interface' && node.interfaceDef.extends.length>0)
-								{	code = node.interfaceDef.extends.length==1 ? 'base type' : 'base types';
-								}
-								return code;
-							},
 							onConstructor: m =>
 							{	let text = '🔧 ';
 								if (isDeprecated(m))
@@ -177,8 +139,10 @@ class NodesToMd
 							{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 								const isAbstract = 'isAbstract' in m && m.isAbstract;
 								const isStatic = 'isStatic' in m && m.isStatic;
+								const optional = 'optional' in m && m.optional;
+								const isOverride = 'isOverride' in m && m.isOverride || false;
 								const icon = isDestructor ? '🔨 ' : m.kind!='function' ? '⚙ ' : '';
-								return this.#convertFunction(icon, m.kind, m.name, isDeprecated(m), accessibility, isAbstract, isStatic, 'optional' in m && m.optional, 'functionDef' in m ? m.functionDef : m);
+								return this.#convertFunction(icon, m.kind, m.name, isDeprecated(m), accessibility, isAbstract, isStatic, optional, isOverride, 'functionDef' in m ? m.functionDef : m);
 							},
 							onEnumMember: m =>
 							{	let text = '';
@@ -337,15 +301,17 @@ class NodesToMd
 		{	const accessibility = 'accessibility' in p ? p.accessibility : undefined;
 			const isAbstract = 'isAbstract' in p && p.isAbstract;
 			const isStatic = 'isStatic' in p && p.isStatic;
-			const isAccessor = 'isAccessor' in p && p.isAccessor;
-			return this.#convertProperty(icon, p.name, isDeprecated(p), accessibility, isAbstract, isStatic, p.readonly, isAccessor ?? false, p.optional, p.tsType);
+			const isAccessor = 'isAccessor' in p && p.isAccessor || false;
+			const isOverride = 'isOverride' in p && p.isOverride || false;
+			return this.#convertProperty(icon, p.name, isDeprecated(p), accessibility, isAbstract, isStatic, p.readonly, isAccessor, isOverride, p.optional, p.tsType);
 		}
 		else if (p.getter && p.setter)
 		{	const m = p.getter;
 			const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 			const isAbstract = 'isAbstract' in m && m.isAbstract;
 			const isStatic = 'isStatic' in m && m.isStatic;
-			return this.#convertProperty(icon, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, false, true, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
+			const isOverride = 'isOverride' in p && p.isOverride;
+			return this.#convertProperty(icon, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, false, true, isOverride, m.optional, 'functionDef' in m ? m.functionDef.returnType : m.returnType);
 		}
 		else
 		{	const m = p.getter ?? p.setter;
@@ -353,13 +319,14 @@ class NodesToMd
 			{	const accessibility = 'accessibility' in m ? m.accessibility : undefined;
 				const isAbstract = 'isAbstract' in m && m.isAbstract;
 				const isStatic = 'isStatic' in m && m.isStatic;
-				return this.#convertFunction(icon, m.kind, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, m.optional, 'functionDef' in m ? m.functionDef : m);
+				const isOverride = 'isOverride' in p && p.isOverride;
+				return this.#convertFunction(icon, m.kind, m.name, isDeprecated(p), accessibility, isAbstract, isStatic, m.optional, isOverride, 'functionDef' in m ? m.functionDef : m);
 			}
 		}
 		return {text: '', beforeNamePos: 0, afterNamePos: 0};
 	}
 
-	#convertProperty(icon: string, name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, optional: boolean, tsType: TsTypeDef|undefined)
+	#convertProperty(icon: string, name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, readonly: boolean|undefined, isAccessor: boolean, isOverride: boolean, optional: boolean, tsType: TsTypeDef|undefined)
 	{	let text = icon;
 		if (isDeprecated)
 		{	text += '`deprecated` ';
@@ -372,6 +339,9 @@ class NodesToMd
 		}
 		if (isStatic)
 		{	text += '`static` ';
+		}
+		if (isOverride)
+		{	text += '`override` ';
 		}
 		if (readonly)
 		{	text += '`readonly` ';
@@ -389,7 +359,7 @@ class NodesToMd
 		return {text, beforeNamePos, afterNamePos};
 	}
 
-	#convertFunction(icon: string, isMethod: 'function'|'method'|'getter'|'setter', name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, functionDef: FunctionDef|LiteralMethodDef)
+	#convertFunction(icon: string, isMethod: 'function'|'method'|'getter'|'setter', name: string, isDeprecated: boolean, accessibility: Accessibility|undefined, isAbstract: boolean, isStatic: boolean, optional: boolean, isOverride: boolean, functionDef: FunctionDef|LiteralMethodDef)
 	{	let text = icon;
 		if (isDeprecated)
 		{	text += '`deprecated` ';
@@ -402,6 +372,9 @@ class NodesToMd
 		}
 		if (isStatic)
 		{	text += '`static` ';
+		}
+		if (isOverride)
+		{	text += '`override` ';
 		}
 		if (isMethod != 'method')
 		{	text += isMethod=='getter' ? '`get` ' : isMethod=='setter' ? '`set` ' : '`function` ';
@@ -556,12 +529,12 @@ class NodesToMd
 		}
 		for (const p of properties)
 		{	code += separ;
-			code += this.#convertProperty('', p.name, false, undefined, false, false, p.readonly, false, p.optional, p.tsType).text;
+			code += this.#convertProperty('', p.name, false, undefined, false, false, p.readonly, false, false, p.optional, p.tsType).text;
 			separ = ', ';
 		}
 		for (const p of methods)
 		{	code += separ;
-			code += this.#convertFunction('', p.kind, p.name, false, undefined, false, false, p.optional, p).text;
+			code += this.#convertFunction('', p.kind, p.name, false, undefined, false, false, p.optional, false, p).text;
 			separ = ', ';
 		}
 		return code;
@@ -916,6 +889,8 @@ class NodesToMd
 	{	const superNodes: Array<DocNode|TsTypeTypeLiteralDef> = [node];
 		const info = new Array<{node: DocNode|TsTypeTypeLiteralDef, nMembers: number}>;
 		const members = new Array<string>;
+		let selfClassProperties: ClassPropertyDef[] | undefined;
+		let selfClassMethods: ClassMethodDef[] | undefined;
 		for (let i=0; i<superNodes.length; i++)
 		{	const superNode = superNodes[i];
 			const prev = members.length;
@@ -947,7 +922,31 @@ class NodesToMd
 				for (let j=0; j<types.length; j++)
 				{	const t = types[j];
 					switch (t.kind)
-					{	case 'typeRef':
+					{	case 'parenthesized':
+						case 'optional':
+						{	const inner = 'parenthesized' in t ? t.parenthesized : t.optional;
+							if (!types.includes(inner))
+							{	if (types == interfaceDef.extends)
+								{	types = types.slice();
+								}
+								types.push(inner);
+							}
+							break;
+						}
+						case 'intersection':
+						case 'union':
+						{	const inner = 'intersection' in t ? t.intersection : t.union;
+							if (types == interfaceDef.extends)
+							{	types = types.slice();
+							}
+							for (const t2 of inner)
+							{	if (!types.includes(t2))
+								{	types.push(t2);
+								}
+							}
+							break;
+						}
+						case 'typeRef':
 						{	if (t.typeRef.nodeIndex == undefined)
 							{	return; // error
 							}
@@ -959,28 +958,6 @@ class NodesToMd
 						}
 						case 'typeLiteral':
 						{	superNodes.push(t);
-							break;
-						}
-						case 'intersection':
-						{	if (types == interfaceDef.extends)
-							{	types = types.slice();
-							}
-							for (const t2 of t.intersection)
-							{	if (!types.includes(t2))
-								{	types.push(t2);
-								}
-							}
-							break;
-						}
-						case 'union':
-						{	if (types == interfaceDef.extends)
-							{	types = types.slice();
-							}
-							for (const t2 of t.union)
-							{	if (!types.includes(t2))
-								{	types.push(t2);
-								}
-							}
 							break;
 						}
 						default:
@@ -997,15 +974,33 @@ class NodesToMd
 			}
 			if (addProperties)
 			{	for (const m of addProperties)
-				{	if (!members.includes(m.name))
+				{	const found = members.indexOf(m.name);
+					if (found == -1)
 					{	members.push(m.name);
+					}
+					else if (selfClassProperties && selfClassMethods)
+					{	if (found < selfClassProperties.length)
+						{	selfClassProperties[found].isOverride = true;
+						}
+						else if (found < selfClassProperties.length+selfClassMethods.length)
+						{	selfClassMethods[found - selfClassProperties.length].isOverride = true;
+						}
 					}
 				}
 			}
 			if (addMethods)
 			{	for (const m of addMethods)
-				{	if (!members.includes(m.name))
+				{	const found = members.indexOf(m.name);
+					if (found == -1)
 					{	members.push(m.name);
+					}
+					else if (selfClassProperties && selfClassMethods)
+					{	if (found < selfClassProperties.length)
+						{	selfClassProperties[found].isOverride = true;
+						}
+						else if (found < selfClassProperties.length+selfClassMethods.length)
+						{	selfClassMethods[found - selfClassProperties.length].isOverride = true;
+						}
 					}
 				}
 			}
@@ -1013,8 +1008,56 @@ class NodesToMd
 			if (nMembers > 0)
 			{	info.push({node: superNode, nMembers});
 			}
+			if (i==0 && superNode.kind=='class')
+			{	selfClassProperties = superNode.classDef.properties;
+				selfClassMethods = superNode.classDef.methods;
+			}
 		}
 		return info;
+	}
+
+	#getHeritageInfoAsString(node: DocNode)
+	{	let code = '';
+		const heritageInfo = this.#getHeritageInfo(node);
+		if (heritageInfo)
+		{	let nFromTypeLiterals = 0;
+			for (let i=1; i<heritageInfo.length; i++)
+			{	const fromNode = heritageInfo[i].node;
+				const nMembers = heritageInfo[i].nMembers;
+				if (fromNode.kind == 'typeLiteral')
+				{	nFromTypeLiterals += nMembers;
+				}
+				else
+				{	const link = this.#getLink(fromNode);
+					const name = !link ? fromNode.name : mdLink(fromNode.name, link);
+					if (code)
+					{	code += `, ${nMembers} from ${name}`;
+					}
+					else if (nMembers == 1)
+					{	code = `${nMembers} inherited member from ${name}`;
+					}
+					else
+					{	code = `${nMembers} inherited members from ${name}`;
+					}
+				}
+			}
+			if (nFromTypeLiterals > 0)
+			{	if (code)
+				{	code += ` and more ${nFromTypeLiterals} `;
+				}
+				else
+				{	code = `${nFromTypeLiterals} inherited `;
+				}
+				code += nFromTypeLiterals==1 ? 'member' : 'members';
+			}
+		}
+		else if (node.kind=='class' && node.classDef.extends)
+		{	code = 'base class';
+		}
+		else if (node.kind=='interface' && node.interfaceDef.extends.length>0)
+		{	code = node.interfaceDef.extends.length==1 ? 'base type' : 'base types';
+		}
+		return code;
 	}
 }
 
