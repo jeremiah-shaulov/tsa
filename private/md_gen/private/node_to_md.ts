@@ -24,6 +24,7 @@ type HeaderLine =
 type ClassConverter =
 {	onDecorators(m: DecoratorDef[]): string;
 	onTopHeader(): string;
+	onSuperInfo(): string;
 	onConstructor(m: ClassConstructorDef): HeaderLine;
 	onIndexSignature(m: ClassIndexSignatureDef): HeaderLine;
 	onProperty(m: ClassPropertyDef|InterfacePropertyDef|LiteralPropertyDef|Accessor): HeaderLine;
@@ -275,7 +276,7 @@ export class NodeToMd
 	}
 
 	getCode(importUrls: string[])
-	{	const {onDecorators, onTopHeader, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
+	{	const {onDecorators, onTopHeader, onSuperInfo, onMethod, onTypeAlias, onVariable, onNamespace, onJsDoc} = this.#converter;
 		const memberHeaders = this.#memberHeaders;
 		let outline = '';
 		let sectionsCode = '';
@@ -348,9 +349,11 @@ export class NodeToMd
 			{	const memberHeader = memberHeaders.get(m);
 				sections.add(sectionIndex(m), What.Method, memberHeader,  mdBlockquote(onJsDoc(m.jsDoc, this.#node, memberHeader?.headerId ?? '', 0)));
 			}
+			// super
+			const superInfo = onSuperInfo();
 			// done
 			sectionsCode = sections+'';
-			outline = sections.getOutline();
+			outline = sections.getOutline(superInfo);
 		}
 		const decorators = this.#node.kind=='class' && this.#node.classDef.decorators ? onDecorators(this.#node.classDef.decorators) : '';
 		const topHeader = onTopHeader();
@@ -621,7 +624,7 @@ class ClassSections
 		return code;
 	}
 
-	getOutline()
+	getOutline(superInfo: string)
 	{	let code = '';
 		// static properties
 		code += this.#genMemberOutline(this.#propertiesPublicStatic, 'static property', 'static properties', false);
@@ -651,8 +654,15 @@ class ClassSections
 		code += this.#genMemberOutline(this.#methodsProtected, 'protected method', 'protected methods', false);
 		// deprecated
 		code += this.#genMemberOutline(this.#deprecated, 'deprecated symbol', 'deprecated symbols', true);
+		// super
+		if (superInfo)
+		{	code += '- ' + superInfo + '\n';
+		}
 		// done
-		return code ? `## This ${this.#kind=='typeAlias' ? 'type' : this.#kind} has\n\n${code}\n\n` : '';
+		if (code)
+		{	code = `## This ${this.#kind=='typeAlias' ? 'type' : this.#kind} has\n\n${code}\n\n`;
+		}
+		return code;
 	}
 
 	#genMemberOutline(memberHeader: MemberHeader[], titleSingular: string, titlePlural: string, numberOnly: boolean)

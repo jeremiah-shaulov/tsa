@@ -1,5 +1,5 @@
 import {indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
-import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef} from '../../doc_node/mod.ts';
+import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef, ClassDef, TsTypeTypeLiteralDef, ClassMethodDef, InterfaceMethodDef} from '../../doc_node/mod.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
 import {isDeprecated} from './util.ts';
@@ -46,7 +46,7 @@ class NodesToMd
 						{	onDecorators: decorators =>
 							{	let code = '';
 								for (const d of decorators)
-								{	const link = this.#getLink(this.#nodes[d.nameNodeIndex ?? -1]);
+								{	const link = this.#getLink(nodes[d.nameNodeIndex ?? -1]);
 									const name = link ? mdLink(d.name, link) : d.name;
 									code += `@${name}(${d.args?.map(a => mdEscape(a)).join(', ') ?? ''})\n\n`;
 								}
@@ -101,6 +101,45 @@ class NodesToMd
 								else if (node.kind == 'namespace')
 								{	code += '`namespace` ';
 									code += mdEscape(node.name);
+								}
+								return code;
+							},
+							onSuperInfo: () =>
+							{	let code = '';
+								const heritage = this.#getHeritageInfo(node);
+								if (heritage)
+								{	let nFromTypeLiterals = 0;
+									for (let i=1; i<heritage.length; i++)
+									{	const fromNode = heritage[i].node;
+										const nMembers = heritage[i].nMembers;
+										if (fromNode.kind == 'typeLiteral')
+										{	nFromTypeLiterals += nMembers;
+										}
+										else
+										{	const link = this.#getLink(fromNode);
+											const name = !link ? fromNode.name : mdLink(fromNode.name, link);
+											if (!code)
+											{	code = `${nMembers} inherited members from ${name}`;
+											}
+											else
+											{	code += `, ${nMembers} from ${name}`;
+											}
+										}
+									}
+									if (nFromTypeLiterals > 0)
+									{	if (!code)
+										{	code = `${nFromTypeLiterals} inherited members`;
+										}
+										else
+										{	code += ` and more ${nFromTypeLiterals} members`;
+										}
+									}
+								}
+								else if (node.kind=='class' && node.classDef.extends)
+								{	code = 'base class';
+								}
+								else if (node.kind=='interface' && node.interfaceDef.extends.length>0)
+								{	code = node.interfaceDef.extends.length==1 ? 'base type' : 'base types';
 								}
 								return code;
 							},
@@ -867,6 +906,111 @@ class NodesToMd
 			return refNode.declarationKind!='private' && this.#isPublicOrProtectedMember(refNode) && isExportFromEntryPoint(refNode);
 		}
 		return true;
+	}
+
+	#getHeritageInfo(node: DocNode)
+	{	const superNodes: Array<DocNode|TsTypeTypeLiteralDef> = [node];
+		const info = new Array<{node: DocNode|TsTypeTypeLiteralDef, nMembers: number}>;
+		const members = new Array<string>;
+		for (let i=0; i<superNodes.length; i++)
+		{	const superNode = superNodes[i];
+			const prev = members.length;
+			let addProperties: ClassPropertyDef[]|InterfacePropertyDef[]|LiteralPropertyDef[]|undefined;
+			let addMethods: ClassMethodDef[]|InterfaceMethodDef[]|LiteralMethodDef[]|undefined;
+			if (superNode.kind == 'class')
+			{	const {classDef} = superNode;
+				// Add members
+				addProperties = classDef.properties;
+				addMethods = classDef.methods;
+				// Add super
+				if (classDef.superNodeIndex != undefined)
+				{	const superNode2 = this.#nodes[classDef.superNodeIndex];
+					if (!superNodes.includes(superNode2))
+					{	superNodes.push(superNode2);
+					}
+				}
+				else if (classDef.extends)
+				{	return; // error
+				}
+			}
+			else if (superNode.kind == 'interface')
+			{	const {interfaceDef} = superNode;
+				// Add members
+				addProperties = interfaceDef.properties;
+				addMethods = interfaceDef.methods;
+				// Add super
+				let types = interfaceDef.extends;
+				for (let j=0; j<types.length; j++)
+				{	const t = types[j];
+					switch (t.kind)
+					{	case 'typeRef':
+						{	if (t.typeRef.nodeIndex == undefined)
+							{	return; // error
+							}
+							const superNode2 = this.#nodes[t.typeRef.nodeIndex];
+							if (!superNodes.includes(superNode2))
+							{	superNodes.push(superNode2);
+							}
+							break;
+						}
+						case 'typeLiteral':
+						{	superNodes.push(t);
+							break;
+						}
+						case 'intersection':
+						{	if (types == interfaceDef.extends)
+							{	types = types.slice();
+							}
+							for (const t2 of t.intersection)
+							{	if (!types.includes(t2))
+								{	types.push(t2);
+								}
+							}
+							break;
+						}
+						case 'union':
+						{	if (types == interfaceDef.extends)
+							{	types = types.slice();
+							}
+							for (const t2 of t.union)
+							{	if (!types.includes(t2))
+								{	types.push(t2);
+								}
+							}
+							break;
+						}
+						default:
+						{	return; // error
+						}
+					}
+				}
+			}
+			else if (superNode.kind == 'typeLiteral')
+			{	const {typeLiteral} = superNode;
+				// Add members
+				addProperties = typeLiteral.properties;
+				addMethods = typeLiteral.methods;
+			}
+			if (addProperties)
+			{	for (const m of addProperties)
+				{	if (!members.includes(m.name))
+					{	members.push(m.name);
+					}
+				}
+			}
+			if (addMethods)
+			{	for (const m of addMethods)
+				{	if (!members.includes(m.name))
+					{	members.push(m.name);
+					}
+				}
+			}
+			const nMembers = members.length - prev;
+			if (nMembers > 0)
+			{	info.push({node: superNode, nMembers});
+			}
+		}
+		return info;
 	}
 }
 
