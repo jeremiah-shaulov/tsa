@@ -217,11 +217,12 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		writeTextFile(host, outFile, JSON.stringify(docNodes.nodes, undefined, pretty ? '\t' : undefined));
 	}
 	else
-	{	const createdDirs = new Array<string>;
+	{	const docDirs = new Array<string>;
 		const baseDir = path.dirname(outFile);
 		const outFileBasename = path.basename(outFile);
 		const docDirBasename = outDir;
 		const baseDirUrl = outUrl && new URL('.', outUrl).href;
+		let nWritten = 0;
 		let nRemoved = 0;
 		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, mainPageStart, entryPoints, importUrls, baseDirUrl))
 		{	// Need to write `code` to `${dir}/README.md`
@@ -230,9 +231,18 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
 			{	try
+				{	if (host.readFile(filename) == code)
+					{	break;
+					}
+				}
+				catch
+				{	// ok
+				}
+				try
 				{	writeTextFile(host, filename, code);
+					nWritten++;
 					// If successfully written from the first attempt, see what else files exist in this directory, and remove them
-					if (i==0 && dir)
+					if (i==0 && dir && dir!=docDirBasename)
 					{	for (const name of host.getDirectories!(curDir))
 						{	if (name != 'README.md')
 							{	// Remove this file or directory
@@ -251,14 +261,14 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 				}
 			}
 			if (dir && dir!=docDirBasename)
-			{	createdDirs.push(dir);
+			{	docDirs.push(dir);
 			}
 		}
 		// Delete existing files that i didn't create
 		const outDirPath = path.join(baseDir, docDirBasename);
-		if (createdDirs.length)
+		if (docDirs.length)
 		{	for (const name of host.getDirectories!(outDirPath))
-			{	if (name!='README.md' && !createdDirs.includes(path.join(docDirBasename, name)))
+			{	if (name!='README.md' && !docDirs.includes(path.join(docDirBasename, name)))
 				{	// Remove this file or directory
 					await Deno.remove(path.join(outDirPath, name), {recursive: true});
 					nRemoved++;
@@ -266,7 +276,12 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			}
 		}
 		// Done
-		console.log(`Created ${createdDirs.length} README.md files. Removed ${nRemoved} files or directories.`);
+		let log = `Written ${nWritten} README.md files`;
+		if (nWritten < docDirs.length)
+		{	log += ` + ${docDirs.length-nWritten} up to date`;
+		}
+		log += `. Removed ${nRemoved} files or directories.`;
+		console.log(log);
 	}
 }
 
