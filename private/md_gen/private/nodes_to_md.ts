@@ -200,7 +200,10 @@ class NodesToMd
 	{	// Module doc
 		const moduleDoc = this.#nodes.find(n => n.kind == 'moduleDoc');
 		let code = mainPageStart;
-		if (!mainTitle)
+		if (mainTitle)
+		{	mainTitle = mdEscape(mainTitle);
+		}
+		else
 		{	const tags = moduleDoc?.jsDoc.tags;
 			if (tags)
 			{	for (const tag of tags)
@@ -215,7 +218,7 @@ class NodesToMd
 			}
 		}
 		if (mainTitle)
-		{	code += `# ${mdEscape(mainTitle)}\n\n`;
+		{	code += `# ${mainTitle}\n\n`;
 		}
 		code += mdLink('Documentation Index', this.#docDirBasename+'/README.md')+'\n\n';
 		if (moduleDoc)
