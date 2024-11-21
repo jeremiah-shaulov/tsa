@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LiteralMethodDef} from "https://deno.land/x/tsa@v0.0.45/mod.ts"
+import {LiteralMethodDef} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
 ```
 
 ## This interface has

@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {JsDoc} from "https://deno.land/x/tsa@v0.0.45/mod.ts"
+import {JsDoc} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
 ```
 
 ## This interface has

@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {defaultResolve} from "https://deno.land/x/tsa@v0.0.45/mod.ts"
+import {defaultResolve} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
 ```
 
 `function` defaultResolve(specifier: `string`, referrer: `string`, emitDeclarationOnly: `boolean`, host: [tsa.CompilerHost](../interface.CompilerHost/README.md)): Promise\<`string`>
