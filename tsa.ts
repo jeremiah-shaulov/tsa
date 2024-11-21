@@ -222,7 +222,8 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		const outFileBasename = path.basename(outFile);
 		const docDirBasename = outDir;
 		const baseDirUrl = outUrl && new URL('.', outUrl).href;
-		let nWritten = 0;
+		let nCreatedOrUpdated = 0;
+		let nUpdated = 0;
 		let nRemoved = 0;
 		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, mainPageStart, entryPoints, importUrls, baseDirUrl))
 		{	// Need to write `code` to `${dir}/README.md`
@@ -230,17 +231,20 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			const filename = !dir ? outFile : path.join(curDir, 'README.md');
 			// Do 2 attempts. The first attempt may fail if the parent directory doesn't exist
 			for (let i=0; i<2; i++)
-			{	try
+			{	let exists: 0|1 = 0;
+				try
 				{	if (host.readFile(filename) == code)
 					{	break;
 					}
+					exists = 1;
 				}
 				catch
 				{	// ok
 				}
 				try
 				{	writeTextFile(host, filename, code);
-					nWritten++;
+					nCreatedOrUpdated++;
+					nUpdated += exists;
 					// If successfully written from the first attempt, see what else files exist in this directory, and remove them
 					if (i==0 && dir && dir!=docDirBasename)
 					{	for (const name of host.getDirectories!(curDir))
@@ -276,11 +280,29 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			}
 		}
 		// Done
-		let log = `Written ${nWritten} README.md files`;
-		if (nWritten < docDirs.length)
-		{	log += ` + ${docDirs.length-nWritten} up to date`;
+		let log = '';
+		if (docDirs.length == 0)
+		{	log = `No README.md files written`;
 		}
-		log += `. Removed ${nRemoved} files or directories.`;
+		else if (nCreatedOrUpdated == 0)
+		{	log = `All ${docDirs.length} README.md files are up to date`;
+		}
+		else if (nUpdated == 0)
+		{	log = `Created ${nCreatedOrUpdated} README.md files`;
+		}
+		else if (nCreatedOrUpdated == nUpdated)
+		{	log = `Updated ${nCreatedOrUpdated} README.md files`;
+		}
+		else
+		{	log = `Created ${nCreatedOrUpdated-nUpdated} README.md files + updated ${nUpdated}`;
+		}
+		if (nCreatedOrUpdated!=0 && nCreatedOrUpdated<docDirs.length)
+		{	log += ` + ${docDirs.length-nCreatedOrUpdated} up to date`;
+		}
+		log += '.';
+		if (nRemoved)
+		{	log += ` Removed ${nRemoved} files or directories.`;
+		}
 		console.log(log);
 	}
 }
