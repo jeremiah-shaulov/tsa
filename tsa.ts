@@ -2,7 +2,7 @@
 
 import {tsa, printDiagnostics} from './mod.ts';
 import {Command, path, APP_GIT_TAG} from './private/deps.ts';
-import {writeTextFile} from './private/util.ts';
+import {readTextFile, writeTextFile} from './private/util.ts';
 
 const RE_BAD_SHELL_CHAR = /[^\w%+\-.\/:=@]/;
 
@@ -233,7 +233,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			for (let i=0; i<2; i++)
 			{	let exists: 0|1 = 0;
 				try
-				{	if (host.readFile(filename) == code)
+				{	if (readTextFile(host, filename) == code)
 					{	break;
 					}
 					exists = 1;
