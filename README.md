@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/tsa.ts doc-md --outFile=README.md mod.ts --importUrl https://deno.land/x/tsa@v0.0.48/mod.ts --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/README.md
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/README.md --importUrl=https://deno.land/x/tsa@v0.0.48/mod.ts mod.ts
 -->
 
 # tsa - Typescript source code analysis and documentation tool
@@ -74,6 +74,8 @@ tsa doc-md --mainTitle 'Standard bytes library' --outFile=/tmp/tsa-test/README.m
 
 This tool has 1 noncommon feature: if `{@linkcode Symbol}` tag lays on it's own line, and has no display text (like `[Display text]{@linkcode Symbol}` or `{@linkcode Symbol|Display text}`),
 it produces typescript declaration of the symbol with links to another symbols that appear in the declaration.
+
+After generating the documentation, you can use [this](doc_test/README.md) helper module to unit-test code examples.
 
 ### tsa bundle-js [options] <file1.ts> [fileN.ts...]
 

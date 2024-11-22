@@ -29,9 +29,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+			let outFile = String(options.outFile || '/dev/stdout');
 			const pretty = !!options.pretty;
+			const entryPoints = [file1, ...files];
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Gen doc
 			await doc(entryPoints, outFile, '', pretty, false);
@@ -51,9 +56,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+			let outFile = String(options.outFile || '/dev/stdout');
 			const pretty = !!options.pretty;
+			const entryPoints = [file1, ...files];
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Gen doc
 			await doc(entryPoints, outFile, '', pretty, false);
@@ -70,22 +80,25 @@ program
 	)
 	.requiredOption('--outFile <README.md>', 'Where to save the result.')
 	.option('--outDir <generated-doc>', 'This command also creates linked README.md files in the --outDir directory (default: "generated-doc"). The directory will be created near --outFile or existing directory will be emptied if necessary.')
+	.option('--outUrl <URL>', 'If you plan to upload the resulting files to a public resource (such as github), you can optionally specify URL by which the --outFile will be publicly accessible. Then you can use script examples in doc-comments marked as "// To run this example:" on the first line, and followed by a line that contains "example.ts", like "// deno run --allow-all example.ts", and these lines will be converted to "// To download and run this example:"...')
 	.option('--mainTitle <My Project>', 'The title that will appear in the main README.md file. By default the title is taken from `@summary` tag near `@module`, and this option overrides it.')
 	.option('--importUrl <URL>', 'Optionally specify one such flag per each source file in corresponding order. This lets including in the documentation import examples for public symbols. The specified importUrl must point to a public registry that downloads (or will download) the same file as provided to the generator. For example: tsa doc-md foo/mod.ts --importUrl https://deno.land/foo@1.0.0/mod.ts bar/mod.ts --importUrl https://deno.land/bar@1.0.0/mod.ts (the number of --importUrl options must be the same as number of given files).', optionStringArray)
-	.option('--outUrl <URL>', 'If you plan to upload the resulting files to a public resource (such as github), you can optionally specify URL by which the --outFile will be publicly accessible. Then you can use script examples in doc-comments marked as "// To run this example:" on the first line, and followed by a line that contains "example.ts", like "// deno run --allow-all example.ts", and these lines will be converted to "// To download and run this example:"...')
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean|string[]>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile);
+			let outFile = String(options.outFile);
 			const outDir = String(options.outDir || 'generated-doc');
+			const outUrl = String(options.outUrl || '');
 			const mainTitle = String(options.mainTitle || '');
 			const importUrls = Array.isArray(options.importUrl) ? options.importUrl : [];
-			const outUrl = String(options.outUrl || '');
+			const entryPoints = [file1, ...files];
 
 			// Validate options
 			if (!outFile)
 			{	throw new Error('--outFile must be specified');
+			}
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
 			}
 			if (outDir.includes('/') || outDir.includes(path.SEPARATOR))
 			{	throw new Error('--outDir must be name of the directory to create/update near --outFile, not directory path');
@@ -95,7 +108,26 @@ program
 			}
 
 			// Gen doc
-			const mainPageStart = `<!--\n\tThis file is generated with the following command:\n\tdeno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts ${args.map(a => escapeShellArg(a)).join(' ')}\n-->\n\n`;
+			let cmd = `deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/${APP_GIT_TAG}/tsa.ts doc-md --outFile=${escapeShellArg(outFile)}`;
+			if (outDir != 'generated-doc')
+			{	cmd += ` --outDir=${escapeShellArg(outDir)}`;
+			}
+			if (outUrl)
+			{	cmd += ` --outUrl=${escapeShellArg(outUrl)}`;
+			}
+			if (mainTitle)
+			{	cmd += ` --mainTitle=${escapeShellArg(mainTitle)}`;
+			}
+			const baseDir = path.dirname(outFile);
+			for (let i=0; i<entryPoints.length; i++)
+			{	if (importUrls[i])
+				{	cmd += ` --importUrl=${escapeShellArg(importUrls[i])}`;
+				}
+				const file = entryPoints[i].startsWith('file://') ? path.fromFileUrl(entryPoints[i]) : entryPoints[i];
+				const relFile = path.relative(baseDir, file);
+				cmd += ` ${escapeShellArg(relFile)}`;
+			}
+			const mainPageStart = `<!--\n\tThis file is generated with the following command:\n\t${cmd}\n-->\n\n`;
 			await doc(entryPoints, outFile, outDir, false, true, mainTitle, mainPageStart, importUrls, outUrl);
 
 			// Done
@@ -112,8 +144,13 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
+			let outFile = String(options.outFile || '/dev/stdout');
 			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Gen types
 			await types(entryPoints, outFile);
@@ -133,9 +170,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+			let outFile = String(options.outFile || '/dev/stdout');
 			const target = targetToNum(options.target);
+			const entryPoints = [file1, ...files];
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Bundle
 			await bundle(entryPoints, outFile, target, false);
@@ -155,9 +197,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+			let outFile = String(options.outFile || '/dev/stdout');
 			const target = targetToNum(options.target);
+			const entryPoints = [file1, ...files];
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Bundle
 			await bundle(entryPoints, outFile, target, false);
@@ -177,9 +224,14 @@ program
 	.action
 	(	async (file1: string, files: string[], options: Record<string, string|boolean>) =>
 		{	// Input options
-			const entryPoints = [file1, ...files];
-			const outFile = String(options.outFile || '/dev/stdout');
+			let outFile = String(options.outFile || '/dev/stdout');
 			const target = targetToNum(options.target);
+			const entryPoints = [file1, ...files];
+
+			// Validate options
+			if (outFile.startsWith('file://'))
+			{	outFile = path.fromFileUrl(outFile);
+			}
 
 			// Bundle
 			await bundle(entryPoints, outFile, target, true);
