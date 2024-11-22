@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {EmitDocOptions} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
+import {EmitDocOptions} from "https://deno.land/x/tsa@v0.0.47/mod.ts"
 ```
 
 Options that you can provide

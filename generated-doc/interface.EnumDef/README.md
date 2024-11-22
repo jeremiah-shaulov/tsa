@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {EnumDef} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
+import {EnumDef} from "https://deno.land/x/tsa@v0.0.47/mod.ts"
 ```
 
 ## This interface has

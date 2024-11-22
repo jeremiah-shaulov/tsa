@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNodeNamespace} from "https://deno.land/x/tsa@v0.0.46/mod.ts"
+import {DocNodeNamespace} from "https://deno.land/x/tsa@v0.0.47/mod.ts"
 ```
 
 ## This interface has
