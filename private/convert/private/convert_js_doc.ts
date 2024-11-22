@@ -37,7 +37,7 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 	{	docTags = ts.getJSDocTags(node);
 	}
 	if (symbolDisplayParts?.length || docTags?.length)
-	{	const extracted = extractJsDocComment(node);
+	{	const extracted = extractJsDocComment(ts, node);
 		let doc = undoCommentPreprocessing(extracted);
 		const docTokens = new Array<JsDocToken>;
 		if (symbolDisplayParts)
@@ -63,9 +63,12 @@ export function convertJsDoc(ts: typeof tsa, converter: Converter, symbolDisplay
 	}
 }
 
-function extractJsDocComment(node?: tsa.Node)
+function extractJsDocComment(ts: typeof tsa, node?: tsa.Node)
 {	if (node)
-	{	const {text} = node.getSourceFile();
+	{	if (ts.isVariableDeclaration(node) && node.parent && ts.isVariableDeclarationList(node.parent) && node.parent.declarations.length==1 && node.parent.parent && ts.isVariableStatement(node.parent.parent))
+		{	node = node.parent.parent;
+		}
+		const {text} = node.getSourceFile();
 		let {pos, end} = node;
 		let from = -1;
 		let to = -1;

@@ -225,6 +225,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		let nCreatedOrUpdated = 0;
 		let nUpdated = 0;
 		let nRemoved = 0;
+		let totalFiles = 0;
 		for (const {dir, code} of docNodes.toMd(outFileBasename, docDirBasename, mainTitle, mainPageStart, entryPoints, importUrls, baseDirUrl))
 		{	// Need to write `code` to `${dir}/README.md`
 			const curDir = !dir ? baseDir : path.join(baseDir, dir);
@@ -267,6 +268,7 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 			if (dir && dir!=docDirBasename)
 			{	docDirs.push(dir);
 			}
+			totalFiles++;
 		}
 		// Delete existing files that i didn't create
 		const outDirPath = path.join(baseDir, docDirBasename);
@@ -281,11 +283,11 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		}
 		// Done
 		let log = '';
-		if (docDirs.length == 0)
+		if (totalFiles == 0)
 		{	log = `No README.md files written`;
 		}
 		else if (nCreatedOrUpdated == 0)
-		{	log = `All ${docDirs.length} README.md files are up to date`;
+		{	log = `All ${totalFiles} README.md files are up to date`;
 		}
 		else if (nUpdated == 0)
 		{	log = `Created ${nCreatedOrUpdated} README.md files`;
@@ -296,8 +298,8 @@ async function doc(entryPoints: string[], outFile: string, outDir: string, prett
 		else
 		{	log = `Created ${nCreatedOrUpdated-nUpdated} README.md files + updated ${nUpdated}`;
 		}
-		if (nCreatedOrUpdated!=0 && nCreatedOrUpdated<docDirs.length)
-		{	log += ` + ${docDirs.length-nCreatedOrUpdated} up to date`;
+		if (nCreatedOrUpdated!=0 && nCreatedOrUpdated<totalFiles)
+		{	log += ` + ${totalFiles-nCreatedOrUpdated} up to date`;
 		}
 		log += '.';
 		if (nRemoved)
