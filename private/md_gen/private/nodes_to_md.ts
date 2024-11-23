@@ -724,10 +724,10 @@ class NodesToMd
 			}
 		}
 		// Convert examples and substitute importUrls
-		if (!this.#baseDirUrlWithTrailingSlash || !doc)
+		const importUrl = getUrlForFilename(node.location.filename, this.#entryPointsDirs, this.#importUrls);
+		if (!doc || !this.#baseDirUrlWithTrailingSlash && !importUrl)
 		{	return doc;
 		}
-		const importUrl = getUrlForFilename(node.location.filename, this.#entryPointsDirs, this.#importUrls);
 		let newDoc = '';
 		let from = 0;
 		let codeFrom = -1;
