@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/README.md --importUrl=https://deno.land/x/tsa@v0.0.48/mod.ts mod.ts
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/README.md --importUrl=https://deno.land/x/tsa@v0.0.49/mod.ts mod.ts
 -->
 
 # tsa - Typescript source code analysis and documentation tool
@@ -24,7 +24,7 @@ Also this library can bundle Typescript project to single Typescript file (not o
 To install this tool do:
 
 ```bash
-deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.48/tsa.ts
+deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.49/tsa.ts
 ```
 
 The command supports 5 operations:
@@ -122,10 +122,10 @@ Similarly when using this library, the first step is to create [tsa.TsaProgram](
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-p9mn.ts
 
-import {tsa, printDiagnostics, LoadOptions} from 'https://deno.land/x/tsa@v0.0.48/mod.ts';
+import {tsa, printDiagnostics, LoadOptions} from 'https://deno.land/x/tsa@v0.0.49/mod.ts';
 
 const SUBJ = 'https://deno.land/x/dir@1.5.1/mod.ts'; // Can be local file (`file:///...`)
 

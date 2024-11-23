@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.48/tsa.ts doc-md --outFile=doc_test/README.md mod.ts
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/tsa.ts doc-md --outFile=doc_test/README.md --importUrl=https://deno.land/x/tsa@v0.0.49/doc_test/mod.ts mod.ts
 -->
 
 [Documentation Index](generated-doc/README.md)

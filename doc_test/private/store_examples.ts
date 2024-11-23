@@ -30,7 +30,7 @@ class NotTsaError extends Error
 	```ts
 	// from_readme.test.ts
 
-	import {storeExamplesToTmpFiles} from 'https://deno.land/x/tsa@v0.0.48/doc_test/mod.ts';
+	import {storeExamplesToTmpFiles} from '../mod.ts';
 
 	for (const {exampleName, filename, prelude} of await storeExamplesToTmpFiles(import.meta.url))
 	{	const func = async function()

@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {InterfacePropertyDef} from "https://deno.land/x/tsa@v0.0.48/mod.ts"
+import {InterfacePropertyDef} from "https://deno.land/x/tsa@v0.0.49/mod.ts"
 ```
 
 ## This interface has
