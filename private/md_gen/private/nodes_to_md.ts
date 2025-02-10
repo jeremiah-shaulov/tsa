@@ -794,9 +794,9 @@ class NodesToMd
 									newDoc += dir;
 									newDoc += '/README.md';
 								}
-								newDoc += "' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<";
+								newDoc += "' | perl -ne '$y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<";
 								newDoc += exampleId;
-								newDoc += ">~)' > /tmp/";
+								newDoc += ">/' > /tmp/";
 								newDoc += exampleId;
 								newDoc += ".ts";
 								newDoc += nextComments.slice(lastCommentPos).replaceAll(EXAMPLE, `/tmp/${exampleId}.ts`);
