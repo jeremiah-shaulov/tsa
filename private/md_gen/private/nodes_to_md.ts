@@ -794,7 +794,7 @@ class NodesToMd
 									newDoc += dir;
 									newDoc += '/README.md';
 								}
-								newDoc += "' | perl -ne '$y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<";
+								newDoc += "' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<";
 								newDoc += exampleId;
 								newDoc += ">/' > /tmp/";
 								newDoc += exampleId;
