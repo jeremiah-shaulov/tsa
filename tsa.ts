@@ -254,12 +254,22 @@ function escapeShellArg(arg: string)
 {	return RE_BAD_SHELL_CHAR.test(arg) ? "'" + arg.replaceAll("'", "'\\''") + "'" : arg;
 }
 
+function printPreEmitDiagnostics(program: tsa.TsaProgram)
+{	try
+	{	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	}
+	catch (e)
+	{	// tsa.getPreEmitDiagnostics() can throw "assertion failed" in some typescript versions
+		console.error(e);
+	}
+}
+
 async function doc(entryPoints: string[], outFile: string, outDir: string, pretty: boolean, isMd: boolean, mainTitle='', mainPageStart='', importUrls=new Array<string>, outUrl='')
 {	// Create program
 	const compilerOptions = {declaration: true, emitDeclarationOnly: true};
 	const host = tsa.createCompilerHost(compilerOptions);
 	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
-	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	printPreEmitDiagnostics(program);
 
 	// Generate doc
 	const docNodes = program.emitDoc({includeReferenced: true, noImportNodes: true});
@@ -366,7 +376,7 @@ async function types(entryPoints: string[], outFile: string)
 	const compilerOptions = {declaration: true, emitDeclarationOnly: true, outFile};
 	const host = tsa.createCompilerHost(compilerOptions);
 	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
-	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	printPreEmitDiagnostics(program);
 
 	// Generate the DTS
 	let contents = '';
@@ -387,7 +397,7 @@ async function bundle(entryPoints: string[], outFile: string, target: tsa.Script
 	const compilerOptions = {};
 	const host = tsa.createCompilerHost(compilerOptions);
 	const program = await tsa.createTsaProgram(entryPoints, compilerOptions, undefined, host);
-	printDiagnostics(tsa.getPreEmitDiagnostics(program));
+	printPreEmitDiagnostics(program);
 
 	// Bundle
 	const bundle = program.emitTsaBundle();
@@ -401,7 +411,7 @@ async function bundle(entryPoints: string[], outFile: string, target: tsa.Script
 	else
 	{	// Create second program to transpile the bundle to Javascript
 		const program2 = await bundle.toProgram({outFile, target});
-		printDiagnostics(tsa.getPreEmitDiagnostics(program2));
+		printPreEmitDiagnostics(program2);
 
 		// Transpile
 		const result2 = program2.emit
