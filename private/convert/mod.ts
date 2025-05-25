@@ -3,7 +3,7 @@
 	Example:
 
 	```ts
-	import ts from 'npm:typescript@5.6.3';
+	import ts from 'npm:typescript@5.8.3';
 	import * as path from 'https://deno.land/std@0.178.0/path/mod.ts';
 	import {Converter} from 'https://deno.land/x/tsa@v0.0.12/private/convert/mod.ts';
 	import {Loader} from 'https://deno.land/x/tsa@v0.0.12/private/load_options.ts';
