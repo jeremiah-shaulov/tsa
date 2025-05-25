@@ -16,7 +16,7 @@ the file and its imports/references are put into an InferredProject.
 [isProjectWithSingleRoot](#-isprojectwithsingleroot-boolean),
 [close](#-override-close-void),
 [getTypeAcquisition](#-override-gettypeacquisition-typeacquisition)
-- 107 inherited members from [Project](../class.Project/README.md)
+- 104 inherited members from [Project](../class.Project/README.md)
 
 
 #### 📄 `readonly` projectRootPath: `string` | `undefined`

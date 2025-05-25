@@ -12,7 +12,7 @@ A list of comma-separated expressions. This node is only created by transformati
 - 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.CommaListExpression](../enum.SyntaxKind/README.md#commalistexpression--355)
+#### 📄 `readonly` kind: [SyntaxKind.CommaListExpression](../enum.SyntaxKind/README.md#commalistexpression--356)
 
 
 

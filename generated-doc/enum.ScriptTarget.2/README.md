@@ -50,6 +50,10 @@
 
 
 
+#### ES2024 = <mark>"es2024"</mark>
+
+
+
 #### ESNext = <mark>"esnext"</mark>
 
 

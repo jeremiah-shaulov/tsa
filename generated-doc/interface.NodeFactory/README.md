@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- 458 methods:
+- 459 methods:
 [createNodeArray](#-createnodearrayt-extends-nodeelements-readonly-t-hastrailingcomma-boolean-nodearrayt),
 [createNumericLiteral](#-createnumericliteralvalue-string--number-numericliteralflags-tokenflags-numericliteral),
 [createBigIntLiteral](#-createbigintliteralvalue-string--pseudobigint-bigintliteral),
@@ -413,6 +413,7 @@
 [createSourceFile](#-createsourcefilestatements-readonly-statement-endoffiletoken-endoffiletoken-flags-nodeflags-sourcefile),
 [updateSourceFile](#-updatesourcefilenode-sourcefile-statements-readonly-statement-isdeclarationfile-boolean-referencedfiles-readonly-filereference-typereferences-readonly-filereference-hasnodefaultlib-boolean-libreferences-readonly-filereference-sourcefile),
 [createNotEmittedStatement](#-createnotemittedstatementoriginal-node-notemittedstatement),
+[createNotEmittedTypeElement](#-createnotemittedtypeelement-notemittedtypeelement),
 [createPartiallyEmittedExpression](#-createpartiallyemittedexpressionexpression-expression-original-node-partiallyemittedexpression),
 [updatePartiallyEmittedExpression](#-updatepartiallyemittedexpressionnode-partiallyemittedexpression-expression-expression-partiallyemittedexpression),
 [createCommaListExpression](#-createcommalistexpressionelements-readonly-expression-commalistexpression),
@@ -2121,6 +2122,10 @@
 
 
 #### ⚙ createNotEmittedStatement(original: [Node](../interface.Node/README.md)): [NotEmittedStatement](../interface.NotEmittedStatement/README.md)
+
+
+
+#### ⚙ createNotEmittedTypeElement(): [NotEmittedTypeElement](../interface.NotEmittedTypeElement/README.md)
 
 
 

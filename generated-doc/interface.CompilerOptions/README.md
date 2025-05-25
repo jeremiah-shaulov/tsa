@@ -5,7 +5,7 @@
 ## This interface has
 
 - [index signature](#-option-string-compileroptionsvalue--tsconfigsourcefile)
-- 96 properties:
+- 100 properties:
 [allowImportingTsExtensions](#-allowimportingtsextensions-boolean),
 [allowJs](#-allowjs-boolean),
 [allowArbitraryExtensions](#-allowarbitraryextensions-boolean),
@@ -39,6 +39,7 @@
 [isolatedDeclarations](#-isolateddeclarations-boolean),
 [jsx](#-jsx-jsxemit),
 [lib](#-lib-string),
+[libReplacement](#-libreplacement-boolean),
 [locale](#-locale-string),
 [mapRoot](#-maproot-string),
 [maxNodeModuleJsDepth](#-maxnodemodulejsdepth-number),
@@ -48,6 +49,7 @@
 [moduleDetection](#-moduledetection-moduledetectionkind),
 [newLine](#-newline-newlinekind),
 [noEmit](#-noemit-boolean),
+[noCheck](#-nocheck-boolean),
 [noEmitHelpers](#-noemithelpers-boolean),
 [noEmitOnError](#-noemitonerror-boolean),
 [noErrorTruncation](#-noerrortruncation-boolean),
@@ -79,6 +81,7 @@
 [removeComments](#-removecomments-boolean),
 [resolvePackageJsonExports](#-resolvepackagejsonexports-boolean),
 [resolvePackageJsonImports](#-resolvepackagejsonimports-boolean),
+[rewriteRelativeImportExtensions](#-rewriterelativeimportextensions-boolean),
 [rootDir](#-rootdir-string),
 [rootDirs](#-rootdirs-string),
 [skipLibCheck](#-skiplibcheck-boolean),
@@ -100,6 +103,7 @@
 [types](#-types-string),
 [typeRoots](#-typeroots-string),
 [verbatimModuleSyntax](#-verbatimmodulesyntax-boolean),
+[erasableSyntaxOnly](#-erasablesyntaxonly-boolean),
 [esModuleInterop](#-esmoduleinterop-boolean),
 [useDefineForClassFields](#-usedefineforclassfields-boolean)
 - [9 deprecated symbols](#-deprecated-charset-string)
@@ -241,6 +245,10 @@
 
 
 
+#### 📄 libReplacement?: `boolean`
+
+
+
 #### 📄 locale?: `string`
 
 
@@ -274,6 +282,10 @@
 
 
 #### 📄 noEmit?: `boolean`
+
+
+
+#### 📄 noCheck?: `boolean`
 
 
 
@@ -401,6 +413,10 @@
 
 
 
+#### 📄 rewriteRelativeImportExtensions?: `boolean`
+
+
+
 #### 📄 rootDir?: `string`
 
 
@@ -484,6 +500,10 @@
 
 
 #### 📄 verbatimModuleSyntax?: `boolean`
+
+
+
+#### 📄 erasableSyntaxOnly?: `boolean`
 
 
 

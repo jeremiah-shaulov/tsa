@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- 66 methods:
+- 67 methods:
 [cleanupSemanticCache](#-cleanupsemanticcache-void),
 [getSyntacticDiagnostics](#-getsyntacticdiagnosticsfilename-string-diagnosticwithlocation),
 [getSemanticDiagnostics](#-getsemanticdiagnosticsfilename-string-diagnostic),
@@ -70,6 +70,7 @@
 [uncommentSelection](#-uncommentselectionfilename-string-textrange-textrange-textchange),
 [getSupportedCodeFixes](#-getsupportedcodefixesfilename-string-readonly-string),
 [dispose](#-dispose-void),
+[preparePasteEditsForFile](#-preparepasteeditsforfilefilename-string-copiedtextranges-textrange-boolean),
 [getPasteEdits](#-getpasteeditsargs-pasteeditsargs-formatoptions-formatcodesettings-pasteedits)
 - [7 deprecated symbols](#-deprecated-getsyntacticclassificationsfilename-string-span-textspan-classifiedspan)
 
@@ -468,6 +469,10 @@
 
 
 #### ⚙ dispose(): `void`
+
+
+
+#### ⚙ preparePasteEditsForFile(fileName: `string`, copiedTextRanges: [TextRange](../interface.TextRange/README.md)\[]): `boolean`
 
 
 

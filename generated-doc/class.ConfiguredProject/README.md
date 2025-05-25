@@ -19,7 +19,7 @@ Otherwise it will create an InferredProject.
 [setProjectErrors](#-override-setprojecterrorsprojecterrors-diagnostic-void),
 [close](#-override-close-void),
 [getEffectiveTypeRoots](#-geteffectivetyperoots-string)
-- 106 inherited members from [Project](../class.Project/README.md)
+- 103 inherited members from [Project](../class.Project/README.md)
 
 
 #### 📄 `readonly` canonicalConfigFilePath: [NormalizedPath](../type.NormalizedPath/README.md)

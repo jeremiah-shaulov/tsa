@@ -6,10 +6,11 @@ Response message body for "projectInfo" request
 
 ## This interface has
 
-- 3 properties:
+- 4 properties:
 [configFileName](#-configfilename-string),
 [fileNames](#-filenames-string),
-[languageServiceDisabled](#-languageservicedisabled-boolean)
+[languageServiceDisabled](#-languageservicedisabled-boolean),
+[configuredProjectInfo](#-configuredprojectinfo-defaultconfiguredprojectinfo)
 
 
 #### 📄 configFileName: `string`
@@ -28,6 +29,12 @@ Response message body for "projectInfo" request
 #### 📄 languageServiceDisabled?: `boolean`
 
 > Indicates if the project has a active language service instance
+
+
+
+#### 📄 configuredProjectInfo?: [DefaultConfiguredProjectInfo](../interface.DefaultConfiguredProjectInfo/README.md)
+
+> Information about default project
 
 
 

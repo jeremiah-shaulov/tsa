@@ -1,4 +1,4 @@
-export const APP_GIT_TAG = 'v0.0.50';
+export const APP_GIT_TAG = 'v0.0.51';
 
 export {type LoadResponse} from 'https://deno.land/x/deno_graph@0.63.3/mod.ts';
 export {cache, directory as cacheDirectory} from 'https://deno.land/x/cache@0.2.13/mod.ts';

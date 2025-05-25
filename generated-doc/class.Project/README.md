@@ -74,11 +74,10 @@
 [setTypeAcquisition](#-settypeacquisitionnewtypeacquisition-typeacquisition--undefined-void),
 [getTypeAcquisition](#-gettypeacquisition-typeacquisition),
 [refreshDiagnostics](#-refreshdiagnostics-void)
-- 4 protected properties:
+- 3 protected properties:
 [watchOptions](#-protected-watchoptions-watchoptions--undefined),
 [languageService](#-protected-languageservice-languageservice),
-[projectErrors](#-protected-projecterrors-diagnostic--undefined),
-[isInitialLoadPending](#-protected-isinitialloadpending---boolean)
+[projectErrors](#-protected-projecterrors-diagnostic--undefined)
 - 5 protected methods:
 [removeLocalTypingsFromTypeAcquisition](#-protected-removelocaltypingsfromtypeacquisitionnewtypeacquisition-typeacquisition-typeacquisition),
 [removeExistingTypings](#-protected-removeexistingtypingsinclude-string-string),
@@ -388,10 +387,6 @@
 
 
 #### 📄 `protected` projectErrors: [Diagnostic](../interface.Diagnostic/README.md)\[] | `undefined`
-
-
-
-#### 📄 `protected` isInitialLoadPending: () => `boolean`
 
 
 

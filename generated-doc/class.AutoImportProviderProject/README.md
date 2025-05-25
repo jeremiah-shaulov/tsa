@@ -11,7 +11,7 @@
 [getLanguageService](#-override-getlanguageservice-never),
 [getHostForAutoImportProvider](#-gethostforautoimportprovider-never),
 [getProjectReferences](#-override-getprojectreferences-readonly-projectreference)
-- 107 inherited members from [Project](../class.Project/README.md)
+- 104 inherited members from [Project](../class.Project/README.md)
 
 
 #### ⚙ `override` updateGraph(): `boolean`

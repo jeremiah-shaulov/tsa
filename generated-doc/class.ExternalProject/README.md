@@ -14,7 +14,7 @@ These are created only if a host explicitly calls `openExternalProject`.
 - 2 methods:
 [updateGraph](#-override-updategraph-boolean),
 [getExcludedFiles](#-override-getexcludedfiles-readonly-normalizedpath)
-- 109 inherited members from [Project](../class.Project/README.md)
+- 106 inherited members from [Project](../class.Project/README.md)
 
 
 #### 📄 externalProjectName: `string`

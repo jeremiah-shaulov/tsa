@@ -4,8 +4,8 @@
 
 ## This interface has
 
-- property [getIndexInfosOfIndexSymbol](#-getindexinfosofindexsymbol-indexsymbol-symbol--indexinfo)
-- 86 methods:
+- property [getIndexInfosOfIndexSymbol](#-getindexinfosofindexsymbol-indexsymbol-symbol-siblingsymbols-symbol--indexinfo)
+- 88 methods:
 [getTypeOfSymbolAtLocation](#-gettypeofsymbolatlocationsymbol-symbol-node-node-type),
 [getTypeOfSymbol](#-gettypeofsymbolsymbol-symbol-type),
 [getDeclaredTypeOfSymbol](#-getdeclaredtypeofsymbolsymbol-symbol-type),
@@ -78,6 +78,7 @@
 [getBigIntType](#-getbiginttype-type),
 [getBigIntLiteralType](#-getbigintliteraltypevalue-pseudobigint-bigintliteraltype),
 [getBooleanType](#-getbooleantype-type),
+[getUnknownType](#-getunknowntype-type),
 [getFalseType](#-getfalsetype-type),
 [getTrueType](#-gettruetype-type),
 [getVoidType](#-getvoidtype-type),
@@ -91,10 +92,11 @@
 [isArrayLikeType](#-isarrayliketypetype-type-boolean),
 [resolveName](#-resolvenamename-string-location-node--undefined-meaning-symbolflags-excludeglobals-boolean-symbol),
 [getTypePredicateOfSignature](#-gettypepredicateofsignaturesignature-signature-typepredicate),
-[runWithCancellationToken](#-runwithcancellationtokenttoken-cancellationtoken-cb-checker-typechecker--t-t)
+[runWithCancellationToken](#-runwithcancellationtokenttoken-cancellationtoken-cb-checker-typechecker--t-t),
+[getTypeArgumentsForResolvedSignature](#-gettypeargumentsforresolvedsignaturesignature-signature-readonly-type)
 
 
-#### 📄 getIndexInfosOfIndexSymbol: (indexSymbol: [Symbol](../interface.Symbol/README.md)) => [IndexInfo](../interface.IndexInfo/README.md)\[]
+#### 📄 getIndexInfosOfIndexSymbol: (indexSymbol: [Symbol](../interface.Symbol/README.md), siblingSymbols?: [Symbol](../interface.Symbol/README.md)\[]) => [IndexInfo](../interface.IndexInfo/README.md)\[]
 
 
 
@@ -446,6 +448,10 @@
 
 
 
+#### ⚙ getUnknownType(): [Type](../interface.Type/README.md)
+
+
+
 #### ⚙ getFalseType(): [Type](../interface.Type/README.md)
 
 
@@ -536,6 +542,10 @@
 > Depending on the operation performed, it may be appropriate to throw away the checker
 > if the cancellation token is triggered. Typically, if it is used for error checking
 > and the operation is cancelled, then it should be discarded, otherwise it is safe to keep.
+
+
+
+#### ⚙ getTypeArgumentsForResolvedSignature(signature: [Signature](../interface.Signature/README.md)): readonly Type\[]
 
 
 

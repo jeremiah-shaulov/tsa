@@ -22,11 +22,15 @@
 
 
 
-#### Assertions = <mark>6</mark>
+#### Satisfies = <mark>32</mark>
 
 
 
-#### All = <mark>31</mark>
+#### Assertions = <mark>38</mark>
+
+
+
+#### All = <mark>63</mark>
 
 
 

@@ -46,6 +46,10 @@
 
 
 
+#### ES2024 = <mark>11</mark>
+
+
+
 #### ESNext = <mark>99</mark>
 
 

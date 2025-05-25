@@ -4,11 +4,12 @@
 
 ## This interface has
 
-- 4 properties:
+- 5 properties:
 [keyType](#-keytype-type),
 [type](#-type-type),
 [isReadonly](#-isreadonly-boolean),
-[declaration](#-declaration-indexsignaturedeclaration)
+[declaration](#-declaration-indexsignaturedeclaration),
+[components](#-components-elementwithcomputedpropertyname)
 
 
 #### 📄 keyType: [Type](../interface.Type/README.md)
@@ -24,6 +25,10 @@
 
 
 #### 📄 declaration?: [IndexSignatureDeclaration](../interface.IndexSignatureDeclaration/README.md)
+
+
+
+#### 📄 components?: [ElementWithComputedPropertyName](../type.ElementWithComputedPropertyName/README.md)\[]
 
 
 

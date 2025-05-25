@@ -78,11 +78,11 @@ type CreateSourceFile = (this: typeof tsa, origSpecifier: string, content: strin
 		{	declaration: true,
 			emitDeclarationOnly: true,
 		},
-		{	resolve(specifier, referrer)
+		{	resolve(specifier, referrer, emitDeclarationOnly, host)
 			{	if (specifier == fakeInputFilename)
 				{	return specifier;
 				}
-				return defaultResolve(specifier, referrer);
+				return defaultResolve(specifier, referrer, emitDeclarationOnly, host);
 			},
 			async load(specifier, isDynamic, emitDeclarationOnly, host)
 			{	if (specifier == fakeInputFilename)
