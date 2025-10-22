@@ -14,7 +14,7 @@
 [getSemanticClassifications](#-getsemanticclassificationsfilename-string-span-textspan-format-semanticclassificationformat-classifiedspan--classifiedspan2020),
 [getEncodedSyntacticClassifications](#-getencodedsyntacticclassificationsfilename-string-span-textspan-classifications),
 [getEncodedSemanticClassifications](#-getencodedsemanticclassificationsfilename-string-span-textspan-format-semanticclassificationformat-classifications),
-[getCompletionsAtPosition](#-getcompletionsatpositionfilename-string-position-number-options-getcompletionsatpositionoptions--undefined-formattingsettings-formatcodesettings-withmetadata),
+[getCompletionsAtPosition](#-getcompletionsatpositionfilename-string-position-number-options-getcompletionsatpositionoptions--undefined-formattingsettings-formatcodesettings-withmetadatacompletioninfo),
 [getCompletionEntryDetails](#-getcompletionentrydetailsfilename-string-position-number-entryname-string-formatoptions-formatcodeoptions--formatcodesettings--undefined-source-string--undefined-preferences-userpreferences--undefined-data-completionentrydata--undefined-completionentrydetails),
 [getCompletionEntrySymbol](#-getcompletionentrysymbolfilename-string-position-number-name-string-source-string--undefined-symbol),
 [getQuickInfoAtPosition](#-getquickinfoatpositionfilename-string-position-number-maximumlength-number-quickinfo),
@@ -178,7 +178,7 @@
 
 
 
-#### ⚙ getCompletionsAtPosition(fileName: `string`, position: `number`, options: [GetCompletionsAtPositionOptions](../interface.GetCompletionsAtPositionOptions/README.md) | `undefined`, formattingSettings?: [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): WithMetadata
+#### ⚙ getCompletionsAtPosition(fileName: `string`, position: `number`, options: [GetCompletionsAtPositionOptions](../interface.GetCompletionsAtPositionOptions/README.md) | `undefined`, formattingSettings?: [FormatCodeSettings](../interface.FormatCodeSettings/README.md)): WithMetadata\<CompletionInfo>
 
 > Gets completion entries at a particular position in a file.
 > 

@@ -114,7 +114,7 @@
 
 #### 📄 `readonly` useLabelDetailsInCompletionEntries?: `boolean`
 
-> Indicates whether `CompletionEntry.labelDetailscompletion entry label details` are supported.
+> Indicates whether `entry label details` are supported.
 > If not, contents of `labelDetails` may be included in the [CompletionEntry.name](../interface.CompletionEntry/README.md#-name-string) property.
 
 

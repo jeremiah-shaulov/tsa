@@ -9,7 +9,7 @@
 [clean](#-cleanproject-string-exitstatus),
 [buildReferences](#-buildreferencesproject-string-cancellationtoken-cancellationtoken-writefile-writefilecallback-getcustomtransformers-project-string--customtransformers-exitstatus),
 [cleanReferences](#-cleanreferencesproject-string-exitstatus),
-[getNextInvalidatedProject](#-getnextinvalidatedprojectcancellationtoken-cancellationtoken-invalidatedproject)
+[getNextInvalidatedProject](#-getnextinvalidatedprojectcancellationtoken-cancellationtoken-invalidatedprojectt)
 
 
 #### ⚙ build(project?: `string`, cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md), writeFile?: [WriteFileCallback](../type.WriteFileCallback/README.md), getCustomTransformers?: (project: `string`) => [CustomTransformers](../interface.CustomTransformers/README.md)): [ExitStatus](../enum.ExitStatus/README.md)
@@ -28,7 +28,7 @@
 
 
 
-#### ⚙ getNextInvalidatedProject(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): InvalidatedProject
+#### ⚙ getNextInvalidatedProject(cancellationToken?: [CancellationToken](../interface.CancellationToken/README.md)): InvalidatedProject\<T>
 
 
 
