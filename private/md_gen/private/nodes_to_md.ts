@@ -1115,7 +1115,7 @@ function newURL(relPath: string, base: string)
 		if (m)
 		{	const scopePackage = m[0];
 			const url = new URL(relPath, 'http://localhost/'+base.slice(scopePackage.length));
-			return new URL(scopePackage + url.href.slice('http://localhost'.length));
+			return new URL(scopePackage + url.href.slice('http://localhost'.length + (scopePackage.endsWith('/') ? 1 : 0)));
 		}
 		throw e;
 	}
