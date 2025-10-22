@@ -1,4 +1,4 @@
-import {cache, path, semver} from '../../deps.ts';
+import {cache, remove, path, semver} from '../../deps.ts';
 import {tsa} from '../../tsa_ns.ts';
 import {readTextFile} from '../../util.ts';
 
@@ -9,10 +9,16 @@ export async function resolveJsr(specifier: string, _emitDeclarationOnly: boolea
 {	const parsed = parseJsrSpecifier(specifier);
 	if (parsed)
 	{	const {packageUrl, versionQuery, entryPointQuery} = parsed;
-		const meta = await getMeta(host, packageUrl);
-		const version = metaChooseVersion(meta, versionQuery);
+		let version = '';
+		for (let attempt=0; attempt<2; attempt++)
+		{	const meta = await getMeta(host, packageUrl, undefined, attempt==1);
+			version = metaChooseVersion(meta, versionQuery);
+			if (version)
+			{	break;
+			}
+		}
 		if (!version)
-		{	throw new Error(`Version ${version} is not found in: ${packageUrl}`);
+		{	throw new Error(`Version ${versionQuery} is not found in: ${packageUrl}`);
 		}
 		const versionMeta = await getMeta(host, packageUrl, version);
 		const entryPoint = versionMetaChooseEntryPoint(versionMeta, entryPointQuery);
@@ -49,8 +55,11 @@ function parseJsrSpecifier(specifier: string)
 	}
 }
 
-async function getMeta(host: tsa.CompilerHost, packageUrl: string, version='')
+async function getMeta(host: tsa.CompilerHost, packageUrl: string, version='', uncache=false)
 {	const metaUrl = !version ? packageUrl+'meta.json' : packageUrl+version+'_meta.json';
+	if (uncache)
+	{	await remove(metaUrl);
+	}
 	const {path: metaPath} = await cache(metaUrl);
 	const metaText = readTextFile(host, metaPath);
 	return JSON.parse(metaText);
