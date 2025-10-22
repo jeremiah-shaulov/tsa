@@ -641,10 +641,17 @@ class NodesToMd
 									}
 								}
 								if (!linkText)
-								{	const pos = curNamepath.lastIndexOf('|');
+								{	const pos = curNamepath.indexOf('|');
 									if (pos != -1)
 									{	linkText = curNamepath.slice(pos+1);
 										curNamepath = curNamepath.slice(0, pos);
+									}
+									else
+									{	const pos = curNamepath.indexOf(' ');
+										if (pos != -1)
+										{	linkText = curNamepath.slice(pos+1);
+											curNamepath = curNamepath.slice(0, pos);
+										}
 									}
 								}
 								if (!linkText)
