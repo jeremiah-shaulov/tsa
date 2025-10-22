@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {TsTypeQueryDef} from "https://deno.land/x/tsa@v0.0.54/mod.ts"
+import {TsTypeQueryDef} from "https://deno.land/x/tsa@v0.0.55/mod.ts"
 ```
 
 ## This interface has

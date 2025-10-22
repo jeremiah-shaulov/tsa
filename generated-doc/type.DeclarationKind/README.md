@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DeclarationKind} from "https://deno.land/x/tsa@v0.0.54/mod.ts"
+import {DeclarationKind} from "https://deno.land/x/tsa@v0.0.55/mod.ts"
 ```
 
 Indicates how the documentation node was declared. `"private"` indicates
