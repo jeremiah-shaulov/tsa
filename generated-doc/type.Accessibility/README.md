@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {Accessibility} from "https://deno.land/x/tsa@v0.0.52/mod.ts"
+import {Accessibility} from "https://deno.land/x/tsa@v0.0.53/mod.ts"
 ```
 
 `type` Accessibility = <mark>"public"</mark> | <mark>"protected"</mark> | <mark>"private"</mark>

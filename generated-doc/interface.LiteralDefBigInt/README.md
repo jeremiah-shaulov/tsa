@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {LiteralDefBigInt} from "https://deno.land/x/tsa@v0.0.52/mod.ts"
+import {LiteralDefBigInt} from "https://deno.land/x/tsa@v0.0.53/mod.ts"
 ```
 
 ## This interface has
