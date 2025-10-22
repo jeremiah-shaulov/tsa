@@ -2,7 +2,7 @@
 	so they can be given to the `tsa.CompilerOptions.lib` compiler option.
 
 	The compiler doesn't expose public API to allow extra libraries to be available.
-	But version `5.8.3` (and maybe others) has 2 private variables that let me hook on the library lookup process:
+	But version `5.9.3` (and maybe others) has 2 private variables that let me hook on the library lookup process:
 	- `ts.libMap`
 	- `ts.libs`
 
