@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {DocNodes} from "https://deno.land/x/tsa@v0.0.51/mod.ts"
+import {DocNodes} from "https://deno.land/x/tsa@v0.0.52/mod.ts"
 ```
 
 ## This class has

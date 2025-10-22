@@ -7,13 +7,14 @@
 - 5 properties:
 [kind](#-readonly-kind-syntaxkindimportclause),
 [parent](#-readonly-parent-importdeclaration--jsdocimporttag),
-[isTypeOnly](#-readonly-istypeonly-boolean),
+[phaseModifier](#-readonly-phasemodifier-undefined--importphasemodifiersyntaxkind),
 [name](#-readonly-name-identifier),
 [namedBindings](#-readonly-namedbindings-namedimportbindings)
+- [deprecated symbol](#-deprecated-readonly-istypeonly-boolean)
 - 1 inherited member from [Declaration](../interface.Declaration/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ImportClause](../enum.SyntaxKind/README.md#importclause--273)
+#### 📄 `readonly` kind: [SyntaxKind.ImportClause](../enum.SyntaxKind/README.md#importclause--274)
 
 
 
@@ -21,7 +22,7 @@
 
 
 
-#### 📄 `readonly` isTypeOnly: `boolean`
+#### 📄 `readonly` phaseModifier: `undefined` | [ImportPhaseModifierSyntaxKind](../type.ImportPhaseModifierSyntaxKind/README.md)
 
 
 
@@ -32,4 +33,16 @@
 #### 📄 `readonly` namedBindings?: [NamedImportBindings](../type.NamedImportBindings/README.md)
 
 
+
+<div style="opacity:0.6">
+
+#### 📄 `deprecated` `readonly` isTypeOnly: `boolean`
+
+> `deprecated`
+> 
+> Use `phaseModifier` instead
+
+
+
+</div>
 

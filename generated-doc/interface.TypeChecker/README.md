@@ -5,7 +5,7 @@
 ## This interface has
 
 - property [getIndexInfosOfIndexSymbol](#-getindexinfosofindexsymbol-indexsymbol-symbol-siblingsymbols-symbol--indexinfo)
-- 88 methods:
+- 89 methods:
 [getTypeOfSymbolAtLocation](#-gettypeofsymbolatlocationsymbol-symbol-node-node-type),
 [getTypeOfSymbol](#-gettypeofsymbolsymbol-symbol-type),
 [getDeclaredTypeOfSymbol](#-getdeclaredtypeofsymbolsymbol-symbol-type),
@@ -86,6 +86,7 @@
 [getNullType](#-getnulltype-type),
 [getESSymbolType](#-getessymboltype-type),
 [getNeverType](#-getnevertype-type),
+[getNonPrimitiveType](#-getnonprimitivetype-type),
 [isTypeAssignableTo](#-istypeassignabletosource-type-target-type-boolean),
 [isArrayType](#-isarraytypetype-type-boolean),
 [isTupleType](#-istupletypetype-type-boolean),
@@ -489,6 +490,12 @@
 > Gets the intrinsic `never` type. There are multiple types that act as `never` used internally in the compiler,
 > so the type returned by this function should not be used in equality checks to determine if another type
 > is `never`. Instead, use `type.flags & TypeFlags.Never`.
+
+
+
+#### ⚙ getNonPrimitiveType(): [Type](../interface.Type/README.md)
+
+> Gets the intrinsic `object` type.
 
 
 

@@ -16,7 +16,7 @@
 - 1 inherited member from [DeclarationStatement](../interface.DeclarationStatement/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [Statement](../interface.Statement/README.md), 16 from [Node](../interface.Node/README.md), 1 from [Declaration](../interface.Declaration/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ExportDeclaration](../enum.SyntaxKind/README.md#exportdeclaration--278)
+#### 📄 `readonly` kind: [SyntaxKind.ExportDeclaration](../enum.SyntaxKind/README.md#exportdeclaration--279)
 
 
 

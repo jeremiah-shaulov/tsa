@@ -4,13 +4,14 @@
 
 ## This interface has
 
-- 6 properties:
+- 7 properties:
 [kind](#-kind-scriptelementkind),
 [kindModifiers](#-kindmodifiers-string),
 [textSpan](#-textspan-textspan),
 [displayParts](#-displayparts-symboldisplaypart),
 [documentation](#-documentation-symboldisplaypart),
-[tags](#-tags-jsdoctaginfo)
+[tags](#-tags-jsdoctaginfo),
+[canIncreaseVerbosityLevel](#-canincreaseverbositylevel-boolean)
 
 
 #### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
@@ -34,6 +35,10 @@
 
 
 #### 📄 tags?: [JSDocTagInfo](../interface.JSDocTagInfo/README.md)\[]
+
+
+
+#### 📄 canIncreaseVerbosityLevel?: `boolean`
 
 
 

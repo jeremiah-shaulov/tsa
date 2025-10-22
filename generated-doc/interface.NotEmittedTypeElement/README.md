@@ -8,7 +8,7 @@
 - 3 inherited members from [TypeElement](../interface.TypeElement/README.md), 1 from [Declaration](../interface.Declaration/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.NotEmittedTypeElement](../enum.SyntaxKind/README.md#notemittedtypeelement--354)
+#### 📄 `readonly` kind: [SyntaxKind.NotEmittedTypeElement](../enum.SyntaxKind/README.md#notemittedtypeelement--355)
 
 
 

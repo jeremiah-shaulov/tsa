@@ -11,7 +11,7 @@
 - 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.IndexedAccessType](../enum.SyntaxKind/README.md#indexedaccesstype--199)
+#### 📄 `readonly` kind: [SyntaxKind.IndexedAccessType](../enum.SyntaxKind/README.md#indexedaccesstype--200)
 
 
 

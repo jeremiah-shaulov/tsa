@@ -15,7 +15,7 @@
 - 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 1 from [Declaration](../interface.Declaration/README.md), 1 from [LocalsContainer](../interface.LocalsContainer/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.MappedType](../enum.SyntaxKind/README.md#mappedtype--200)
+#### 📄 `readonly` kind: [SyntaxKind.MappedType](../enum.SyntaxKind/README.md#mappedtype--201)
 
 
 

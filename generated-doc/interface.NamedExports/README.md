@@ -11,7 +11,7 @@
 - 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.NamedExports](../enum.SyntaxKind/README.md#namedexports--279)
+#### 📄 `readonly` kind: [SyntaxKind.NamedExports](../enum.SyntaxKind/README.md#namedexports--280)
 
 
 

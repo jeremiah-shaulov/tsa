@@ -17,7 +17,7 @@
 [getCompletionsAtPosition](#-getcompletionsatpositionfilename-string-position-number-options-getcompletionsatpositionoptions--undefined-formattingsettings-formatcodesettings-withmetadata),
 [getCompletionEntryDetails](#-getcompletionentrydetailsfilename-string-position-number-entryname-string-formatoptions-formatcodeoptions--formatcodesettings--undefined-source-string--undefined-preferences-userpreferences--undefined-data-completionentrydata--undefined-completionentrydetails),
 [getCompletionEntrySymbol](#-getcompletionentrysymbolfilename-string-position-number-name-string-source-string--undefined-symbol),
-[getQuickInfoAtPosition](#-getquickinfoatpositionfilename-string-position-number-quickinfo),
+[getQuickInfoAtPosition](#-getquickinfoatpositionfilename-string-position-number-maximumlength-number-quickinfo),
 [getNameOrDottedNameSpan](#-getnameordottednamespanfilename-string-startpos-number-endpos-number-textspan),
 [getBreakpointStatementAtPosition](#-getbreakpointstatementatpositionfilename-string-position-number-textspan),
 [getSignatureHelpItems](#-getsignaturehelpitemsfilename-string-position-number-options-signaturehelpitemsoptions--undefined-signaturehelpitems),
@@ -239,7 +239,7 @@
 
 
 
-#### ⚙ getQuickInfoAtPosition(fileName: `string`, position: `number`): [QuickInfo](../interface.QuickInfo/README.md)
+#### ⚙ getQuickInfoAtPosition(fileName: `string`, position: `number`, maximumLength?: `number`): [QuickInfo](../interface.QuickInfo/README.md)
 
 > Gets semantic information about the identifier at a particular position in a
 > file. Quick info is what you typically see when you hover in an editor.
@@ -251,6 +251,10 @@
 > 🎚️ Parameter **position**:
 > 
 > A zero-based index of the character where you want the quick info
+> 
+> 🎚️ Parameter **maximumLength**:
+> 
+> Maximum length of a quickinfo text before it is truncated.
 
 
 

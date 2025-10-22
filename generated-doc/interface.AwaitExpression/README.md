@@ -10,7 +10,7 @@
 - 1 inherited member from [UnaryExpression](../interface.UnaryExpression/README.md), 1 from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.AwaitExpression](../enum.SyntaxKind/README.md#awaitexpression--223)
+#### 📄 `readonly` kind: [SyntaxKind.AwaitExpression](../enum.SyntaxKind/README.md#awaitexpression--224)
 
 
 

@@ -2,5 +2,5 @@
 
 [Documentation Index](../README.md)
 
-`var` versionMajorMinor: <mark>"5.8"</mark>
+`var` versionMajorMinor: <mark>"5.9"</mark>
 

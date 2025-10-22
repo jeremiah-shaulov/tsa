@@ -17,7 +17,7 @@
 
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ImportAttributes](../enum.SyntaxKind/README.md#importattributes--300)
+#### 📄 `readonly` kind: [SyntaxKind.ImportAttributes](../enum.SyntaxKind/README.md#importattributes--301)
 
 
 

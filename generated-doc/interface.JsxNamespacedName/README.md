@@ -11,7 +11,7 @@
 - 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.JsxNamespacedName](../enum.SyntaxKind/README.md#jsxnamespacedname--295)
+#### 📄 `readonly` kind: [SyntaxKind.JsxNamespacedName](../enum.SyntaxKind/README.md#jsxnamespacedname--296)
 
 
 

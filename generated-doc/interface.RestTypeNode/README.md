@@ -10,7 +10,7 @@
 - 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.RestType](../enum.SyntaxKind/README.md#resttype--191)
+#### 📄 `readonly` kind: [SyntaxKind.RestType](../enum.SyntaxKind/README.md#resttype--192)
 
 
 

@@ -66,6 +66,10 @@
 
 
 
+#### SingleSignatureType = <mark>134217728</mark>
+
+
+
 #### ClassOrInterface = <mark>3</mark>
 
 
@@ -79,10 +83,6 @@
 
 
 #### InstantiationExpressionType = <mark>8388608</mark>
-
-
-
-#### SingleSignatureType = <mark>134217728</mark>
 
 
 

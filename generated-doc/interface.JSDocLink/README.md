@@ -11,7 +11,7 @@
 - 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.JSDocLink](../enum.SyntaxKind/README.md#jsdoclink--324)
+#### 📄 `readonly` kind: [SyntaxKind.JSDocLink](../enum.SyntaxKind/README.md#jsdoclink--325)
 
 
 

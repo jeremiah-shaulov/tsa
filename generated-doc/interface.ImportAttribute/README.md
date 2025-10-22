@@ -12,7 +12,7 @@
 - 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ImportAttribute](../enum.SyntaxKind/README.md#importattribute--301)
+#### 📄 `readonly` kind: [SyntaxKind.ImportAttribute](../enum.SyntaxKind/README.md#importattribute--302)
 
 
 

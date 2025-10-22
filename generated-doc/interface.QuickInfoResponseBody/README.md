@@ -6,14 +6,15 @@ Body of QuickInfoResponse.
 
 ## This interface has
 
-- 7 properties:
+- 8 properties:
 [kind](#-kind-scriptelementkind),
 [kindModifiers](#-kindmodifiers-string),
 [start](#-start-location),
 [end](#-end-location),
 [displayString](#-displaystring-string),
 [documentation](#-documentation-string--symboldisplaypart),
-[tags](#-tags-jsdoctaginfo)
+[tags](#-tags-jsdoctaginfo),
+[canIncreaseVerbosityLevel](#-canincreaseverbositylevel-boolean)
 
 
 #### 📄 kind: [ScriptElementKind](../enum.ScriptElementKind/README.md)
@@ -56,6 +57,12 @@ Body of QuickInfoResponse.
 #### 📄 tags: [JSDocTagInfo](../interface.JSDocTagInfo.2/README.md)\[]
 
 > JSDoc tags associated with symbol.
+
+
+
+#### 📄 canIncreaseVerbosityLevel?: `boolean`
+
+> Whether the verbosity level can be increased for this quick info response.
 
 
 

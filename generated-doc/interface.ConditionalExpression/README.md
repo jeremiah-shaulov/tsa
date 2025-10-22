@@ -14,7 +14,7 @@
 - 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ConditionalExpression](../enum.SyntaxKind/README.md#conditionalexpression--227)
+#### 📄 `readonly` kind: [SyntaxKind.ConditionalExpression](../enum.SyntaxKind/README.md#conditionalexpression--228)
 
 
 

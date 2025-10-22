@@ -11,7 +11,7 @@
 - 16 inherited members from [Node](../interface.Node/README.md), 1 from [Statement](../interface.Statement/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ModuleBlock](../enum.SyntaxKind/README.md#moduleblock--268)
+#### 📄 `readonly` kind: [SyntaxKind.ModuleBlock](../enum.SyntaxKind/README.md#moduleblock--269)
 
 
 

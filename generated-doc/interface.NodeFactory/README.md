@@ -262,8 +262,8 @@
 [updateImportEqualsDeclaration](#-updateimportequalsdeclarationnode-importequalsdeclaration-modifiers-readonly-modifierlike--undefined-istypeonly-boolean-name-identifier-modulereference-modulereference-importequalsdeclaration),
 [createImportDeclaration](#-createimportdeclarationmodifiers-readonly-modifierlike--undefined-importclause-importclause--undefined-modulespecifier-expression-attributes-importattributes-importdeclaration),
 [updateImportDeclaration](#-updateimportdeclarationnode-importdeclaration-modifiers-readonly-modifierlike--undefined-importclause-importclause--undefined-modulespecifier-expression-attributes-importattributes--undefined-importdeclaration),
-[createImportClause](#-createimportclauseistypeonly-boolean-name-identifier--undefined-namedbindings-namedimportbindings--undefined-importclause),
-[updateImportClause](#-updateimportclausenode-importclause-istypeonly-boolean-name-identifier--undefined-namedbindings-namedimportbindings--undefined-importclause),
+[createImportClause](#-createimportclausephasemodifier-importphasemodifiersyntaxkind--undefined-name-identifier--undefined-namedbindings-namedimportbindings--undefined-importclause),
+[updateImportClause](#-updateimportclausenode-importclause-phasemodifier-importphasemodifiersyntaxkind--undefined-name-identifier--undefined-namedbindings-namedimportbindings--undefined-importclause),
 [createImportAttributes](#-createimportattributeselements-nodearrayimportattribute-multiline-boolean-importattributes),
 [updateImportAttributes](#-updateimportattributesnode-importattributes-elements-nodearrayimportattribute-multiline-boolean-importattributes),
 [createImportAttribute](#-createimportattributename-importattributename-value-expression-importattribute),
@@ -464,7 +464,7 @@
 [replaceModifiers](#-replacemodifierst-extends-hasmodifiersnode-t-modifiers-readonly-modifier--modifierflags--undefined-t),
 [replaceDecoratorsAndModifiers](#-replacedecoratorsandmodifierst-extends-hasmodifiers--hasdecoratorsnode-t-modifiers-readonly-modifierlike--undefined-t),
 [replacePropertyName](#-replacepropertynamet-extends-accessordeclaration--methoddeclaration--methodsignature--propertydeclaration--propertysignature--propertyassignmentnode-t-name-tname-t)
-- [6 deprecated symbols](#-deprecated-createassertclauseelements-nodearrayassertentry-multiline-boolean-assertclause)
+- [8 deprecated symbols](#-deprecated-createimportclauseistypeonly-boolean-name-identifier--undefined-namedbindings-namedimportbindings--undefined-importclause)
 
 
 #### ⚙ createNodeArray\<T `extends` [Node](../interface.Node/README.md)>(elements?: readonly T\[], hasTrailingComma?: `boolean`): [NodeArray](../interface.NodeArray/README.md)\<T>
@@ -1521,11 +1521,11 @@
 
 
 
-#### ⚙ createImportClause(isTypeOnly: `boolean`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
+#### ⚙ createImportClause(phaseModifier: [ImportPhaseModifierSyntaxKind](../type.ImportPhaseModifierSyntaxKind/README.md) | `undefined`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
 
 
 
-#### ⚙ updateImportClause(node: [ImportClause](../interface.ImportClause/README.md), isTypeOnly: `boolean`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
+#### ⚙ updateImportClause(node: [ImportClause](../interface.ImportClause/README.md), phaseModifier: [ImportPhaseModifierSyntaxKind](../type.ImportPhaseModifierSyntaxKind/README.md) | `undefined`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
 
 
 
@@ -2336,6 +2336,14 @@
 
 
 <div style="opacity:0.6">
+
+#### ⚙ `deprecated` createImportClause(isTypeOnly: `boolean`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
+
+
+
+#### ⚙ `deprecated` updateImportClause(node: [ImportClause](../interface.ImportClause/README.md), isTypeOnly: `boolean`, name: [Identifier](../interface.Identifier/README.md) | `undefined`, namedBindings: [NamedImportBindings](../type.NamedImportBindings/README.md) | `undefined`): [ImportClause](../interface.ImportClause/README.md)
+
+
 
 #### ⚙ `deprecated` createAssertClause(elements: [NodeArray](../interface.NodeArray/README.md)\<[AssertEntry](../interface.AssertEntry/README.md)>, multiLine?: `boolean`): [AssertClause](../interface.AssertClause/README.md)
 

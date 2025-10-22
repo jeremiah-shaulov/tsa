@@ -8,7 +8,7 @@
 - 17 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 kind: [SyntaxKind.SyntaxList](../enum.SyntaxKind/README.md#syntaxlist--352)
+#### 📄 kind: [SyntaxKind.SyntaxList](../enum.SyntaxKind/README.md#syntaxlist--353)
 
 
 

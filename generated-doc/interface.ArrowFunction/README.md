@@ -13,7 +13,7 @@
 - 1 inherited member from [Expression](../interface.Expression/README.md), 4 from [FunctionLikeDeclarationBase](../interface.FunctionLikeDeclarationBase/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [LocalsContainer](../interface.LocalsContainer/README.md), 1 from [FlowContainer](../interface.FlowContainer/README.md), 17 from [Node](../interface.Node/README.md), 3 from [SignatureDeclarationBase](../interface.SignatureDeclarationBase/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md), 1 from [Declaration](../interface.Declaration/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ArrowFunction](../enum.SyntaxKind/README.md#arrowfunction--219)
+#### 📄 `readonly` kind: [SyntaxKind.ArrowFunction](../enum.SyntaxKind/README.md#arrowfunction--220)
 
 
 

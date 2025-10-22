@@ -4,7 +4,7 @@
 
 ## This interface has
 
-- 43 properties:
+- 44 properties:
 [disableSuggestions](#-readonly-disablesuggestions-boolean),
 [quotePreference](#-readonly-quotepreference-auto--double--single),
 [includeCompletionsForModuleExports](#-readonly-includecompletionsformoduleexports-boolean),
@@ -47,7 +47,8 @@
 [lazyConfiguredProjectsFromExternalProject](#-readonly-lazyconfiguredprojectsfromexternalproject-boolean),
 [displayPartsForJSDoc](#-readonly-displaypartsforjsdoc-boolean),
 [generateReturnInDocTemplate](#-readonly-generatereturnindoctemplate-boolean),
-[disableLineTextInReferences](#-readonly-disablelinetextinreferences-boolean)
+[disableLineTextInReferences](#-readonly-disablelinetextinreferences-boolean),
+[maximumHoverLength](#-readonly-maximumhoverlength-number)
 
 
 #### 📄 `readonly` disableSuggestions?: `boolean`
@@ -297,6 +298,14 @@
 
 
 #### 📄 `readonly` disableLineTextInReferences?: `boolean`
+
+
+
+#### 📄 `readonly` maximumHoverLength?: `number`
+
+> A positive integer indicating the maximum length of a hover text before it is truncated.
+> 
+> Default: `500`
 
 
 

@@ -12,7 +12,7 @@
 - 4 inherited members from [FunctionLikeDeclarationBase](../interface.FunctionLikeDeclarationBase/README.md), 2 from [ClassElement](../interface.ClassElement/README.md), 1 from [JSDocContainer](../interface.JSDocContainer/README.md), 1 from [LocalsContainer](../interface.LocalsContainer/README.md), 3 from [SignatureDeclarationBase](../interface.SignatureDeclarationBase/README.md), 16 from [Node](../interface.Node/README.md), 1 from [Declaration](../interface.Declaration/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.Constructor](../enum.SyntaxKind/README.md#constructor--176)
+#### 📄 `readonly` kind: [SyntaxKind.Constructor](../enum.SyntaxKind/README.md#constructor--177)
 
 
 

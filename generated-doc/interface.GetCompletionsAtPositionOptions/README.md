@@ -9,7 +9,7 @@
 [triggerKind](#-triggerkind-completiontriggerkind),
 [includeSymbol](#-includesymbol-boolean)
 - [2 deprecated symbols](#-deprecated-includeexternalmoduleexports-boolean)
-- 43 inherited members from [UserPreferences](../interface.UserPreferences/README.md)
+- 44 inherited members from [UserPreferences](../interface.UserPreferences/README.md)
 
 
 #### 📄 triggerCharacter?: [CompletionsTriggerCharacter](../type.CompletionsTriggerCharacter/README.md)

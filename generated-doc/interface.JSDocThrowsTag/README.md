@@ -10,7 +10,7 @@
 - 3 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.JSDocThrowsTag](../enum.SyntaxKind/README.md#jsdocthrowstag--349)
+#### 📄 `readonly` kind: [SyntaxKind.JSDocThrowsTag](../enum.SyntaxKind/README.md#jsdocthrowstag--350)
 
 
 

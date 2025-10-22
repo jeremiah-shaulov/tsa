@@ -11,7 +11,7 @@
 - 16 inherited members from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.ArrayBindingPattern](../enum.SyntaxKind/README.md#arraybindingpattern--207)
+#### 📄 `readonly` kind: [SyntaxKind.ArrayBindingPattern](../enum.SyntaxKind/README.md#arraybindingpattern--208)
 
 
 

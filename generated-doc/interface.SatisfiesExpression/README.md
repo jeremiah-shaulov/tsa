@@ -11,7 +11,7 @@
 - 1 inherited member from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.SatisfiesExpression](../enum.SyntaxKind/README.md#satisfiesexpression--238)
+#### 📄 `readonly` kind: [SyntaxKind.SatisfiesExpression](../enum.SyntaxKind/README.md#satisfiesexpression--239)
 
 
 

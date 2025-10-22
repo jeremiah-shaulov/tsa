@@ -11,7 +11,7 @@
 - 1 inherited member from [TypeNode](../interface.TypeNode/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 kind: [SyntaxKind.TemplateLiteralType](../enum.SyntaxKind/README.md#templateliteraltype--203)
+#### 📄 kind: [SyntaxKind.TemplateLiteralType](../enum.SyntaxKind/README.md#templateliteraltype--204)
 
 
 

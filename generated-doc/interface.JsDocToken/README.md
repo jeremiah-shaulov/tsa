@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {JsDocToken} from "https://deno.land/x/tsa@v0.0.51/mod.ts"
+import {JsDocToken} from "https://deno.land/x/tsa@v0.0.52/mod.ts"
 ```
 
 Doc-comment string split to tokens.

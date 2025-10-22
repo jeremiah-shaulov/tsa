@@ -12,7 +12,7 @@
 - 1 inherited member from [Expression](../interface.Expression/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.JsxExpression](../enum.SyntaxKind/README.md#jsxexpression--294)
+#### 📄 `readonly` kind: [SyntaxKind.JsxExpression](../enum.SyntaxKind/README.md#jsxexpression--295)
 
 
 

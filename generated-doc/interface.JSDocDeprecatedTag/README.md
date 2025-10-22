@@ -8,7 +8,7 @@
 - 3 inherited members from [JSDocTag](../interface.JSDocTag/README.md), 16 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 kind: [SyntaxKind.JSDocDeprecatedTag](../enum.SyntaxKind/README.md#jsdocdeprecatedtag--331)
+#### 📄 kind: [SyntaxKind.JSDocDeprecatedTag](../enum.SyntaxKind/README.md#jsdocdeprecatedtag--332)
 
 
 

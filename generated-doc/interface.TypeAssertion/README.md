@@ -11,7 +11,7 @@
 - 1 inherited member from [UnaryExpression](../interface.UnaryExpression/README.md), 1 from [Expression](../interface.Expression/README.md), 17 from [Node](../interface.Node/README.md), 2 from [ReadonlyTextRange](../interface.ReadonlyTextRange/README.md)
 
 
-#### 📄 `readonly` kind: [SyntaxKind.TypeAssertionExpression](../enum.SyntaxKind/README.md#typeassertionexpression--216)
+#### 📄 `readonly` kind: [SyntaxKind.TypeAssertionExpression](../enum.SyntaxKind/README.md#typeassertionexpression--217)
 
 
 

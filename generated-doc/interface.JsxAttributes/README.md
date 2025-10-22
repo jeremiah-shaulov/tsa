@@ -15,7 +15,7 @@
 
 
 
-#### 📄 `readonly` kind: [SyntaxKind.JsxAttributes](../enum.SyntaxKind/README.md#jsxattributes--292)
+#### 📄 `readonly` kind: [SyntaxKind.JsxAttributes](../enum.SyntaxKind/README.md#jsxattributes--293)
 
 
 
