@@ -286,7 +286,7 @@ function doConvertType(ts: typeof tsa, converter: Converter, origType: tsa.Type|
 	else if (ts.isTypeReferenceNode(node))
 	{	const typeName = getText(ts, node.typeName);
 		if (typeName)
-		{	const typeParams = (origType && 'typeArguments' in origType ? origType.typeArguments as tsa.Type[] : node.typeArguments)?.map(type => convertType(ts, converter, type));
+		{	const typeParams = (origType && 'typeArguments' in origType && origType.typeArguments ? origType.typeArguments as tsa.Type[] : node.typeArguments)?.map(type => convertType(ts, converter, type));
 			const typeRef =
 			{	...(typeParams?.length && {typeParams}),
 				typeName,
