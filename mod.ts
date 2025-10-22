@@ -15,7 +15,7 @@
 	To install this tool do:
 
 	```bash
-	deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.54/tsa.ts
+	deno install --global --allow-env --allow-net --allow-read --allow-write https://deno.land/x/tsa@v0.0.55/tsa.ts
 	```
 
 	The command supports 5 operations:
@@ -166,7 +166,7 @@ export
 		// To run this example:
 		// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-		import {tsa} from 'https://deno.land/x/tsa@v0.0.54/mod.ts';
+		import {tsa} from 'https://deno.land/x/tsa@v0.0.55/mod.ts';
 		console.log(tsa.version);
 		```
 
@@ -176,7 +176,7 @@ export
 		// To run this example:
 		// deno run --allow-env --allow-net --allow-read --allow-write example.ts
 
-		import {tsa} from 'https://deno.land/x/tsa@v0.0.54/mod.ts';
+		import {tsa} from 'https://deno.land/x/tsa@v0.0.55/mod.ts';
 
 		// Different version of typescript
 		import tsaSubstitute from 'npm:typescript@3.9.3';
