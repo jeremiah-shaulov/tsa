@@ -12,6 +12,7 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 const RE_NO_NL = /[\r\n]/;
+const RE_JSR_URL = /^jsr:@[a-z0-9-]+\/[a-z0-9-]+(?:@[A-Za-z0-9.-]+)?\/?/;
 
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
@@ -860,7 +861,7 @@ class NodesToMd
 										if (state == State.AfterImportFrom)
 										{	const str = token.getValue();
 											if (str.startsWith('./') || str.startsWith('../'))
-											{	const subst = JSON.stringify(new URL(str, importUrl).href);
+											{	const subst = JSON.stringify(newURL(str, importUrl.href).href);
 												newDoc += doc.slice(from, offset);
 												newDoc += text.charAt(0)=="'" && !subst.includes('\\') ? "'"+subst.slice(1, -1)+"'" : subst;
 												from = offset + text.length;
@@ -1098,9 +1099,25 @@ function getUrlForFilename(filename: string, entryPointsDirs: string[], importUr
 		{	const e = entryPointsDirs[i];
 			if (filename.startsWith(e))
 			{	const relPath = filename.slice(filename.charAt(e.length)=='/' ? e.length+1 : e.length);
-				return new URL(relPath, importUrls[i]);
+				const base = importUrls[i];
+				return newURL(relPath, base);
 			}
 		}
+	}
+}
+
+function newURL(relPath: string, base: string)
+{	try
+	{	return new URL(relPath, base);
+	}
+	catch (e)
+	{	const m = RE_JSR_URL.exec(base);
+		if (m)
+		{	const scopePackage = m[0];
+			const url = new URL(relPath, 'http://localhost/'+base.slice(scopePackage.length));
+			return new URL(scopePackage + url.href.slice('http://localhost'.length));
+		}
+		throw e;
 	}
 }
 
