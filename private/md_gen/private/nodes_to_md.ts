@@ -25,6 +25,7 @@ class NodesToMd
 {	#nodes;
 	#outFileBasename;
 	#docDirBasename;
+	#entryPoints;
 	#entryPointsDirs;
 	#importUrls;
 	#baseDirUrlWithTrailingSlash;
@@ -36,6 +37,7 @@ class NodesToMd
 	{	this.#nodes = nodes;
 		this.#outFileBasename = outFileBasename;
 		this.#docDirBasename = docDirBasename;
+		this.#entryPoints = entryPoints;
 		this.#entryPointsDirs = entryPoints.map(f => path.toFileUrl(path.dirname(path.resolve(f))).href);
 		this.#importUrls = importUrls;
 		this.#baseDirUrlWithTrailingSlash = baseDirUrl.endsWith('/') ? baseDirUrl : baseDirUrl ? baseDirUrl+'/' : '';
@@ -868,7 +870,12 @@ class NodesToMd
 										if (state == State.AfterImportFrom)
 										{	const str = token.getValue();
 											if (str.startsWith('./') || str.startsWith('../'))
-											{	const subst = JSON.stringify(newURL(str, importUrl.href).href);
+											{	let fileImportUrl = newURL(str, importUrl.href).href;
+												const entryPointUrl = newURL(this.#entryPoints[0], this.#importUrls[0]).href;
+												if (fileImportUrl == entryPointUrl)
+												{	fileImportUrl = this.#importUrls[0];
+												}
+												const subst = JSON.stringify(fileImportUrl);
 												newDoc += doc.slice(from, offset);
 												newDoc += text.charAt(0)=="'" && !subst.includes('\\') ? "'"+subst.slice(1, -1)+"'" : subst;
 												from = offset + text.length;
