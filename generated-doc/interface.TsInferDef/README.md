@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {TsInferDef} from "https://deno.land/x/tsa@v0.0.55/mod.ts"
+import {TsInferDef} from "https://deno.land/x/tsa@v0.0.56/mod.ts"
 ```
 
 ## This interface has

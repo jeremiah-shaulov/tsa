@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {TsTypeTupleDef} from "https://deno.land/x/tsa@v0.0.55/mod.ts"
+import {TsTypeTupleDef} from "https://deno.land/x/tsa@v0.0.56/mod.ts"
 ```
 
 ## This interface has
