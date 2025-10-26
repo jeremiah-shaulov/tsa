@@ -9,6 +9,7 @@ const RE_BASH_TOKENIZER = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\S+|(\s+)/ys;
 const RE_BASH_UNESCAPE = /\\./gs;
 const RE_EXAMPLE_NAME = /[^\r\n]+ > \/tmp\/(example-\w+)\.ts[\r\n]/y;
 const RE_UNCOMMENT = /^\/\/[ \t]*/mg;
+const RE_CODE_BLOCK_START = /\n(?:>+ )?```/g;
 
 class NotTsaError extends Error
 {
@@ -199,20 +200,20 @@ function *extractExampleCodeBlocksSubst(readme: string, docDirPublicUrl: URL, mo
 
 function *extractExampleCodeBlocks(readme: string, docDirPublicUrl: URL)
 {	const exampleBegin = " curl '" + new URL('.', docDirPublicUrl).href;
-	const banner = '\n// To download and run this example:';
-
-	for (let {from, to} of extractCodeBlocks(readme))
-	{	if (readme.startsWith(banner, from))
+	for (let {from, to, endl} of extractCodeBlocks(readme))
+	{	const banner = endl + '// To download and run this example:';
+		if (readme.startsWith(banner, from))
 		{	from += banner.length;
-			from = readme.indexOf('\n', from);
+			from = readme.indexOf(endl, from);
 			if (from==-1 || from>=to)
 			{	break;
 			}
 			const exampleFrom = from;
-			while (readme.startsWith('\n//', from))
-			{	from += 3;
+			const pref = endl + '//';
+			while (readme.startsWith(pref, from))
+			{	from += pref.length;
 				const lineFrom = readme.startsWith(exampleBegin, from) ? from : -1;
-				from = readme.indexOf('\n', from);
+				from = readme.indexOf(endl, from);
 				if (from==-1 || from>=to)
 				{	break;
 				}
@@ -224,8 +225,12 @@ function *extractExampleCodeBlocks(readme: string, docDirPublicUrl: URL)
 						if (readme.charCodeAt(to-1) == C_CR)
 						{	to--; // before '\r'
 						}
-						let prelude = readme.slice(exampleFrom+1, lineFrom-2);
-						const code = prelude + readme.slice(from+1, to); // after '\n'
+						let prelude = readme.slice(exampleFrom+endl.length, lineFrom-2);
+						let code = prelude + readme.slice(from+endl.length, to);
+						if (endl != '\n')
+						{	prelude = prelude.replaceAll(endl, '\n');
+							code = code.replaceAll(endl, '\n');
+						}
 						prelude = prelude.replace(RE_UNCOMMENT, '');
 						yield {exampleName, code, prelude};
 					}
@@ -238,12 +243,14 @@ function *extractExampleCodeBlocks(readme: string, docDirPublicUrl: URL)
 function *extractCodeBlocks(readme: string)
 {	let from = 0;
 	while (true)
-	{	from = readme.indexOf('\n```', from);
-		if (from == -1)
+	{	RE_CODE_BLOCK_START.lastIndex = from;
+		const match = RE_CODE_BLOCK_START.exec(readme);
+		if (!match)
 		{	break;
 		}
-		from += 4;
-		const to = readme.indexOf('\n```', from);
+		from = RE_CODE_BLOCK_START.lastIndex;
+		const endBlock = match[0];
+		const to = readme.indexOf(endBlock, from);
 		if (to == -1)
 		{	break;
 		}
@@ -251,7 +258,8 @@ function *extractCodeBlocks(readme: string)
 		{	while (from<to && readme.charCodeAt(from)!=C_LF)
 			{	from++;
 			}
-			yield {from, to};
+			const endl = endBlock.slice(0, -3);
+			yield {from, to, endl};
 		}
 		from = to + 4;
 	}
