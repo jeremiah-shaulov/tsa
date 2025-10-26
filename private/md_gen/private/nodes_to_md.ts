@@ -1,5 +1,6 @@
 import {indentAndWrap, crc32, path, jstok, JstokTokenType} from '../../deps.ts';
 import {DocNode, ClassConstructorParamDef, TsTypeDef, LiteralDef, LiteralMethodDef, TsTypeParamDef, TsTypeLiteralDef, FunctionDef, Accessibility, JsDoc, DocNodeNamespace, DocNodeVariable, DocNodeFunction, DocNodeClass, DocNodeTypeAlias, DocNodeEnum, DocNodeInterface, ClassPropertyDef, InterfacePropertyDef, LiteralPropertyDef, TsTypeTypeLiteralDef, ClassMethodDef, InterfaceMethodDef} from '../../doc_node/mod.ts';
+import {newURL} from '../../util.ts';
 import {Accessor, NodeToMd} from './node_to_md.ts';
 import {NodeToMdCollection} from './node_to_md_collection.ts';
 import {isDeprecated} from './util.ts';
@@ -12,7 +13,6 @@ const EXAMPLE = 'example.ts';
 const RE_MD_CODEBLOCKS = /^ ? ? ?```(\w*)[ \t]*$/gm;
 const RE_MD_CODEBLOCK_EXAMPLE = /\s*\/\/\s*To\s+run\s+this\s+example:[ \t]*((?:\r?\n[ \t]*\/\/[^\r\n]+)+)/y;
 const RE_NO_NL = /[\r\n]/;
-const RE_JSR_URL = /^jsr:@[a-z0-9-]+\/[a-z0-9-]+(?:@[A-Za-z0-9.-]+)?\/?/;
 
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
@@ -1110,21 +1110,6 @@ function getUrlForFilename(filename: string, entryPointsDirs: string[], importUr
 				return newURL(relPath, base);
 			}
 		}
-	}
-}
-
-function newURL(relPath: string, base: string)
-{	try
-	{	return new URL(relPath, base);
-	}
-	catch (e)
-	{	const m = RE_JSR_URL.exec(base);
-		if (m)
-		{	const scopePackage = m[0];
-			const url = new URL(relPath, 'http://localhost/'+base.slice(scopePackage.length));
-			return new URL(scopePackage + url.href.slice('http://localhost'.length + (scopePackage.endsWith('/') ? 1 : 0)));
-		}
-		throw e;
 	}
 }
 
