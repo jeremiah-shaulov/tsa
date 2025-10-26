@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {tsa} from "https://deno.land/x/tsa@v0.0.56/mod.ts"
+import {tsa} from "https://deno.land/x/tsa@v0.0.57/mod.ts"
 ```
 
 Reexport of the typescript compiler.
@@ -18,10 +18,10 @@ This library contains typescript compiler inside, and it's version is predefined
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.56/generated-doc/namespace.tsa/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-w9uo>/' > /tmp/example-w9uo.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.57/generated-doc/namespace.tsa/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-w9uo>/' > /tmp/example-w9uo.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-w9uo.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.56/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.57/mod.ts';
 console.log(tsa.version);
 ```
 
@@ -29,10 +29,10 @@ There's no guarantee that it can work with different `tsc` version, but i'll sho
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.56/generated-doc/namespace.tsa/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-nclx>/' > /tmp/example-nclx.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.57/generated-doc/namespace.tsa/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-nclx>/' > /tmp/example-nclx.ts
 // deno run --allow-env --allow-net --allow-read --allow-write /tmp/example-nclx.ts
 
-import {tsa} from 'https://deno.land/x/tsa@v0.0.56/mod.ts';
+import {tsa} from 'https://deno.land/x/tsa@v0.0.57/mod.ts';
 
 // Different version of typescript
 import tsaSubstitute from 'npm:typescript@3.9.3';
