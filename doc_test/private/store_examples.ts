@@ -1,4 +1,5 @@
 import {path} from './deps.ts';
+import {newURL} from './util.ts';
 
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
@@ -50,7 +51,7 @@ export async function storeExamplesToTmpFiles(testFilename: string)
 	const tmpDir = await getTmpDir();
 	const {readme, modFsUrl, modPublicUrl, docDirFsUrl, docDirPublicUrl} = await findMainReadme(testFilename);
 	const modDirFs = new URL('.', modFsUrl).href + '/';
-	const modDirPublic = new URL('.', modPublicUrl).href + '/';
+	const modDirPublic = newURL('.', modPublicUrl.href).href + '/';
 
 	// Main README.md
 	for (const {exampleName, code, prelude} of extractExampleCodeBlocksSubst(readme, docDirPublicUrl, modDirFs, modDirPublic))
@@ -99,7 +100,7 @@ async function findMainReadme(testFilename: string)
 		try
 		{	const {outDir, outUrl, importUrl, entryPoint} = parseTsaArgs(readme);
 			const modFsUrl = new URL(path.toFileUrl(path.resolve(entryPoint)), url); // `file://` URL of `mod.ts`
-			const modPublicUrl = new URL('.', importUrl); // `https://` URL of `mod.ts`
+			const modPublicUrl = newURL('.', importUrl); // `https://` URL of `mod.ts`
 			const docDirFsUrl = new URL(outDir, url); // `file://` URL of `generated-doc` (or differently named)
 			const docDirPublicUrl = new URL(outDir, outUrl); // `https://` URL of `generated-doc` (or differently named)
 			return {readme, modFsUrl, modPublicUrl, docDirFsUrl, docDirPublicUrl};
